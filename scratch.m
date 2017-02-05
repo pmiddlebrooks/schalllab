@@ -255,6 +255,8 @@ td = td(validTrial,:);
 td(td.responseOnset - td.responseCueOn > 1200, :) = [];
 nTrial = size(td, 1);
 
+subj_idx = td.sessionTag;
+
 ss_presented = zeros(nTrial, 1);
 ss_presented(~isnan(td.stopSignalOn)) = 1;
 
@@ -268,7 +270,7 @@ ssd(~ss_presented) = -999;
 rt = td.responseOnset - td.responseCueOn;
 rt(ss_presented & strcmp(td.trialOutcome, 'stopCorrect')) = -999;
 
-b = table(ss_presented, inhibited, ssd, rt);
+b = table(subj_idx, ss_presented, inhibited, ssd, rt);
 
 writetable(b, fullfile(local_data_path, 'broca/bayes_ssrt.csv'))
 
@@ -361,3 +363,58 @@ variables = {...
 % variables = [variables, {'spikeData'}];
 td = load('~/schalllab/scratch/jp113n02', variables{:});
 toc
+
+
+%%
+%% Verifying/discovering alignment discrepancy between plexon spike times and reality spike times based on observed shift between electrode channels
+sigE = [];
+sigL = [];
+for i = 1 : 21
+    iSigE = Data(i).responseOnset.colorCoh(2).goTarg.sdfMean(Data(i).responseOnset.colorCoh(2).goTarg.alignTime + [-200 : 200]);
+    sigE = [sigE; iSigE];
+end
+
+for i = 22 : 89
+    iSigL = Data(i).responseOnset.colorCoh(2).goTarg.sdfMean(Data(i).responseOnset.colorCoh(2).goTarg.alignTime + [-200 : 200]);
+    sigL = [sigL; iSigL];
+end
+
+sigEM = nanmean(sigE, 1);
+sigLM = nanmean(sigL, 1);
+
+[maxE, iE] = max(sigEM);
+[maxL, iL] = max(sigLM);
+
+sigEM = sigEM/maxE;
+sigLM = sigLM/maxL;
+[acor, lag] = xcorr(sigEM', sigLM')
+
+%%
+
+figure(1), axis equal, axis off
+
+A = [size(classic, 1) size(cancel, 1) size(ddm, 1)];
+I = [size(classicCancel, 1) size(classicDdm, 1) size(classicDdmCancel, 1) size(classicDdmCancel, 1)];
+venn(A,I,'FaceColor',{'r','y','b'},'FaceAlpha',{.5,0.6,0.2},'EdgeColor','black')
+
+%%
+  %Compare ErrMinModes
+  A = [350 300 275]; I = [100 80 60 40];
+  figure
+  subplot(1,3,1), h1 = venn(A,I,'ErrMinMode','None');
+  axis image,  title ('No 3-Circle Error Minimization')
+  subplot(1,3,2), h2 = venn(A,I,'ErrMinMode','TotalError');
+  axis image,  title ('Total Error Mode')
+  subplot(1,3,3), h3 = venn(A,I,'ErrMinMode','ChowRodgers');
+  axis image, title ('Chow-Rodgers Mode')
+  set([h1 h2], 'FaceAlpha', 0.6)
+
+    %Using the same areas as above, display the error optimization at each 
+%   iteration. Get the output structure.
+  F = struct('Display', 'iter');
+  [H,S] = venn(A,I,F,'ErrMinMode','ChowRodgers','FaceAlpha', 0.6);
+
+  %Now label each zone 
+  for i = 1:7
+      text(S.ZoneCentroid(i,1), S.ZoneCentroid(i,2), ['Zone ' num2str(i)])
+  end

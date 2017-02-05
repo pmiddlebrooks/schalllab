@@ -478,57 +478,8 @@ for i = 9 : length(sessionArray)
 end
 
 
-%%
-dataDir = '/Volumes/SchallLab/data/Broca';
-d = dir(dataDir);
-for i = 1240 : size(d, 1)
-    if regexp(d(i).name, '.*n01.plx')
-        disp(d(i).name(1:end-4))
-        plexon_translate_datafile_mac('broca',d(i).name(1:end-4));
-    end
-end
 
 
-
-
-
-
-
-
-
-
-
-%% Translate all joules ccm sessions (except neural ones, already done)
-subject = 'joule';
-
-projectDate = '2016-08-12';
-projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/perceptualchoice_stop_spikes_population';
-
-dataPath = fullfile(projectRoot,'data',projectDate,subject);
-
-
-% Open the sessions file and makes lists of the entries
-fid=  fopen(fullfile(dataPath,['ccm_sessions_',subject,'.csv']));
-
-
-nCol = 5;
-formatSpec = '%s';
-mHeader = textscan(fid, formatSpec, nCol, 'Delimiter', ',');
-
-mData = textscan(fid, '%s %s %d %d %d', 'Delimiter', ',','TreatAsEmpty',{'NA','na'});
-
-sessionList     = mData{1};
-
-Opt.whichData   = 'behavior';
-Opt.saveFile    = true;
-for i = 48 : size(sessionList, 1)
-    i
-    session = sessionList{i};
-    if ~ismember(session, {'jp054n02', 'jp060n02', 'jp061n02'})
-        disp(session)
-        plexon_translate_datafile_mac('joule',session, Opt);
-    end
-end
 
 %% print joule's session behavior for each ccm session
 subject = 'joule';
@@ -556,24 +507,6 @@ for i = 70 : length(sessionList)
     data = ccm_session_behavior(subject, sessionList{i});
     clear data
 end
-
-%% run ccm_classify_neuron_pop for joule, fresh
-
-projectDate = '2016-08-12';
-projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/perceptualchoice_stop_spikes_population';
-
-addpath(genpath(fullfile(projectRoot,'src/code',projectDate)));
-
-subject = 'joule';
-
-append = false;
-ccm_classify_neuron_pop(subject,projectRoot,projectDate,append)
-%% run ccm_classify_neuron_pop for broca, fresh
-
-subject = 'broca';
-
-append = false;
-ccm_classify_neuron_pop(subject,projectRoot,projectDate,append)
 
 %% print broca's session behavior for each ccm session
 subject = 'broca';
@@ -807,15 +740,6 @@ for i = 1 : length(channelType)
     
     fprintf('%d channel:\t %d sessions\t Mean single/multi unit per channel: %.1f\n', channelType(i), electrode(i), meanSignal(i))
 end
-%%
-Opt.whichData = 'behavior';
-subject = 'joule';
-sessionArray = {...
-    'jp077n03'};
-for i = 1 : length(sessionArray)
-    plexon_translate_datafile_mac(subject, sessionArray{i}, Opt);
-end
-
 %%
 cEpoch = 'presacc';
 presaccSessions = c(c.(cEpoch) & ~dg.ddm, :);
@@ -1200,30 +1124,6 @@ for i = 1 : length(categoryList)
     ccm_population_neuron_plot(subject,projectRoot,projectDate,opt)
 end
 
-%%
-
-ccm_classify_neuron_pop(subject,projectRoot,projectDate, append)
-ccm_neuron_stop_vs_go_pop(subject,projectRoot,projectDate, append)
-
-
-%%
-dataPath = fullfile(projectRoot,'data',projectDate,subject);
-original = load(fullfile(dataPath, 'ccm_neuronTypes'));
-
-sessionID = original.neuronTypes.sessionID;
-unit = original.neuronTypes.unit;
-rf = original.neuronTypes.rf;
-
-starInd = find(strcmp(sessionID, 'bp244n02'), 1);
-% Loop through the sessions and add the data to the table.
-% poolID = parpool(4);
-for i = starInd : size(original.neuronTypes, 1)
-    iUnit = [sessionID(i), unit(i)];
-    iData               = ccm_session_data(subject, iUnit);
-end
-% delete(poolID)
-
-
 
 
 %%  Compile a list of known duplicate units to
@@ -1243,12 +1143,6 @@ duplicates.Unit = {...
 
 save(fullfile(dataPath, 'ccm_duplicate_neurons'), 'duplicates')
 
-%%
-sessionList = number.session(number.channels == 32);
-for i = 2 : length(sessionList)
-    [Data, Opt] = ccm_session_data_pop('broca',sessionList{i});
-    ccm_session_data_plot_pop(Data, Opt);
-end
 %% comparing cmd and ccm SSRTs
 subject = 'joule';
 fid=  fopen(fullfile(local_data_path,subject,['cmd_sessions_',subject,'.csv']));
@@ -1419,7 +1313,7 @@ cellfun(@(x,y) plot(x,y, '-', 'color', cmdColor, 'linewidth', 2), cmdInhX, cmdIn
 print(figureHandle,fullfile(local_figure_path, [subject, '_ssrt']),'-depsc', '-r300')
 
 
-%%
+%%  Transform tables to variables in save files
 subject = 'joule';
 % dataDir = '/Volumes/SchallLab/data/Joule';
 dataDir = ['/Volumes/SchallLab/data/', subject];
@@ -1442,7 +1336,7 @@ for i = 360 : size(d, 1)
         disp(toc)
     end
 end
-%%
+%%  Transform tables to variables in save files
 subject = 'broca';
 % dataDir = '/Volumes/SchallLab/data/Joule';
 dataDir = ['/Volumes/SchallLab/data/', subject];
@@ -1471,18 +1365,34 @@ for i = 1405 : size(d, 1)
     end
 end
 
-%%
+%%  Transform tables to variables in save files
 subject = 'xena';
-localPath = fullfile('~/matlab/local_data',subject);
-% pathDir =  dir(localPath);
-
-% delete([localPath, '*spikeUnit*'], [localPath, '*behavior.mat'])
-delete([localPath, '/*_spikeUnit*'], [localPath, '/*_behavior.mat'])
-% for i = 1 : size(pathDir, 1);
-%     if regexp(pathDir(i), '.*spikeUnit.*') || regexp(pathDir(i), '.*behavior.mat')
-%
-%     end
-% end
+% dataDir = '/Volumes/SchallLab/data/Joule';
+dataDir = ['/Volumes/SchallLab/data/', subject, '/Plexon/'];
+d = dir(dataDir);
+for i = 1 : size(d, 1)
+    if ~isempty(regexp(d(i).name, 'xp.*mat', 'once')) && isempty(regexp(d(i).name, 'xp.*_legacy.mat', 'once'))
+        tic
+        disp(i)
+        disp(d(i).name(1:end-4))
+        
+        load(fullfile(dataDir, d(i).name))
+        if exist('trialData', 'var')
+            switch class(trialData)
+                case 'dataset'
+                    trialData = dataset2struct(trialData, 'AsScalar',true);
+                case 'table'
+                    trialData = table2struct(trialData, 'ToScalar',true);
+            end
+            trialData.SessionData = SessionData;
+            
+            save(fullfile(dataDir, d(i).name), '-struct', 'trialData','-v7.3')
+            save(fullfile(local_data_path, subject, d(i).name), '-struct', 'trialData','-v7.3')
+            clear trialData SessionData
+        end
+        disp(toc)
+    end
+end
 
 
 
