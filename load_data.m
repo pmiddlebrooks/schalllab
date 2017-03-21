@@ -1,9 +1,13 @@
-function [trialData, SessionData, ExtraVariable] = load_data(subjectID, sessionID, variables)
+function [trialData, SessionData, ExtraVariable] = load_data(subjectID, sessionID, variables, multiUnit)
 % function [trialData, SessionData] = load_data(subjectID, sessionID)
 %
 % Loads a data file and does some minimal processing common to lots of
 % analyses
 %
+
+if nargin < 4
+    multiUnit = false;
+end
 
 
 ExtraVariable = struct();
@@ -36,10 +40,13 @@ end
 SessionData = trialData.SessionData;
 trialData = rmfield(trialData, 'SessionData');
 
-% if isa(trialData, 'dataset')
-%     trialData = dataset2table(trialData);
-% end
-
+if multiUnit
+    if ismember('spikeData', variables)
+    [SessionData.spikeUnitArray, trialData.spikeData] = convert_to_multiunit(SessionData.spikeUnitArray, trialData.spikeData);
+    else
+    [SessionData.spikeUnitArray, ~] = convert_to_multiunit(SessionData.spikeUnitArray);
+    end
+end
 
 if isfield(SessionData, 'taskID')
     task = SessionData.taskID;
@@ -103,7 +110,16 @@ if strcmp(task, 'ccm') || strcmp(task, 'cmd')
 end
 
 
-
+% Some of Xena's early sessions, the TEMPO code was outputing the wrong
+% targ1CheckerProp if it was supposed to be .53 (it was outputing .52 due
+% to how I set up the TEMPO code to calculate it). Fix that here
+switch subjectID
+    case 'xena'
+        if ismember(.52, trialData.targ1CheckerProp) && ismember(.47, trialData.targ1CheckerProp)
+            trialData.targ1CheckerProp(trialData.targ1CheckerProp == .52) = .53;
+        end
+    otherwise
+end
 
 
 if ~strcmp(task, 'maskbet')

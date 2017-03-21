@@ -140,9 +140,9 @@ for kTarg = 1 : nTargPair
     
     
     if plotFlag
-        figureHandle = figureHandle + 1;
+%         figureHandle = figureHandle + 1;
         nRow = 3;
-        nColumn = 3;
+        nColumn = 4;
         screenOrSave = 'save';
         if printPlot
             [axisWidth, axisHeight, xAxesPosition, yAxesPosition] = standard_landscape(nRow, nColumn, figureHandle);
@@ -172,7 +172,7 @@ for kTarg = 1 : nTargPair
         ax(pRightvRT) = axes('units', 'centimeters', 'position', [xAxesPosition(2, 2) yAxesPosition(2, 2) axisWidth axisHeight]);
         cla
         hold(ax(pRightvRT), 'on')
-        % Target RTs - Distractor RTs for go and stop trials
+         % Target RTs - Distractor RTs for go and stop trials
         %     ax(targDistRT) = axes('units', 'centimeters', 'position', [xAxesPosition(3, 2) yAxesPosition(3, 2) axisWidth axisHeight]);
         %     hold(ax(targDistRT), 'on')
     end
@@ -192,6 +192,9 @@ for kTarg = 1 : nTargPair
     go50TargLeftRT      = cell(1);
     go50DistRightRT     = cell(1);
     go50DistLeftRT      = cell(1);
+    nGoTrial            = nan(1, length(pSignalArray));
+    nNonCancelTrial     = nan(1, length(pSignalArray));
+    nCancelTrial        = nan(1, length(pSignalArray));
     
     if ~isempty(ssdArray) && options.doStops
         stopTargRT = cell(length(ssdArray), length(pSignalArray));
@@ -252,7 +255,7 @@ for kTarg = 1 : nTargPair
             
             goTargRT{iPropIndex}  = allRT(iGoTargTrial);
             goDistRT{iPropIndex}  = allRT(iGoDistTrial);
-            
+            nGoTrial(iPropIndex)  = length(iGoTargTrial) + length(iGoDistTrial);
         elseif iPct == 50
             optSelect.targDir   	= rightTargArray(kTarg);
             optSelect.outcome     = {'goCorrectTarget', 'targetHoldAbort'};
@@ -342,7 +345,7 @@ for kTarg = 1 : nTargPair
                 end
             end
             
-            
+       
             %         oddData = find(isnan(cell2mat(trialData.saccadeToTargetIndex)) & iStopTargIndices & ismember(cell2mat(trialData.targ1CheckerProp), pSignalArray));
             %         if oddData
             %             fprintf('%d trials to target %d are listed as Incorrect Stops but don''t have valid saccades to target:\n', length(oddData), iTarget)
@@ -562,7 +565,7 @@ for kTarg = 1 : nTargPair
         set(ax(pRightvRT), 'xtickLabel', pSignalArray*100)
         set(get(ax(pRightvRT), 'ylabel'), 'String', 'RT')
         set(ax(pRightvRT),'XLim',[pSignalArray(1) - choicePlotXMargin pSignalArray(end) + choicePlotXMargin])
-        set(ax(pRightvRT),'YLim',[min([goLeftToTargMean, goRightToTargMean, goLeftToDistMean, goRightToDistMean]) - 50, max([goLeftToTargMean, goRightToTargMean, goLeftToDistMean, goRightToDistMean]) + 25])
+        set(ax(pRightvRT),'YLim',[min([goLeftToTargMean, goRightToTargMean, goLeftToDistMean, goRightToDistMean]) - 100, max([goLeftToTargMean, goRightToTargMean, goLeftToDistMean, goRightToDistMean]) + 25])
         %               set(ax(pRightvRT),'YLim',[200 600])
         plot(ax(pRightvRT), [.5 .5], ylim, '--k')
         

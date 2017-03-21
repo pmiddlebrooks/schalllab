@@ -11,10 +11,10 @@ cmWidth = 27.9;
 sumFig = figure(figureHandle);
 
 
-interSpaceX = .5;
+interSpaceX = .8;
 % interSpaceX = 1.3;
 interSpaceY = 1.5;
-interSpaceY = .5;
+interSpaceY = .8;
 leftRightMargin = 1.5;
 topBottomMargin = 1.5;
 

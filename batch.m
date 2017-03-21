@@ -1318,7 +1318,7 @@ subject = 'joule';
 % dataDir = '/Volumes/SchallLab/data/Joule';
 dataDir = ['/Volumes/SchallLab/data/', subject];
 d = dir(dataDir);
-for i = 360 : size(d, 1)
+for i = 1 : size(d, 1)
     if regexp(d(i).name, 'jp.*mat')
         tic
         

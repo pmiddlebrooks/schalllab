@@ -3,13 +3,28 @@ function rf = ccm_find_saccade_rf(Data)
 % function rf = find_saccade_rf(Data);
 %
 
-% analyses windows relative to their aligned event
+% if length(Data.pSignalArray) > 2
+%     error('You need to collapse across color coherences on each side to caculate RF. Use options.collapseSignal=true when calling ccm_session_data.m')
+% end
+%     % analyses windows relative to their aligned event
 preTargWindow       = -299 : -1;
 postCheckerWindow   = 50 : 150;
 preSaccWindow       = -49 : 0;
 
 
-
+% if length(Data.pSignalArray) > 2
+%                 opt                 = ccm_options; % Get default options structure
+%                 
+%                 opt.epochName       = 'responseOnset';
+%                 opt.eventMarkName   = markEvent;
+%                 opt.conditionArray  = {'goTarg'};
+%                 opt.ssdArray        = [];
+%                 opt.colorCohArray   = Data.pSignalArray(Data.pSignalArray < .5);
+%                 DataLeft      = ccm_concat_neural_conditions(Data, opt);
+% 
+%                 opt.colorCohArray   = Data.pSignalArray(Data.pSignalArray > .5);
+%                 DataRight      = ccm_concat_neural_conditions(Data, opt);
+% else
 rf = 'none'; % Default is no RF
 
 leftFixAlign        = Data.targOn.colorCoh(1).goTarg.alignTime;
@@ -26,6 +41,7 @@ rightCheckerRate 	= nansum(Data.checkerOn.colorCoh(end).goTarg.raster(:,rightChe
 leftSaccRate        = nansum(Data.responseOnset.colorCoh(1).goTarg.raster(:,leftSaccAlign + preSaccWindow), 2)  .* 1000 ./ length(preSaccWindow);
 rightSaccRate       = nansum(Data.responseOnset.colorCoh(end).goTarg.raster(:,rightSaccAlign + preSaccWindow), 2)  .* 1000 ./ length(preSaccWindow);
 
+% end
 
 % Is there leftward presaccadic activity?
 leftRF = false; % default is no

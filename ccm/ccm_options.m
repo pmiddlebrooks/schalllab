@@ -60,8 +60,8 @@ function Opt = ccm_options
 %     Opt.responseDir  = the angle of target to which a response was made
 %           {'collapse','none' (for stopStop trials),'left','right','up','down','upLeft','upRight',downLeft','downRight'<list of possible angels, e.g. [45 -45]
 
-Opt.dataType = 'neuron';
-
+Opt.dataType            = 'neuron';
+Opt.multiUnit           = false;
 Opt.trialData           = [];
 Opt.howProcess        = 'each';%'print';
 Opt.unitArray        = [];
@@ -90,7 +90,7 @@ Opt.ssd                 = 'any';
 Opt.allowRtPreSsd     = true;
 Opt.targDir             = 'collapse';
 Opt.responseDir    = {'collapse'}; % {'left', 'right'};
-Opt.ssrt                 = [];
+Opt.ssrt                 = 'intWeightPerSession';
 
 
 Opt.include50           = false; % include 50% color coherence conditions?

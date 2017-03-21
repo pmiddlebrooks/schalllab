@@ -104,11 +104,10 @@ for i = 1 : length(ssd)
   % 1. pNoncanceled doesn't exists (isnan)
   % 2. pNoncanceled is zero and the next SSD's pNoncanceled is also zero
   % 3. pnoncanceled is one and the previous SSD's pNoncanceled is also 1
+%             iPResp == 0 || ...
   if isnan(iPResp) || ...
-            iPResp == 0 || ...
       (i < length(ssd) && iPResp == 0 && pRespond(i+1) == 0) || ...
-      (i > 1 && iPResp == 1 && pRespond(i-1) == 11 && pRespond(i-2) == 1)
-    % ssrtEach(i) = nan
+      (i > 1 && iPResp == 1 && pRespond(i-1) == 1)
   else
     indexRT     = find(p_goRT >= iPResp,1);   %match estimated p(noncan|SSD) to p(RT)
     ssrtEach(i) = goRT(indexRT) - iSSD; %this is the SSRT by the method of integration

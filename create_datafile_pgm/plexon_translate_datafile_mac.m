@@ -19,6 +19,7 @@ cd ~/schalllab/create_datafile_pgm/
 tic
 if nargin < 3
     Opt.whichData   = 'all';
+    Opt.hemisphere = [];
     Opt.saveFile    = true;
     Opt.LFP_CHANNELS = 1:32;
     Opt.EEG_CHANNELS = [];
@@ -28,7 +29,7 @@ if nargin < 3
         return
     end
 end
-
+hemisphere = Opt.hemisphere;
 %__________________________________________________________________________
 %                            CONSTANTS
 %__________________________________________________________________________
@@ -55,8 +56,10 @@ nError = 0;
 
 switch Opt.whichData
     case {'all','lfp','eeg','spike'}
+        if isempty(Opt.hemisphere)
         prompt = 'Which hemisphere was recorded (right, left, both, none)? ';
         hemisphere = input(prompt, 's');
+        end
         if strcmp(hemisphere, 'none')
             LFP_CHANNELS = [];
             EEG_CHANNELS = [];
@@ -1184,14 +1187,15 @@ end
 adValues    = double(plx.ContinuousChannels(xChannel).Values);
 lastTime   = size(adValues, 1);
 notLastTrial = 1;
+trialData = struct2table(trialData);
 while notLastTrial
-    if lastTime < trialData.trialOnset(end)
+    if lastTime < firstTrialStart + trialData.trialOnset(end) + trialData.trialDuration(end)
         trialData(end,:) = [];
     else
         notLastTrial = 0;
     end
 end
-
+trialData = table2struct(trialData, 'ToScalar', true);
 
 nTrial = size(trialData.trialOutcome, 1);
 taskID = SessionData.taskID;
@@ -1416,8 +1420,8 @@ end
 %__________________________________________________________________________
 trialData.SessionData = SessionData;
 
-%     saveFileName = [tebaDataPath, sessionID];
-%     save(saveFileName, 'trialData','-v7.3')
+    saveFileName = [tebaDataPath, sessionID];
+    save(saveFileName, '-struct', 'trialData','-v7.3')
 % 
             save(fullfile(local_data_path, monkey, sessionID), '-struct', 'trialData','-v7.3')
 

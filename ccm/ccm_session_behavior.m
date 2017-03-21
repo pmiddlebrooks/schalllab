@@ -7,6 +7,7 @@ if nargin < 3
     options.collapseTarg        = false;
     options.include50           = false;
     options.doStops             = true;
+    options.USE_TWO_COLORS      = false;
     
     options.plotFlag            = true;
     options.printPlot           = true;
@@ -23,7 +24,7 @@ printPlot = options.printPlot;
 collapseTarg = options.collapseTarg;
 
 % specifiy minimal variables to load:
-variables = ccm_min_vars;
+variables = [ccm_min_vars, 'trialOnset', 'trialDuration','rewardDuration'];
 
 
 % Load the data
@@ -39,16 +40,28 @@ if ~strcmp(SD.taskID, 'ccm')
 end
 
 
-clf
+figureHandle = 9239;
+    if plotFlag
+%         figureHandle = figureHandle + 1;
+        nRow = 3;
+        nColumn = 4;
+        screenOrSave = 'save';
+        if printPlot
+            [axisWidth, axisHeight, xAxesPosition, yAxesPosition] = standard_landscape(nRow, nColumn, figureHandle);
+        else
+            [axisWidth, axisHeight, xAxesPosition, yAxesPosition] = screen_figure(nRow, nColumn, figureHandle);
+        end
+        
+    end
 
 
 % axes names
 pRightVsPCorrect = 7;
+rewardRateMA = 7;
 
 
 
 
-figureHandle = 9239;
 
 
 
@@ -76,6 +89,8 @@ if options.doStops
     optInh.printPlot        = printPlot;
     optInh.plotFlag         = plotFlag;
     optInh.figureHandle     = figureHandle;
+    optInh.USE_TWO_COLORS      = options.USE_TWO_COLORS;
+
     dataInh                 = ccm_inhibition(subjectID, sessionID, optInh);
     
     stopRespondProb     = dataInh.stopRespondProb;
@@ -98,6 +113,52 @@ if options.doStops
     ssrtCollapseMean                    = dataInh.ssrtCollapseMean;
     
 end
+
+
+
+
+
+
+
+
+
+
+% % ***********************************************************************
+% Reward Rate during the session
+% % ***********************************************************************
+sessionDuration = floor((trialData.trialOnset(end) + trialData.trialDuration(end)) / 1000/60);
+rewardRate = nan(sessionDuration, 1);
+
+rewardDuration = cellfun(@sum, trialData.rewardDuration);
+
+maMinute = 5;
+
+for i = maMinute : sessionDuration
+    iMsBegin = (i - maMinute) * 60000;
+earliestTrial = find(trialData.trialOnset >= iMsBegin, 1);
+    iMsEnd = i * 60000;
+latestTrial = find(trialData.trialOnset + trialData.trialDuration <= iMsEnd, 1, 'last');
+
+rewardRate(i) = sum(rewardDuration(earliestTrial : latestTrial)) / maMinute;
+
+end
+
+if plotFlag
+    % p(rightward response) vs p(correct choice)
+    ax(rewardRateMA) = axes('units', 'centimeters', 'position', [xAxesPosition(3,1) yAxesPosition(3,1) axisWidth axisHeight]);
+    hold(ax(rewardRateMA), 'on')
+    plot(ax(rewardRateMA), rewardRate, 'color', 'k', 'linewidth', 2)
+
+%     set(ax(rewardRateMA), 'xtick', pSignalArray)
+%     set(ax(rewardRateMA), 'xtickLabel', pSignalArray*100)
+    set(get(ax(rewardRateMA), 'ylabel'), 'String', 'Reward (ms/min')
+    xlim(ax(rewardRateMA), [0 length(rewardRate)])
+    set(get(ax(rewardRateMA), 'xlabel'), 'String', 'Minutes')
+
+end % plotFlag
+
+
+
 
 
 
@@ -207,6 +268,7 @@ goTargetProb(isnan(goTargetProb)) = 1;
 
 
 
+
 % ***********************************************************************
 % Psychometric Function: Proportion(Red Checker) vs Probability(go Right)
 % ***********************************************************************
@@ -215,6 +277,7 @@ optPsy = ccm_psychometric;
 optPsy.collapseTarg = collapseTarg;
 optPsy.printPlot = printPlot;
 optPsy.doStops = options.doStops;
+optPsy.USE_TWO_COLORS = options.USE_TWO_COLORS;
 
 optPsy.plotFlag    = plotFlag;
 optPsy.figureHandle    = figureHandle;
@@ -258,6 +321,8 @@ optChr.printPlot = printPlot;
 optChr.plotFlag    = plotFlag;
 optChr.figureHandle    = figureHandle;
 optChr.doStops = options.doStops;
+optChr.USE_TWO_COLORS = options.USE_TWO_COLORS;
+
 dataChron = ccm_chronometric(subjectID, sessionID, optChr);
 
 pSignalArrayLeft 	= dataChron.pSignalArrayLeft;
@@ -329,9 +394,12 @@ for i = 1 : size(dataChron, 1)
 end
 
 
+      h=axes('Position', [0 0 1 1], 'Visible', 'Off');
+      titleString = sprintf('\n\n%s \t %s', subjectID,sessionID);
+      text(0.5,1, titleString, 'HorizontalAlignment','Center', 'VerticalAlignment','Top')
 
 if printPlot && plotFlag   
-    print(figureHandle+1,fullfile(local_figure_path, subjectID, '_ccm_behavior.pdf'),'-dpdf', '-r300')
+    print(figureHandle,fullfile(local_figure_path, subjectID, [sessionID,'_ccm_behavior.pdf']),'-dpdf', '-r300')
 end
 % delete(localDataFile);
 

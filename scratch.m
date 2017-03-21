@@ -21,7 +21,7 @@ tebaPath = '/Volumes/SchallLab/data/';
 
 
 for i = 1 : length(session)
-    [~, SessionData] = load_data(subject, session{i});
+    [~, SessionData] = (subject, session{i});
     
     SessionData.hemisphere = 'left';
     
@@ -197,21 +197,21 @@ sdf = [];
 epochWindow = [-199:400];
 normWindow = [-299:0];
 for kUnit = unitIndex
-alignListTarg = trialData.targOn(iGoTrial);
+    alignListTarg = trialData.targOn(iGoTrial);
     [alignedRasters, ~] = spike_to_raster(trialData.spikeData(iGoTrial, kUnit), alignListTarg);
     iSdfTarg = nanmean(spike_density_function(alignedRasters, Kernel));
     iNormTarg = max(iSdfTarg);
-
- alignListSacc = trialData.responseOnset(iGoTrial);
+    
+    alignListSacc = trialData.responseOnset(iGoTrial);
     [alignedRasters, ~] = spike_to_raster(trialData.spikeData(iGoTrial, kUnit), alignListSacc);
     iSdfSacc = nanmean(spike_density_function(alignedRasters, Kernel));
     iNormSacc = max(iSdfSacc);
-
+    
     alignListChecker = trialData.targOn(iGoTrial);
     [alignedRasters, ~] = spike_to_raster(trialData.spikeData(iGoTrial, kUnit), alignListChecker);
     iSdfChecker = nanmean(spike_density_function(alignedRasters, Kernel));
     iNormChecker = max(iSdfChecker);
-
+    
     iNorm = max([iNormTarg, iNormSacc, iNormChecker]);
     
     [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(iGoTrial, kUnit), alignListGo);
@@ -300,10 +300,10 @@ spikeRate       = nan(size(trialData.trialOutcome, 1), nUnit);
 
 % Loop through each unit and get the spike rates
 for kUnit = 1 : nUnit
-[alignedRasters, alignmentIndex]    = spike_to_raster(trialData.spikeData(:, kUnit), alignList);
-epochRasters                        = alignedRasters(:, alignmentIndex + epoch);
-kSpikeRate                          = sum(epochRasters,2) ./ (length(epoch) / 1000);  % in spikes per second (1000 = ms to sec conversion)
-spikeRate(:, kUnit)                 = kSpikeRate;
+    [alignedRasters, alignmentIndex]    = spike_to_raster(trialData.spikeData(:, kUnit), alignList);
+    epochRasters                        = alignedRasters(:, alignmentIndex + epoch);
+    kSpikeRate                          = sum(epochRasters,2) ./ (length(epoch) / 1000);  % in spikes per second (1000 = ms to sec conversion)
+    spikeRate(:, kUnit)                 = kSpikeRate;
 end
 
 
@@ -326,13 +326,13 @@ sessionID = {'bp095n04'};
 unit = {'spikeUnit17b'};
 iUnit = [sessionID, unit];
 %%
-    iData               = ccm_session_data(subject, iUnit);
-    
-    iCat              	= ccm_classify_neuron(iData);
-    %%
-        for iVar = 1 : length(variables)
-        trialData.(variables{iVar}) = [];
-    end
+iData               = ccm_session_data(subject, iUnit);
+
+iCat              	= ccm_classify_neuron(iData);
+%%
+for iVar = 1 : length(variables)
+    trialData.(variables{iVar}) = [];
+end
 
 %%
 tic
@@ -359,7 +359,7 @@ variables = {...
     'rt',...
     'ssd',...
     'targAngle',...
-};  
+    };
 % variables = [variables, {'spikeData'}];
 td = load('~/schalllab/scratch/jp113n02', variables{:});
 toc
@@ -398,23 +398,362 @@ I = [size(classicCancel, 1) size(classicDdm, 1) size(classicDdmCancel, 1) size(c
 venn(A,I,'FaceColor',{'r','y','b'},'FaceAlpha',{.5,0.6,0.2},'EdgeColor','black')
 
 %%
-  %Compare ErrMinModes
-  A = [350 300 275]; I = [100 80 60 40];
-  figure
-  subplot(1,3,1), h1 = venn(A,I,'ErrMinMode','None');
-  axis image,  title ('No 3-Circle Error Minimization')
-  subplot(1,3,2), h2 = venn(A,I,'ErrMinMode','TotalError');
-  axis image,  title ('Total Error Mode')
-  subplot(1,3,3), h3 = venn(A,I,'ErrMinMode','ChowRodgers');
-  axis image, title ('Chow-Rodgers Mode')
-  set([h1 h2], 'FaceAlpha', 0.6)
+%Compare ErrMinModes
+A = [350 300 275]; I = [100 80 60 40];
+figure
+subplot(1,3,1), h1 = venn(A,I,'ErrMinMode','None');
+axis image,  title ('No 3-Circle Error Minimization')
+subplot(1,3,2), h2 = venn(A,I,'ErrMinMode','TotalError');
+axis image,  title ('Total Error Mode')
+subplot(1,3,3), h3 = venn(A,I,'ErrMinMode','ChowRodgers');
+axis image, title ('Chow-Rodgers Mode')
+set([h1 h2], 'FaceAlpha', 0.6)
 
-    %Using the same areas as above, display the error optimization at each 
+%Using the same areas as above, display the error optimization at each
 %   iteration. Get the output structure.
-  F = struct('Display', 'iter');
-  [H,S] = venn(A,I,F,'ErrMinMode','ChowRodgers','FaceAlpha', 0.6);
+F = struct('Display', 'iter');
+[H,S] = venn(A,I,F,'ErrMinMode','ChowRodgers','FaceAlpha', 0.6);
 
-  %Now label each zone 
-  for i = 1:7
-      text(S.ZoneCentroid(i,1), S.ZoneCentroid(i,2), ['Zone ' num2str(i)])
-  end
+%Now label each zone
+for i = 1:7
+    text(S.ZoneCentroid(i,1), S.ZoneCentroid(i,2), ['Zone ' num2str(i)])
+end
+
+
+
+
+%%
+subject = 'broca';
+sessionSet = 'behavior1';
+sessionList = task_session_array(subject, 'ccm',sessionSet);
+
+% subject = 'joule';
+% sessionList = unique(neuronTypes.sessionID);
+% deleteSession = {'jp054n02', 'jp060n02', 'jp061n02'};
+% sessionList(ismember(sessionList, deleteSession)) = [];
+
+
+for i = 1 : length(sessionList)
+    fprintf('\n\n\n\n%s\n\n\n\n', sessionList{i});
+    %     [td s] = load_data(subject, sessionList{i}, ccm_min_vars);
+    data = ccm_session_behavior(subject, sessionList{i});
+    data = ccm_inhibition_rt(subject, sessionList{i}, opt);
+end
+
+%%
+
+[td s] = load_data('joule', 'jp113n02',[ccm_min_vars, 'trialOnset', 'trialDuration','rewardDuration']);
+%%
+sessionDuration = floor((td.trialOnset(end) + td.trialDuration(end)) / 1000/60);
+rewardRate = nan(sessionDuration, 1);
+
+rewardDuration = cellfun(@sum, td.rewardDuration);
+
+maMinute = 5;
+maWindow = maMinute * 60 * 1000;
+
+for i = maMinute : sessionDuration
+    iMsBegin = (i - maMinute) * 60000;
+    earliestTrial = find(td.trialOnset >= iMsBegin, 1);
+    iMsEnd = i * 60000;
+    latestTrial = find(td.trialOnset + td.trialDuration <= iMsEnd, 1, 'last');
+    
+    rewardRate(i) = sum(rewardDuration(earliestTrial : latestTrial)) / maMinute;
+    
+end
+
+
+%%
+subject = 'xena';
+sessionList = task_session_array(subject, 'ccm','behavior1');
+
+tOpt = plexon_translate_datafile_mac;
+tOpt.whichData = 'behavior';
+
+for i = 1 : length(sessionList)
+    plexon_translate_datafile_mac('xena', sessionList{i},tOpt);
+end
+
+%%
+target = 7000;
+pricePerCustomer = 250;
+nCustomerPerOptin = .08;
+nOptinPerDay = 5;
+nDays = 21;
+
+revenue = pricePerCustomer * nCustomerPerOptin * nOptinPerDay * nDays;
+% cost = spendPerDay * nDays;
+
+spendPerDay = (target - revenue) / nDays
+%%
+spendPerDay = 14;
+cost = spendPerDay * nDays;
+
+
+%%
+subject = 'broca';
+sessionSet = {'bp121n04', 'bp100n01', 'bp092n02', 'bp228n02'};
+
+opt = ccm_options;
+opt.printFlag = 1;
+
+for i = 1 : length(sessionSet)
+    fprintf('\n\n\n\n%s\n\n\n\n', sessionSet{i});
+    %     [td s] = load_data(subject, sessionList{i}, ccm_min_vars);
+    data = ccm_session_behavior(subject, sessionSet{i});
+    data = ccm_inhibition_rt(subject, sessionSet{i}, opt);
+end
+
+subject = 'joule';
+sessionSet = {'jp114n04', 'jp106n02', 'jp104n02', 'jp083n02', 'jp110n02', 'jp125n04'};
+
+opt = ccm_options;
+opt.printFlag = 1;
+
+for i = 1 : length(sessionSet)
+    fprintf('\n\n\n\n%s\n\n\n\n', sessionSet{i});
+    %     [td s] = load_data(subject, sessionList{i}, ccm_min_vars);
+    data = ccm_session_behavior(subject, sessionSet{i});
+    data = ccm_inhibition_rt(subject, sessionSet{i}, opt);
+end
+
+
+%%
+%%matlab
+
+subject = 'joule';
+
+projectDate = '2017-01-11';
+projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/perceptualchoice_stop_spikes_population';
+
+addpath(genpath(fullfile(projectRoot,'src/code',projectDate)));
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+
+categoryList = {'presacc','presaccNoVis','presaccRamp','visPresacc'};
+categoryList = {'presacc'};
+
+for i = 1 : length(categoryList)
+    
+    load(fullfile(dataPath, ['ccm_',categoryList{i},'_neurons']))
+    
+    % load the population of cancel time anlysis
+    load(fullfile(dataPath, ['ccm_canceled_vs_go_neuronTypes']))
+    
+    % Build a new table of the relevant neurons, and a list of the session/Unit
+    cancelData = table();
+    for i = 1 : size(neurons, 1)
+        % find the indices in cancelTypes that correspond to this unit
+        iInd = strcmp(neurons.sessionID(i), cancelTypes.sessionID) & strcmp(neurons.unit(i), cancelTypes.unit);
+        cancelData = [cancelData; cancelTypes(iInd,:)];
+        
+        
+    end
+end
+
+
+%%
+subject = 'joule';
+sessionList = memList;
+
+tOpt = plexon_translate_datafile_mac;
+tOpt.hemisphere = 'left';
+
+for i = 1 : length(sessionList)
+    plexon_translate_datafile_mac(subject, sessionList{i},tOpt);
+end
+
+
+%%
+subject = 'broca';
+sessionSet = {'bp178n02'};
+sessionSet = {'bp228n02'};
+
+opt = ccm_options;
+opt.printFlag = 1;
+
+for i = 1 : length(sessionSet)
+    fprintf('\n\n\n\n%s\n\n\n\n', sessionSet{i});
+    %     [td s] = load_data(subject, sessionList{i}, ccm_min_vars);
+    data = ccm_session_behavior(subject, sessionSet{i});
+    %     data = ccm_inhibition_rt(subject, sessionSet{i}, opt);
+end
+%%  CREATING PLOTS FOR SSRT ANALYSES
+
+subject = 'broca';
+sessionSet = 'behavior2';
+% sessionList = task_session_array(subject, 'ccm',sessionSet);
+sessionList = 'bp178n02';
+sessionList = 'bp183n02';
+% sessionList = 'bp228n02';
+
+opt = ccm_options;
+opt.plotFlag = 1;
+opt.printPlot = 1;
+
+% for i = 1 : length(sessionList)
+%     fprintf('\n\n\n\n%s\n\n\n\n', sessionList{i});
+% data = ccm_inhibition(subject, sessionList, opt);
+
+% weibullParams = cell2mat(data.weibullParams);
+
+data = ccm_inhibition_rt(subject, sessionList, opt);
+
+
+%% matlab
+subject = 'broca';
+
+projectDate = '2017-01-11';
+accreRoot = '/gpfs22';
+accreHome = '/home/middlepg';
+accreScratch = '/scratch/middlepg';
+if isdir(fullfile(accreScratch))
+    matRoot = fullfile(accreRoot,accreHome,'m-files'); % Edit this if running on Accre
+    projectRoot = fullfile(accreScratch,'perceptualchoice_stop_model');
+    environ = 'accre';
+else
+    matRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/schallab';
+    projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/perceptualchoice_stop_spikes_population';
+    environ = 'local';
+end
+
+addpath(genpath(fullfile(matRoot,'ccm')));
+addpath(genpath(fullfile(projectRoot,'src/code',projectDate)));
+
+
+projectDate = '2017-01-11';
+projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/perceptualchoice_stop_spikes_population';
+
+addpath(genpath(fullfile(projectRoot,'src/code',projectDate)));
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+
+
+load(fullfile(dataPath, 'ccm_neuronTypes'))
+
+sessionList = unique(neuronTypes.sessionID);
+% deleteSession = {'jp054n02', 'jp060n02', 'jp061n02'};
+% deleteSession = {'bp080n01', 'xxxx'};
+% sessionList(ismember(sessionList, deleteSession)) = [];
+
+
+%%
+
+for i = 1 : 1%length(sessionList)
+    fprintf('\n\n\n\n%s\n\n\n\n', sessionList{i});
+%         data = ccm_session_behavior(subject, sessionList{i});
+    data = ccm_inhibition_ssd_metrics(subject, sessionList{i});
+%     data = ccm_inhibition_rt(subject, sessionList{i});
+    
+    
+    
+    
+end   
+
+%%    SSRT across color coherence within each SSD - Population
+opt = ccm_options;
+opt.plotFlag = 0;
+opt.printPlot = 0;
+
+
+
+for i = 1 : 1%length(sessionList)
+    fprintf('\n\n\n\n%s\n\n\n\n', sessionList{i});
+        data = ccm_session_behavior(subject, sessionList{i});
+    data = ccm_inhibition_rt(subject, sessionList{i});
+    
+    
+    
+    
+    
+end   
+
+    
+
+
+
+%%
+figure(5);
+hold on
+plot(1:length(data.weibullParams), weibullParams(:,1), '.k')
+plot(1:length(data.weibullParams), weibullParams(:,2), '.b')
+%             [axisWidth, axisHeight, xAxesPosition, yAxesPosition] = standard_landscape(nRow, nColumn, figureHandle);
+
+
+%%
+optInh = ccm_options;
+optInh.printPlot = 0;
+optInh.plotFlag = 0;
+inh = ccm_inhibition('broca', 'bp228n02', optInh);
+
+chron = ccm_chronometric('broca','bp228n02', optInh);
+%%
+inhTargRT = cellfun(@(x) nanmean(x), inh.goTargRT(:,1), 'uni', false);
+cellfun(@(x) nanmean(x), chron.goLeftToTarg, 'uni', false)
+cellfun(@(x) nanmean(x), chron.goRightToTarg, 'uni', false)
+
+
+%%
+ssdArray = unique(cell2mat(cancelData.stopStopSsd));
+
+
+for i = 1 :length(ssdArray)
+hardInd = cellfun(@(x) x == .58, cancelData.stopStopCoh, 'uni', false);
+ssdInd =  cellfun(@(x) x == ssdArray(i), cancelData.stopStopSsd, 'uni', false);
+
+iHardCoh = cellfun(@(x,y,z) x(y & z), cancelData.stopStopCoh, hardInd, ssdInd, 'uni', false);
+iSSD = cellfun(@(x,y,z) x(y & z), cancelData.stopStopSsd, hardInd, ssdInd, 'uni', false);
+iNeuralCancelTime = cellfun(@(x,y,z,k) x(y & z) - k(y & z), cancelData.cancelTime2Std, hardInd, ssdInd, cancelData.stopStopSsd, 'uni', false);
+% iSsrt = cellfun(@(x) x - cancel
+end
+
+%% matlab
+subject = 'joule';
+
+projectDate = '2017-01-11';
+accreRoot = '/gpfs22';
+accreHome = '/home/middlepg';
+accreScratch = '/scratch/middlepg';
+if isdir(fullfile(accreScratch))
+    matRoot = fullfile(accreRoot,accreHome,'m-files'); % Edit this if running on Accre
+    projectRoot = fullfile(accreScratch,'perceptualchoice_stop_model');
+    environ = 'accre';
+else
+    matRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/schallab';
+    projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/perceptualchoice_stop_spikes_population';
+    environ = 'local';
+end
+
+addpath(genpath(fullfile(matRoot,'ccm')));
+addpath(genpath(fullfile(projectRoot,'src/code',projectDate)));
+
+
+projectDate = '2017-01-11';
+projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/perceptualchoice_stop_spikes_population';
+
+addpath(genpath(fullfile(projectRoot,'src/code',projectDate)));
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+
+
+load(fullfile(dataPath, 'ccm_neuronTypes'))
+
+sessionList = unique(neuronTypes.sessionID);
+% deleteSession = {'jp054n02', 'jp060n02', 'jp061n02'};
+% deleteSession = {'bp080n01', 'xxxx'};
+% sessionList(ismember(sessionList, deleteSession)) = [];
+
+
+%%
+subject = 'xena';
+sessionSet = 'behavior1';
+sessionList = task_session_array(subject, 'ccm',sessionSet)
+%%
+subject = 'broca';
+sessionSet = 'behavior2';
+sessionList = task_session_array(subject, 'ccm',sessionSet)
+%%
+data = ccm_inhibition_population(subject, sessionList)
+
+
+%%
+        [td s] = load_data('joule', 'jp125n04', [ccm_min_vars,'spikeData']);
+
+

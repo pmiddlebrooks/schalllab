@@ -402,9 +402,15 @@ for kDataIndex = 1 : nUnit
       titleString = sprintf('%s \t %s', sessionID, Data(kDataIndex, jTarg).name);
       text(0.5,1, titleString, 'HorizontalAlignment','Center', 'VerticalAlignment','Top')
       if printPlot && ~collapseSignal
-         print(figureHandle,fullfile(local_figure_path, subjectID, [sessionID, '_ccm_', Data(kDataIndex, jTarg).name, '_', dataType]),'-depsc', '-r300')
+        if ~isdir(fullfile(local_figure_path, subjectID, 'session'))
+            mkdir(fullfile(local_figure_path, subjectID, 'session'))
+        end
+         print(figureHandle,fullfile(local_figure_path, subjectID, 'session', [sessionID, '_ccm_', Data(kDataIndex, jTarg).name, '_', dataType]),'-depsc', '-r300')
       elseif printPlot && collapseSignal
-         print(figureHandle,fullfile(local_figure_path, subjectID, 'collapsed', [sessionID, '_ccm_', Data(kDataIndex, jTarg).name, '_', dataType, '_collapse']),'-dpdf', '-r300')
+        if ~isdir(fullfile(local_figure_path, subjectID, 'sessionCollapseChoice'))
+            mkdir(fullfile(local_figure_path, subjectID, 'sessionCollapseChoice'))
+        end
+         print(figureHandle,fullfile(local_figure_path, subjectID, 'sessionCollapseChoice', [sessionID, '_ccm_', Data(kDataIndex, jTarg).name, '_', dataType, '_collapse']),'-dpdf', '-r300')
 
          % print(figureHandle,[micalaFolder, sessionID, '_ccm_', Data(kDataIndex, jTarg).name, '_',dataType,'_collapse.pdf'],'-dpdf', '-r300')
       end

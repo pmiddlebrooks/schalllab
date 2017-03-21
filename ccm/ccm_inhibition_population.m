@@ -27,7 +27,7 @@ optInh              = ccm_inhibition;
 optInh.plotFlag     = 0;
 optInh.include50    = 0;
 optInh.collapseTarg    = true;
-optInh.USE_TWO_COLORS = true;
+optInh.USE_TWO_COLORS = false;
 
 
 
@@ -69,6 +69,9 @@ if optInh.USE_TWO_COLORS
     elseif length(pSignalArray) == 7
         pSignalArray([2 4 6]) = [];
     end
+end
+if ~optInh.include50
+    pSignalArray(pSignalArray == .5) = [];
 end
 nSignalStrength = length(pSignalArray);
 
@@ -180,6 +183,7 @@ for iSession = 1 : nSession
         % Individual session inhibition functions
         inhSess{iSession}    = iData.inhibitionFnGrand;
         inhSessTime{iSession} = min(cell2mat(iData.ssd)) : max(cell2mat(iData.ssd));
+        inhSessTime{iSession} = min(iData.ssdArray) : max(iData.ssdArray);
         inhSessEach{iSession} = iData.inhibitionFn;
     end
     
@@ -254,6 +258,7 @@ ssrtIntegrationAvg = mean(ssrtInt, 1);
 ssrtIntegrationStd = std(ssrtInt, 1);
 ssrtIntegrationSem = ssrtIntegrationStd ./ nSession;
 
+% ssrtPlot = ssrtIntWeight;
 ssrtPlot = ssrtIntWeight;
 ssrtPlotAvg = mean(ssrtPlot, 1);
 ssrtPlotStd = std(ssrtPlot, 1);
@@ -391,9 +396,10 @@ if plotFlag
     % SSRT  ********************************
     %    plot(ax(axSSRT), pSignalArray, mean(ssrtInt, 1), '-ok', 'markeredgecolor', 'k', 'markerfacecolor', 'k', 'markersize', 10)
     errorbar(ax(axSSRT), pSignalArray ,ssrtPlotAvg, ssrtPlotStd, '.' , 'linestyle' , 'none', 'color', 'k', 'linewidth' , 2)
-    plot(ax(axSSRT), pSignalArray, mean(ssrtIntWeight, 1), '-or', 'markeredgecolor', 'r', 'markerfacecolor', 'r', 'markersize', 10)
+    plot(ax(axSSRT), pSignalArray, mean(ssrtPlot, 1), '-or', 'markeredgecolor', 'r', 'markerfacecolor', 'r', 'markersize', 10)
     %    plot(ax(axSSRT), pSignalArray, mean(ssrtMean, 1), '-og', 'markeredgecolor', 'g', 'markerfacecolor', 'g', 'markersize', 10)
-    
+     plot(ax(axSSRT), pSignalArray, mean(ssrtInt, 1), '-ob', 'markeredgecolor', 'r', 'markerfacecolor', 'r', 'markersize', 10)
+   
     set(ax(axSSRT), 'Xlim', [pSignalArray(1) - choicePlotXMargin, pSignalArray(end) + choicePlotXMargin])
     set(ax(axSSRT), 'xtick', pSignalArray)
     set(ax(axSSRT), 'xtickLabel', pSignalArray*100)

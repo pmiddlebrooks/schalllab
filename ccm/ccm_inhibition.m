@@ -67,6 +67,7 @@ plotFlag        = options.plotFlag;
 printPlot       = options.printPlot;
 figureHandle    = options.figureHandle;
 
+
 useCorrectOrAll = 'correct';
 plotSurface = false;
 
@@ -101,6 +102,7 @@ MAX_RT = 1200;
 nSTD   = 3;
 [allRT, outlierTrial]   = truncate_rt(trialData.rt, MIN_RT, MAX_RT, nSTD);
 trialData = structfun(@(x) x(~outlierTrial,:), trialData, 'uni', false);
+allRT(outlierTrial) = [];
 
 
 
@@ -118,6 +120,15 @@ end
 if ~include50
     pSignalArray(pSignalArray == .5) = [];
 end
+
+if include50
+    middleDiff = ceil(length(pSignalArray)/1);
+else
+    middleDiff = [];
+end
+
+choiceLevels = [1:floor(length(pSignalArray)/2) middleDiff floor(length(pSignalArray)/2):-1:1];
+
 
 if ~strcmp(SessionData.taskID, 'ccm')
     fprintf('Not a choice countermanding session, try again\n')
@@ -151,6 +162,8 @@ else
     % do nothing, all target angles will be considered separately
 end
 
+goColor = [0 0 0];
+stopColor = [1 0 0];
 
 
 
@@ -203,6 +216,7 @@ for kTarg = 1 : nTargPair
     ssrtIntegrationSimple = nan(nSignal, 1);
     
     conditionSSD        = cell(nSignal, 1);
+    weibullParams        = cell(nSignal, 1);
     
     
     % Get default ccm options
@@ -210,11 +224,11 @@ for kTarg = 1 : nTargPair
     
     
     if plotFlag
-        figureHandle = figureHandle + 1;
+        %         figureHandle = figureHandle + 1;
         minColorGun = .25;
         maxColorGun = 1;
         nRow = 3;
-        nColumn = 3;
+        nColumn = 4;
         screenOrSave = 'save';
         if printPlot
             [axisWidth, axisHeight, xAxesPosition, yAxesPosition] = standard_landscape(nRow, nColumn, figureHandle);
@@ -229,10 +243,12 @@ for kTarg = 1 : nTargPair
         % axes names
         axInhGrand = 1;
         axInhEach = 2;
-        axInhRTSSD = 6;
         SSDvPCorrect = 3;
         ssrtPRight = 4;
         SSDvSigStrength = 5;
+        axInhRTSSD = 6;
+        nTrialPerCoh = 7;
+        axWeibullParam = 8;
         
         
         % Set up plot axes
@@ -256,15 +272,33 @@ for kTarg = 1 : nTargPair
         cla
         hold(ax(ssrtPRight), 'on')
         
+        %         % SSD vs p(correct)
+        %         ax(SSDvPCorrect) = axes('units', 'centimeters', 'position', [xAxesPosition(3, 1) yAxesPosition(3, 1) axisWidth axisHeight]);
+        %         cla
+        %         hold(ax(SSDvPCorrect), 'on')
+        
         % SSD vs p(correct)
-        ax(SSDvPCorrect) = axes('units', 'centimeters', 'position', [xAxesPosition(3, 1) yAxesPosition(3, 1) axisWidth axisHeight]);
+        ax(nTrialPerCoh) = axes('units', 'centimeters', 'position', [xAxesPosition(3, 2) yAxesPosition(3, 2) axisWidth axisHeight]);
         cla
-        hold(ax(SSDvPCorrect), 'on')
+        hold(ax(nTrialPerCoh), 'on')
         
         % SSD vs p(correct)
         ax(SSDvSigStrength) = axes('units', 'centimeters', 'position', [xAxesPosition(3, 3) yAxesPosition(3, 3) axisWidth axisHeight]);
         cla
         hold(ax(SSDvSigStrength), 'on')
+        
+        % Weibull params w.r.t. Color Coherence
+        ax(axWeibullParam) = axes('units', 'centimeters', 'position', [xAxesPosition(1, 4) yAxesPosition(1, 4) axisWidth axisHeight]);
+        cla
+        hold(ax(axWeibullParam), 'on')
+        
+        
+        
+        
+        
+        
+        
+        
     end
     
     
@@ -403,6 +437,8 @@ for kTarg = 1 : nTargPair
             
             jGoTrialRT = allRT(jGoTrial);
             goTotalRT{iPropInd, jSSDInd} = jGoTrialRT;
+            goTargRT{iPropInd, jSSDInd} = allRT(jGoTargTrial);
+            goDistRT{iPropInd, jSSDInd} = allRT(jGoDistTrial);
             goRTMean(iPropInd, jSSDInd) = nanmean(jGoTrialRT);
             iRTCum = 1/length(jGoTrial):1/length(jGoTrial):1; %y-axis of a cumulative prob dist
             iRTSort = sort(jGoTrialRT);
@@ -521,7 +557,7 @@ for kTarg = 1 : nTargPair
         [fitParameters, lowestSSE] = Weibull(iSSDArray, iStopProbRespond, iNStop);
         ssdTimePoints = ssdArray(1) : ssdArray(end);
         inhibitionFn{iPropInd} = weibull_curve(fitParameters, ssdTimePoints);
-        
+        weibullParams{iPropInd} = fitParameters;
         
         % SSRT: get go RTs and number of stop trials (already have other
         % necessary variables)
@@ -576,19 +612,38 @@ for kTarg = 1 : nTargPair
             end
             inhColor = cMap(iPropInd,:);
             
+            inhEachMap = ccm_colormap([0 1]);
+            if pSignalArray(iPropInd) < .5
+                iInhColor = inhEachMap(1,:);
+            elseif pSignalArray(iPropInd) > .5
+                iInhColor = inhEachMap(2,:);
+            else
+                iInhColor = [.1 .1 .1];
+            end
+            inhLineW = 2*max(choiceLevels)/choiceLevels(iPropInd);
             
+            %             plot(ax(axInhEach), ssd{iPropInd}, iStopProbRespond, 'color', inhColor, 'linewidth', 2)
+            plot(ax(axInhEach), ssdTimePoints, inhibitionFn{iPropInd}, 'color', iInhColor, 'linewidth', inhLineW)
+            plot(ax(ssrtPRight), pSignalArray(iPropInd), ssrtIntegrationWeighted(iPropInd), '.', 'markersize', 30, 'color', inhColor)
+            %             plot(ax(axInhRTSSD), -goRTMinusSSD{iPropInd}, iStopProbRespond, '.', 'color', inhColor, 'markersize', 15);%'linewidth', 2)
+            %             plot(ax(axInhRTSSD), (goSSDTimepoints - offsetVal), inhFnGoMinusSSD{iPropInd}, '-', 'color', inhColor, 'linewidth', 2);%'linewidth', 2)
+            %             plot(ax(SSDvPCorrect), xVal, p(1) * xVal + p(2), 'color', inhColor, 'linewidth', 2)
+            plot(ax(SSDvSigStrength), pSignalArray(iPropInd), mean(conditionSSD{iPropInd}), '.',  'color', inhColor, 'markersize', 30)
             
-            plot(ax(axInhEach), ssd{iPropInd}, iStopProbRespond, 'color', inhColor, 'linewidth', 2)
-            plot(ax(ssrtPRight), pSignalArray(iPropInd), ssrtIntegrationWeighted(iPropInd), '.', 'markersize', 30, 'color', 'r')
-            plot(ax(axInhRTSSD), -goRTMinusSSD{iPropInd}, iStopProbRespond, '.', 'color', inhColor, 'markersize', 15);%'linewidth', 2)
-            plot(ax(axInhRTSSD), (goSSDTimepoints - offsetVal), inhFnGoMinusSSD{iPropInd}, '-', 'color', inhColor, 'linewidth', 2);%'linewidth', 2)
-            plot(ax(SSDvPCorrect), xVal, p(1) * xVal + p(2), 'color', inhColor, 'linewidth', 2)
-                plot(ax(SSDvSigStrength), pSignalArray(iPropInd), mean(conditionSSD{iPropInd}), '.',  'color', inhColor, 'markersize', 30)
-            
+            plot(ax(nTrialPerCoh), pSignalArray(iPropInd), length(goTotalRT{iPropInd,1}), '.', 'markersize', 30, 'color', goColor);
+            plot(ax(nTrialPerCoh), pSignalArray(iPropInd), sum(nStopTarg(iPropInd,:))+sum(nStopDist(iPropInd,:)), '.', 'markersize', 30, 'color', stopColor);
+            plot(ax(nTrialPerCoh), pSignalArray(iPropInd), sum(nStopStop(iPropInd,:)), '*', 'markersize', 25, 'color', stopColor);
             if options.USE_PRE_SSD
                 
-                plot(ax(ssrtPRight), pSignalArray(iPropInd), ssrtGrand(iPropInd), '.', 'markersize', 30, 'color', inhColor)
+                %                 plot(ax(ssrtPRight), pSignalArray(iPropInd), ssrtGrand(iPropInd), '.', 'markersize', 30, 'color', 'r')
             end
+            yyaxis left
+            plot(ax(axWeibullParam), pSignalArray(iPropInd), weibullParams{iPropInd}(1), '.', 'markersize', 30, 'color', inhColor)
+            ylim([0 600])
+            yyaxis right
+            plot(ax(axWeibullParam), pSignalArray(iPropInd), weibullParams{iPropInd}(2), '*', 'markersize', 20, 'color', 'b')
+            ylim([0 12])
+            
         end
         
         
@@ -608,11 +663,11 @@ for kTarg = 1 : nTargPair
     
     
     % Regress the SSRT w.r.t. color coherence
-    if options.USE_PRE_SSD
-        regressSSRT = ssrtGrand;
-    else
-        regressSSRT = ssrtIntegrationWeighted;
-    end
+    %     if options.USE_PRE_SSD
+    %         regressSSRT = ssrtGrand;
+    %     else
+    regressSSRT = ssrtIntegrationWeighted;
+    %     end
     
     if ~options.collapseSignal
         flipPropArray = pSignalArray;
@@ -645,33 +700,68 @@ for kTarg = 1 : nTargPair
         set(get(ax(ssrtPRight), 'ylabel'), 'String', 'SSRT')
         plot(ax(ssrtPRight), [.5 .5], ylim, '--k')
         if ~options.collapseSignal
+            % SSRT vs color coherence
             xlim(ax(ssrtPRight), [pSignalArray(1) - choicePlotXMargin pSignalArray(end) + choicePlotXMargin])
             set(ax(ssrtPRight), 'xtick', pSignalArray)
             set(ax(ssrtPRight), 'xtickLabel', pSignalArray*100)
             plot(ax(ssrtPRight), regressionLineX, regressionLineY, 'b')
+            
+            % Trial Number vs color coherence
+            xlim(ax(nTrialPerCoh), [pSignalArray(1) - choicePlotXMargin pSignalArray(end) + choicePlotXMargin])
+            set(ax(nTrialPerCoh), 'xtick', pSignalArray)
+            set(ax(nTrialPerCoh), 'xtickLabel', pSignalArray*100)
+            
+            % Weibull parameters
+            xlim(ax(axWeibullParam), [pSignalArray(1) - choicePlotXMargin pSignalArray(end) + choicePlotXMargin])
+            set(ax(axWeibullParam), 'xtick', pSignalArray)
+            set(ax(axWeibullParam), 'xtickLabel', pSignalArray*100)
         else
+            % SSRT vs color coherence
             xlim(ax(ssrtPRight), [pSignalArray(1) - choicePlotXMargin pSignalArray(2) + choicePlotXMargin])
             set(ax(ssrtPRight), 'xtick', [pSignalArray(1) pSignalArray(2)])
             set(ax(ssrtPRight), 'xtickLabel', {'left','right'})
+            
+            % Trial Number vs color coherence
+            xlim(ax(nTrialPerCoh), [pSignalArray(1) - choicePlotXMargin pSignalArray(2) + choicePlotXMargin])
+            set(ax(nTrialPerCoh), 'xtick', [pSignalArray(1) pSignalArray(2)])
+            set(ax(nTrialPerCoh), 'xtickLabel', {'left','right'})
+            
+            % Weibull parameters
+            xlim(ax(axWeibullParam), [pSignalArray(1) - choicePlotXMargin pSignalArray(2) + choicePlotXMargin])
+            set(ax(axWeibullParam), 'xtick', [pSignalArray(1) pSignalArray(2)])
+            set(ax(nTrialaxWeibullParamPerCoh), 'xtickLabel', {'left','right'})
         end
         
         
-        % ssd vs p(correct)
-        xlim(ax(SSDvPCorrect), [ssdArray(1)-ssdMargin ssdArray(end)+ssdMargin])
-        set(ax(SSDvPCorrect), 'xtick', ssdArray)
-        set(ax(SSDvPCorrect), 'xtickLabel', ssdArray)
-        ylim(ax(SSDvPCorrect), [-.05 1.05]);
-        set(get(ax(SSDvPCorrect), 'ylabel'), 'String', 'p(Correct)')
         
-        if options.collapseSignal
-            xlim(ax(SSDvSigStrength), [pSignalArray(1) - choicePlotXMargin pSignalArray(2) + choicePlotXMargin])
-            set(ax(SSDvSigStrength), 'xtick', [pSignalArray(1) pSignalArray(2)])
-            set(ax(SSDvSigStrength), 'xticklabel', {'left','right'})
-        else
+        %         % ssd vs p(correct)
+        %         xlim(ax(SSDvPCorrect), [ssdArray(1)-ssdMargin ssdArray(end)+ssdMargin])
+        %         set(ax(SSDvPCorrect), 'xtick', ssdArray)
+        %         set(ax(SSDvPCorrect), 'xtickLabel', ssdArray)
+        %         ylim(ax(SSDvPCorrect), [-.05 1.05]);
+        %         set(get(ax(SSDvPCorrect), 'ylabel'), 'String', 'p(Correct)')
+        %
+        %         if options.collapseSignal
+        %             xlim(ax(SSDvSigStrength), [pSignalArray(1) - choicePlotXMargin pSignalArray(2) + choicePlotXMargin])
+        %             set(ax(SSDvSigStrength), 'xtick', [pSignalArray(1) pSignalArray(2)])
+        %             set(ax(SSDvSigStrength), 'xticklabel', {'left','right'})
+        %         else
+        %             xlim(ax(SSDvSigStrength), [pSignalArray(1) - choicePlotXMargin pSignalArray(end) + choicePlotXMargin])
+        %             set(ax(SSDvSigStrength), 'xtick', pSignalArray)
+        %         end
+        
+        % Mean SSD per signal strength
+        set(get(ax(SSDvSigStrength), 'ylabel'), 'String', 'Mean SSD')
+        set(ax(SSDvSigStrength), 'Ylim', [200 700])
+        if ~options.collapseSignal
             xlim(ax(SSDvSigStrength), [pSignalArray(1) - choicePlotXMargin pSignalArray(end) + choicePlotXMargin])
             set(ax(SSDvSigStrength), 'xtick', pSignalArray)
+            set(ax(SSDvSigStrength), 'xtickLabel', pSignalArray*100)
+        else
+            xlim(ax(SSDvSigStrength), [pSignalArray(1) - choicePlotXMargin pSignalArray(2) + choicePlotXMargin])
+            set(ax(SSDvSigStrength), 'xtick', [pSignalArray(1) pSignalArray(2)])
+            set(ax(SSDvSigStrength), 'xtickLabel', {'left','right'})
         end
-        set(get(ax(SSDvSigStrength), 'ylabel'), 'String', 'Mean SSD')
         
         
         
@@ -734,19 +824,19 @@ for kTarg = 1 : nTargPair
         stopRespondRTObserveGrand(iSSDIndex) = nanmean(allRT(stopInocrrectTrial));
         
     end
-    keepSSD = ~isnan(stopRespondProbGrand);
-    stopRespondProbGrand = stopRespondProbGrand(keepSSD);
-    nStopGrand = nStopGrand(keepSSD);
-    ssdArray = ssdArray(keepSSD);
-    %     [fitParameters, lowestSSE] = Weibull(ssdArray, stopRespondProbGrand);
+    %     keepSSD = ~isnan(stopRespondProbGrand);
+    %     stopRespondProbGrand = stopRespondProbGrand(keepSSD);
+    %     nStopGrand = nStopGrand(keepSSD);
+    %     ssdArrayGrand = ssdArray(keepSSD);
+    ssdArrayGrand = ssdArray;
+    %     [fitParameters, lowestSSE] = Weibull(ssdArrayGrand, stopRespondProbGrand, nStopGrand);
     [fitParameters, lowestSSE] = Weibull(ssdArray, stopRespondProbGrand, nStopGrand);
-    %     [fitParameters, lowestSSE] = Weibull_fast(ssdArray, stopRespondProbGrand);
-    ssdTimePoints = ssdArray(1) : ssdArray(end);
+    ssdTimePoints = ssdArrayGrand(1) : ssdArrayGrand(end);
     inhibitionFnGrand = weibull_curve(fitParameters, ssdTimePoints);
     
     if plotFlag
         plot(ax(axInhGrand), ssdTimePoints, inhibitionFnGrand, 'color', 'g', 'linewidth', 2)
-        plot(ax(axInhGrand), ssdArray, stopRespondProbGrand, '.k', 'markersize', 25)
+        plot(ax(axInhGrand), ssdArrayGrand, stopRespondProbGrand, '.k', 'markersize', 25)
         set(ax(axInhGrand),'YLim',[0 1])
         set(get(ax(axInhGrand), 'ylabel'), 'String', 'p(Respond | stop)')
         %     set(ax(axInhGrand),'XLim',[0 800])
@@ -760,14 +850,14 @@ for kTarg = 1 : nTargPair
     % ssrtMeanGrand = ssrtM;
     % ssrtIntegrationGrand = ssrtI;
     
-    ssrtCollapse        = get_ssrt(ssdArray, stopRespondProbGrand, nStopGrand, goGrandRT, fitParameters);
+    ssrtCollapse        = get_ssrt(ssdArrayGrand, stopRespondProbGrand, nStopGrand, goGrandRT, fitParameters);
     ssrtCollapseGrand   = ssrtCollapse.grand;
     ssrtCollapseIntegrationWeighted = ssrtCollapse.integrationWeighted;
     ssrtCollapseIntegration = ssrtCollapse.integration;
     ssrtCollapseMean    = ssrtCollapse.mean;
     
     if plotFlag && ~options.collapseSignal
-        plot(ax(ssrtPRight), xlim, [ssrtCollapseGrand ssrtCollapseGrand], '--k')
+        plot(ax(ssrtPRight), xlim, [ssrtCollapseIntegrationWeighted ssrtCollapseIntegrationWeighted], '--k')
         
     end
     
@@ -781,7 +871,7 @@ for kTarg = 1 : nTargPair
     
     
     Data(kTarg).allRT                   = allRT;
-  
+    
     
     Data(kTarg).ssrtGrand                   = ssrtGrand;
     Data(kTarg).ssrtMean                    = ssrtMean;
@@ -826,6 +916,8 @@ for kTarg = 1 : nTargPair
     Data(kTarg).stopRespondRTObserveGrand = stopRespondRTObserveGrand;
     Data(kTarg).stopRespondRTPredict = stopRespondRTPredict;
     Data(kTarg).stopRespondRT = stopRespondRT;
+    
+    Data(kTarg).weibullParams = weibullParams;
     
 end % for kTarg = 1 : nTargPair
 

@@ -52,7 +52,7 @@ if nargin < 3
     options.collapseTarg        = false;
     options.include50           = false;
     options.doStops            = true;
-    options.USE_TWO_COLORS    = true;
+    options.USE_TWO_COLORS    = false;
     
     options.plotFlag            = true;
     options.printPlot           = false;
@@ -134,11 +134,11 @@ for kTarg = 1 : nTargPair
     
     
     if plotFlag
-        figureHandle = figureHandle + 1;
+%         figureHandle = figureHandle + 1;
         % axes names
         pRightvSignal = 1;
         nRow = 3;
-        nColumn = 3;
+        nColumn = 4;
         if printPlot
             [axisWidth, axisHeight, xAxesPosition, yAxesPosition] = standard_landscape(nRow, nColumn, figureHandle);
         else
