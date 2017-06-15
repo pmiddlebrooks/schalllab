@@ -1396,6 +1396,158 @@ end
 
 
 
+%%
+if isdir('/Volumes/HD-1/Users/paulmiddlebrooks/')
+    projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/memory_guided_saccades';
+elseif isdir('/Volumes/Macintosh HD/Users/elseyjg/')
+    projectRoot = '/Volumes/Macintosh HD/Users/elseyjg/Memory-Guided-Saccade-Project';
+else
+    disp('You need to add another condition or the file path is wrong.')
+end
+
+dataRoot = fullfile(projectRoot, 'data');
+
+%% BROCA MEM and DEL
+subject = 'broca';
+fid=  fopen(fullfile(dataRoot,subject,['del_sessions_',subject,'.csv']));
+nCol = 5;
+formatSpec = '%s';
+mHeader = textscan(fid, formatSpec, nCol, 'Delimiter', ',');
+
+mData = textscan(fid, '%s %s %d %d %d', 'Delimiter', ',','TreatAsEmpty',{'NA','na'});
+cmdSessionList     = mData{1};
+
+
+optT = plexon_translate_datafile_mac;
+optT.hemisphere = 'left';
+
+delSessionList = cmdSessionList(find(strcmp(cmdSessionList, 'bp228n01')) : end);
+for i = 1 : length(delSessionList)
+    delSessionList{i}
+    plexon_translate_datafile_mac(subject, delSessionList{i}, optT);
+end
+
+
+
+%%
+opt = ccm_options;
+opt.collapseSignal = true;
+
+opt.unitArray = {'spikeUnit14a', 'spikeUnit14b'}; 
+session =  'bp243n02';
+for i = 1 : length(sessionList)
+    data = ccm_session_data('broca', session, opt);
+end
+
+
+%%
+%%matlab
+
+categoryName = 'presacc';
+    load(fullfile(dataPath, ['ccm_',categoryName,'_neurons']))
+
+
+% Establish options to send to ccm_session_data in the for loop below
+opt             = ccm_options;
+opt.howProcess  = 'print';
+opt.plotFlag    = true;
+opt.printPlot    = true;
+opt.dataType    = 'neuron';
+opt.collapseTarg 	= true;
+opt.collapseSignal 	= true;
+opt.doStops 	= false;
+    opt.multiUnit = multiUnit;
+
+
+
+for i = 1 : size(neurons, 1)
+    opt.unitArray = neurons.unit(i);
+    opt.hemisphere = neurons.hemisphere{i};
+    
+    pdfName = [neurons.sessionID{i},'_ccm_',neurons.unit{i},'_neuron_collapse.pdf'];
+    if exist(fullfile(local_figure_path,subject,'sessionCollapseChoice',pdfName))
+    else
+      iData = ccm_session_data(subject, neuronTypes.sessionID{sessionInd(i)}, opt);
+    end
+    
+    clear iData
+end
+
+
+fileName = fullfile(dataPath, ['ccm_',categoryName,'_neurons', addMulti]);
+
+save(fileName, 'neurons')
+
+%%
+opt = ccm_options;
+opt.collapseSignal = true;
+opt.doStops = false;
+sessionList = ...
+    {'bp088n02',...
+    'bp234n02',...
+    'bp247n02'};
+sessionList = ...
+    {'bp196n02-tp'};
+for i = 1 : length(sessionList)
+    iSessionID = sessionList{i};
+    data = ccm_session_data('broca', iSessionID, opt);
+end
+
+
+
+%% Population behavioral measures
+opt = ccm_options;
+opt.saveName = 'neural_model';
+subject = 'broca';
+sessionSet = {...
+    'bp242n02';...
+    'bp244n02';...
+    'bp245n02';...
+    'bp246n02';...
+    'bp247n02'};
+% ccm_chronometric_population(subject, sessionSet, opt);
+% ccm_psychometric_population(subject, sessionSet, opt);
+% ccm_rt_distribution_population(subject, sessionSet, opt);
+data = ccm_inhibition_population(subject, sessionSet, opt);
+
+
+%% Population behavioral measures
+opt = ccm_options;
+opt.saveName = 'neural_model';
+subject = 'joule';
+
+sessionSet = {...
+    'jp110n02';...
+    'jp114n04';...
+    'jp121n02';...
+    'jp124n04';...
+    'jp125n04'};
+% ccm_chronometric_population(subject, sessionSet, opt);
+% ccm_psychometric_population(subject, sessionSet, opt);
+% ccm_rt_distribution_population(subject, sessionSet, opt);
+data = ccm_inhibition_population(subject, sessionSet, opt);
+%% Population behavioral measures
+opt = ccm_options;
+opt.saveName = 'behavior2';
+subject = 'broca';
+
+sessionSet = 'behavior2';
+% ccm_chronometric_population(subject, sessionSet, opt);
+% ccm_psychometric_population(subject, sessionSet, opt);
+% ccm_rt_distribution_population(subject, sessionSet, opt);
+data = ccm_inhibition_population(subject, sessionSet, opt);
+
+%% Population behavioral measures
+opt = ccm_options;
+opt.saveName = 'behavior1';
+subject = 'xena';
+
+sessionSet = 'behavior1';
+% ccm_chronometric_population(subject, sessionSet, opt);
+% ccm_psychometric_population(subject, sessionSet, opt);
+% ccm_rt_distribution_population(subject, sessionSet, opt);
+data = ccm_inhibition_population(subject, sessionSet, opt);
+
 
 
 

@@ -873,11 +873,11 @@ switch taskName
     case 'Memory'
         trialData.fixOn             = photodiode_check(photodiode(:,1), FixSpotOn);
         trialData.targOn            = photodiode_check(photodiode(:,2), Target_);
-        trialData.fixOff            = photodiode_check(photodiode(:,3), Cue_);
+        trialData.fixOff            = photodiode_check(photodiode(:,3), FixSpotOff_);
     case 'Delay'
         trialData.fixOn             = photodiode_check(photodiode(:,1), FixSpotOn);
         trialData.targOn            = photodiode_check(photodiode(:,2), Target_);
-        trialData.fixOff            = photodiode_check(photodiode(:,3), Cue_);
+        trialData.fixOff            = photodiode_check(photodiode(:,3), FixSpotOff_);
     case 'Visual'
         trialData.fixOn             = photodiode_check(photodiode(:,1), FixSpotOn);
         trialData.targOn            = photodiode_check(photodiode(:,2), Target_);
@@ -1407,7 +1407,7 @@ end
 %__________________________________________________________________________
 %                   SHIFT SPIKE TIMES FROM A PARTICULAR SESSION/CHANNELS
 %__________________________________________________________________________
-if strcmp(sessionID, 'jp125n02') || strcmp(sessionID, 'jp125n03')
+if strncmp(sessionID, 'jp125', 5)
     for i = 22 : 89
         iShifted = cellfun(@(x) x + 85, trialData.spikeData(:,i), 'uni', false);
         trialData.spikeData(:,i) = iShifted;

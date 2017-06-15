@@ -1,4 +1,4 @@
-function Opt = ccm_options
+function Opt = mem_options
 % function Opt = ccm_options
 %
 % Returns default Opt structure for use as input in choice
@@ -33,40 +33,22 @@ function Opt = ccm_options
 %     Opt.outcome  = array of strings indicating the outcomes to include:
 %           {'collapse',
 %           'valid'
-%           'goCorrectTarget', 'goCorrectDistractor',
-%           'goIncorrect',
-%           'stopCorrect',
-%           'stopIncorrectTarget', 'stopIncorrectDistractor',
-%           'targetHoldAbort', 'distractorHoldAbort',
-%           'fixationAbort', 'saccadeAbort', 'checkerStimulusAbort'}
+%           'goCorrectTarget', 'targetHoldAbort',
+%           'fixationAbort', 'saccadeAbort'}
 %
 %           valid = any non-aborts
 %
-%     Opt.choiceAccuracy  = default is collapse across all choices. Segments
-%           with respect to weather a choice was correct or error (does not count
-%           if no choice was made.
-%           Opt: 'collapse' (default), 'correct', 'error'.
-%
-%     Opt.rightCheckerPct  = range of checkerboard percentage of right target checkers:
-%           {'collapse', 'right', 'left'
-%           a double array containing the values, e.g. [40 50 60]
-%     Opt.ssd    = range of SSDs to include in the trial list:
-%           {'collapse', 'any', 'none', or
-%           a double array containing the values, e.g. [43 86 129]
-%     Opt.allowRtPreSsd    = whether to allow noncanceled stop trials with RTs before SSDs
-%           true (default) or false
 %     Opt.targDir  = the angle of the CORRECT TARGET
 %           {'collapse','left','right','up','down','upLeft','upRight',downLeft','downRight'<list of possible angels, e.g. [45 -45]
 %     Opt.responseDir  = the angle of target to which a response was made
 %           {'collapse','none' (for stopStop trials),'left','right','up','down','upLeft','upRight',downLeft','downRight'<list of possible angels, e.g. [45 -45]
 
+Opt.task                = 'mem';  % CAn use 'del' to analyzed delayed saccade task with mem codes.
 Opt.dataType            = 'neuron';
 Opt.multiUnit           = false;
 Opt.trialData           = [];
 Opt.howProcess        = 'each';%'print';
 Opt.unitArray        = [];
-Opt.hemisphere        = [];
-Opt.rf        = [];
 
 Opt.figureHandle     = 1000;
 Opt.printPlot        = true;
@@ -74,32 +56,21 @@ Opt.plotFlag         = true;
 
 Opt.collapseSignal   = false;
 Opt.collapseTarg     = true;
-Opt.doStops          = true;
 
 Opt.filterData       = false;
 Opt.stopHz           = 50;
 Opt.normalize        = false;
 Opt.baselineCorrect  = true;
-Opt.epochName       = 'checkerOn';
+Opt.epochName       = 'targOn';
 Opt.eventMarkName       = 'responseOnset';
 Opt.epochWindow     = -299:300;
 
 
-Opt.outcome             = 'valid';
-Opt.choiceAccuracy      = 'collapse';
-Opt.rightCheckerPct     = 'collapse';
-Opt.ssd                 = 'any';
-Opt.allowRtPreSsd     = true;
+Opt.outcome             = 'goCorrectTarget';
 Opt.targDir             = 'collapse';
 Opt.responseDir    = {'collapse'}; % {'left', 'right'};
-Opt.ssrt                 = 'intWeightPerSession';
 
 
-Opt.include50           = false; % include 50% color coherence conditions?
 Opt.deleteAborts     = true;
-Opt.USE_PRE_SSD   	= true; % Use noncanceled stop trials when RT precedes SSD?
-Opt.USE_TWO_COLORS         = false; % Only use one easy and one hard color for both sides
 
-Opt.latencyMatchMethod 	= 'ssrt';
-Opt.minTrialPerCond     = 15;
 Opt.cellType            =      'presacc';

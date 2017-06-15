@@ -4,6 +4,7 @@ function [trialData, SessionData, ExtraVariable] = load_data(subjectID, sessionI
 % Loads a data file and does some minimal processing common to lots of
 % analyses
 %
+warning('off','all')
 
 if nargin < 4
     multiUnit = false;

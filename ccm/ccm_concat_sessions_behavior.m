@@ -1,16 +1,16 @@
-function ccm_concat_sessions_behavior(subjectID, sessionArray)
+function ccm_concat_sessions_behavior(subjectID, sessionArray, sessionSetName)
 %%
 % subjectID = 'human';
 % subjectID = 'xena';
-subjectID = 'broca';
+% subjectID = 'broca';
 
 % sessionSet = 'neural2';
-sessionSet = 'behavior2';
+% sessionSetName = 'behavior2';
 % sessionSet = 'neural3';
 
-task = 'ccm';
+% task = 'ccm';
 % if nargin < 2
-[sessionArray, subjectIDArray] = task_session_array(subjectID, task, sessionSet);
+% [sessionArray, subjectIDArray] = task_session_array(subjectID, task, sessionSetName);
 % end
 %
 % subjectID = 'pm'
@@ -140,7 +140,7 @@ if strcmp(subjectID, 'human')
     save(['~/schalllab/local_data/human/human_', iSessionID, '.mat'], 'SessionData', 'trialData', '-mat')
 else
 %     save(['~/schalllab/local_data/', subjectID, '/', subjectID, '_', sessionSet, '.mat'], 'trialData', 'SessionData', '-mat')
-    save(['~/schalllab/local_data/', subjectID, '/', subjectID, '_', sessionSet, '_ssd.mat'], '-struct', 'trialData', '-mat')
+    save(['~/schalllab/local_data/', subjectID, '/', subjectID, '_', sessionSetName, '.mat'], '-struct', 'trialData', '-mat')
 end
 
 

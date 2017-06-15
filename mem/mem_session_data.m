@@ -1,4 +1,4 @@
-function [Data, options] = mem_session_data(subjectID, sessionID, options)
+function Data = mem_session_data(subjectID, sessionID, Opt)
 
 %
 % function Unit = mem_session_data(subjectID, sessionID, dataType, varargin)
@@ -11,20 +11,20 @@ function [Data, options] = mem_session_data(subjectID, sessionID, options)
 %   subjectID: e.g. 'Broca', 'Xena', 'pm', etc
 %   sessionID: e.g. 'bp111n01', 'Allsaccade'
 %
-%   options: A structure with various ways to select/organize data: If
+%   Opt: A structure with various ways to select/organize data: If
 %   ccm_session_data.m is called without input arguments, the default
-%   options structure is returned. options has the following fields with
+%   Opt structure is returned. Opt has the following fields with
 %   possible values (default listed first):
 %
-%    options.dataType = 'neuron', 'lfp', 'erp';
+%    Opt.dataType = 'neuron', 'lfp', 'erp';
 %
-%    options.figureHandle   = 1000;
-%    options.printPlot      = false, true;
-%    options.plotFlag       = true, false;
-%    options.collapseTarg         = false, true;
-%    options.filterData 	= false, true;
-%    options.normalize      = false, true;
-%    options.unitArray      = {'spikeUnit17a'},'each', units want to analyze
+%    Opt.figureHandle   = 1000;
+%    Opt.printPlot      = false, true;
+%    Opt.plotFlag       = true, false;
+%    Opt.collapseTarg         = false, true;
+%    Opt.filterData 	= false, true;
+%    Opt.normalize      = false, true;
+%    Opt.unitArray      = {'spikeUnit17a'},'each', units want to analyze
 %
 %
 % Returns Unit structure with fields:
@@ -47,36 +47,29 @@ function [Data, options] = mem_session_data(subjectID, sessionID, options)
 clear Data
 
 if nargin < 3
-    options.dataType = 'neuron';
-    
-    options.figureHandle     = 1000;
-    options.printPlot        = true;
-    options.plotFlag         = true;
-    options.collapseSignal   = false;
-    options.collapseTarg      = false;
-    options.doStops          = true;
-    options.filterData       = false;
-    options.stopHz           = 50;
-    options.normalize        = false;
-    options.unitArray        = 'print';
-    options.baselineCorrect  = true;
-    
-    if nargin == 0
-        Data = options;
-        return
-    end
+    Opt = mem_options;
+    Opt.trialData = [];
 end
-collapseSignal  = options.collapseSignal;
-doStops         = options.doStops;
-normalize       = options.normalize;
-filterData      = options.filterData;
-unitArray       = options.unitArray;
-baselineCorrect = options.baselineCorrect;
+
+% User may have input the data already, so you don't need to load it
+if iscell(sessionID)
+    if nargin < 3
+        Opt = ccm_options;
+        Opt.multiUnit = false;
+        Opt.printFlag = 0;
+        Opt.plotFlag = 0;
+        Opt.collapseTarg = 1;
+    end
+    Opt.unitArray = sessionID(2);
+    sessionID = sessionID{1};
+end
+filterData      = Opt.filterData;
+unitArray       = Opt.unitArray;
 
 
 
 % Load the data
-switch options.dataType
+switch Opt.dataType
     case 'neuron'
         addVar = 'spikeData';
     case 'lfp'
@@ -84,7 +77,7 @@ switch options.dataType
     case 'erp'
         addVar = 'eegData';
 end
-variables = [ccm_min_vars, addVar, 'trialDuration'];
+variables = [mem_min_vars, addVar, 'trialDuration'];
 
 [trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, variables);
 
@@ -122,7 +115,7 @@ movEpoch = mem_epoch_range('responseOnset', 'analyze');
 
 
 % Set defaults
-dataType = options.dataType;
+dataType = Opt.dataType;
 switch dataType
     case 'neuron'
         dataArray     = SessionData.spikeUnitArray;
@@ -133,9 +126,17 @@ switch dataType
     case 'erp'
         dataArray     = eeg_electrode_map(subjectID);
 end
-if strcmp(unitArray, 'each') || strcmp(unitArray, 'step') || strcmp(unitArray, 'print')
-    unitArray     = dataArray;
+
+
+
+% If there was not a custom set of units or channels input to process, do
+% them all
+if isempty(Opt.unitArray)
+    if strcmp(Opt.howProcess, 'each') || strcmp(Opt.howProcess, 'step') || strcmp(Opt.howProcess, 'print') || strcmp(Opt.howProcess, 'pop')
+        Opt.unitArray     = dataArray;
+    end
 end
+
 
 % Make sure user input a dataType that was recorded during the session
 dataTypePossible = {'neuron', 'lfp', 'erp'};
@@ -339,7 +340,7 @@ for kDataIndex = 1 : nUnit
         
     end % mEpoch
     
-    yLimMax = max(yMax(kDataIndex, :)) * 1.1;
+    yLimMax = max(yMax(kDataIndex, :)) * 1.1 + 1;
     %          yLimMax = 55;
     switch dataType
         case 'neuron'
@@ -354,18 +355,17 @@ for kDataIndex = 1 : nUnit
     
     
     if strcmp(dataType, 'neuron')
-        classify_cell_type
+        [Data(kDataIndex).cellType, Data(kDataIndex).rf] = mem_classify_cell(Data(kDataIndex));
     end
     
     % print the figure if we're stepping through
-    if options.plotFlag
-        switch options.unitArray
-            case {'step','print'}
-                mem_session_data_plot(Data(kDataIndex), options)
-                if strcmp(options.unitArray, 'step')
+    if Opt.plotFlag
+        switch Opt.howProcess
+            case {'step','print', 'each'}
+                mem_session_data_plot(Data(kDataIndex), Opt)
+                if strcmp(Opt.howProcess, 'step')
                     pause
                 end
-                clear Data
         end
     end
 end % kUnitIndex
@@ -374,8 +374,8 @@ end % kUnitIndex
 
 
 
-if options.plotFlag && ~strcmp(options.unitArray, 'step') && ~strcmp(options.unitArray, 'each') && ~strcmp(options.unitArray, 'print')
-    mem_session_data_plot(Data, options)
+if Opt.plotFlag && ~strcmp(Opt.howProcess, 'step') && ~strcmp(Opt.howProcess, 'each') && ~strcmp(Opt.howProcess, 'print')
+    mem_session_data_plot(Data, Opt)
 end
 
 
@@ -384,7 +384,7 @@ Data(1).unitArray       = unitArray;
 Data(1).dataArray       = dataArray;
 Data(1).sessionID       = sessionID;
 Data(1).subjectID       = subjectID;
-Data(1).options         = options;
+Data(1).Opt         = Opt;
 
 
 
@@ -397,82 +397,6 @@ Data(1).options         = options;
 %*******************************************************************
 
 
-%**********************   CLASSIFY CELL RESPONSE TYPE    %*************************
-    function classify_cell_type
-        if strcmp(dataType, 'neuron')
-            %     for kDataIndex = 1 : nUnit
-            
-            
-            vis = false;
-            mov = false;
-            alpha = .05;
-            baseEpoch = -99 : 0;
-            visEpoch = mem_epoch_range('targOn', 'analyze');
-            movEpoch = mem_epoch_range('responseOnset', 'analyze');
-            
-            
-            baseRasR = Data(kDataIndex).rightTarg.targOn.raster(:, baseEpoch + Data(kDataIndex).rightTarg.targOn.alignTime);
-            baseRasL = Data(kDataIndex).leftTarg.targOn.raster(:, baseEpoch + Data(kDataIndex).leftTarg.targOn.alignTime);
-            nBaseSpikeR = nansum(baseRasR, 2);
-            nBaseSpikeL = nansum(baseRasL, 2);
-            
-            
-            % Visual cell?
-            rightRas = Data(kDataIndex).rightTarg.targOn.raster(:, visEpoch + Data(kDataIndex).rightTarg.targOn.alignTime);
-            nRightSpike = nansum(rightRas, 2);
-            [h, p, ci, stats] = ttest2(nBaseSpikeR, nRightSpike);
-            if p < alpha && nanmean(nBaseSpikeR) < nanmean(nRightSpike)
-                vis = true;
-            end
-            
-            leftRas = Data(kDataIndex).leftTarg.targOn.raster(:, visEpoch + Data(kDataIndex).leftTarg.targOn.alignTime);
-            nLeftSpike = nansum(leftRas, 2);
-            [h, p, ci, stats] = ttest2(nBaseSpikeL, nLeftSpike);
-            if p < alpha && nanmean(nBaseSpikeL) < nanmean(nLeftSpike)
-                vis = true;
-            end
-            
-            
-            % Movement cell?
-            rightRas = Data(kDataIndex).rightTarg.responseOnset.raster(:, movEpoch + Data(kDataIndex).rightTarg.responseOnset.alignTime);
-            nRightSpike = nansum(rightRas, 2);
-            [h, p, ci, stats] = ttest2(nBaseSpikeR, nRightSpike);
-            if p < alpha && nanmean(nBaseSpikeR) < nanmean(nRightSpike)
-                mov = true;
-            end
-            
-            leftRas = Data(kDataIndex).leftTarg.responseOnset.raster(:, movEpoch + Data(kDataIndex).leftTarg.responseOnset.alignTime);
-            nLeftSpike = nansum(leftRas, 2);
-            [h, p, ci, stats] = ttest2(nBaseSpikeL, nLeftSpike);
-            if p < alpha && nanmean(nBaseSpikeL) < nanmean(nLeftSpike)
-                mov = true;
-            end
-            
-            
-            
-            if ~vis && ~mov
-                Data(kDataIndex).cellType = nan;
-            elseif vis && ~mov
-                Data(kDataIndex).cellType = 'visual';
-            elseif ~vis && mov
-                Data(kDataIndex).cellType = 'movement';
-            elseif vis && mov
-                Data(kDataIndex).cellType = 'visuomovement';
-            end
-            %     end % kUnitIndex
-        end
-    end
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -481,9 +405,9 @@ Data(1).options         = options;
 
 
 %**********************   PLOTTING    %*************************
-    function mem_session_data_plot(PlotData, options)
+    function mem_session_data_plot(PlotData, Opt)
         
-        if options.plotFlag
+        if Opt.plotFlag
             cMap = ccm_colormap([0 1]);
             kernelMethod = 'gaussian';
             SIGMA = 20;
@@ -494,7 +418,7 @@ Data(1).options         = options;
             
             
             [nUnitPlot, nTargPair] = size(PlotData);
-            figureHandle    = options.figureHandle;
+            figureHandle    = Opt.figureHandle;
             
             
             targLineW = 2;
@@ -506,7 +430,7 @@ Data(1).options         = options;
                 nEpoch = length(epochArray);
                 nColumn = nEpoch;
                 figureHandle = figureHandle + 1;
-                if options.printPlot
+                if Opt.printPlot
                     [axisWidth, axisHeight, xAxesPosition, yAxesPosition] = standard_landscape(nRow, nColumn, figureHandle);
                 else
                     [axisWidth, axisHeight, xAxesPosition, yAxesPosition] = screen_figure(nRow, nColumn, figureHandle);
@@ -635,14 +559,19 @@ Data(1).options         = options;
                 h=axes('Position', [0 0 1 1], 'Visible', 'Off');
                 titleString = sprintf('%s \t %s', sessionID, PlotData(kDataPlot).name);
                 text(0.5,1, titleString, 'HorizontalAlignment','Center', 'VerticalAlignment','Top', 'color', 'k')
-                if options.printPlot
-                    localFigurePath = local_figure_path;
-                    %          print(figureHandle,[localFigurePath, sessionID, '_', dataArray{kDataPlot}, '_mem_session_' dataType],'-dpdf', '-r300')
-                    %             print(figureHandle,[localFigurePath, sessionID, '_', dataArray{kDataPlot}, '_mem_session_' dataType],'-djpeg')
-%                     print(figureHandle,[local_figure_path, sessionID, '_mem_', PlotData(kDataPlot).name, '_',dataType,'.pdf'],'-dpdf', '-r300')
- micalaFolder = '/Volumes/SchallLab/Users/Paul/micala/mem/';
-print(figureHandle,[micalaFolder, sessionID, '_mem_', PlotData(kDataPlot).name, '_',dataType,'.pdf'],'-dpdf', '-r300')
-               end
+                if Opt.printPlot
+                    if strcmp(Opt.task, 'del')
+                        if ~isdir(fullfile(local_figure_path, subjectID, 'del'))
+                            mkdir(fullfile(local_figure_path, subjectID, 'del'))
+                        end
+                        print(figureHandle, fullfile(local_figure_path,subjectID, 'del', [sessionID, '_del_', PlotData(kDataPlot).name, '_',dataType,'.pdf']),'-dpdf', '-r300')
+                    else
+                        if ~isdir(fullfile(local_figure_path, subjectID, 'mem'))
+                            mkdir(fullfile(local_figure_path, subjectID, 'mem'))
+                        end
+                        print(figureHandle, fullfile(local_figure_path,subjectID, 'mem', [sessionID, '_mem_', PlotData(kDataPlot).name, '_',dataType,'.pdf']),'-dpdf', '-r300')
+                    end
+                end
             end % kUnitIndex
             
             

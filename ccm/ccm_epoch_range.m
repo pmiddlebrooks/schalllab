@@ -23,17 +23,22 @@ switch breadth
         % Set a standard range so each panel of a graph
         epochRange = -99 : 400;
         epochRange = -99 : 300;
+        epochRange = 1 : 600;
         switch epochName
             case 'fixWindowEntered'
                 shiftRange = 0;
             case 'targOn'
-                shiftRange = 0;
+                shiftRange = 50;
+                shiftRange = -50;
             case 'checkerOn'
                 shiftRange = 50;
+                shiftRange = 0;
             case 'stopSignalOn'
                 shiftRange = -100;
             case 'responseOnset'
+        epochRange = -199 : 100;
                 shiftRange = -100;
+                shiftRange = 0;
             case 'responseOffset'
                 shiftRange = -150;
             case 'toneOn'
@@ -46,7 +51,7 @@ switch breadth
         
     case 'analyze'
         % Set a broad range for analyses
-        epochRange = -299 : 500;
+        epochRange = -499 : 800;
                 shiftRange = 0;
 %         switch epochName
 %             case 'fixWindowEntered'

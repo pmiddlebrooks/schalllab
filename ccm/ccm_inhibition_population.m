@@ -1,10 +1,10 @@
-function data = ccm_inhibition_population(subjectID, sessionSet, plotFlag)
+function data = ccm_inhibition_population(subjectID, sessionSet, options)
 
 if nargin < 3
-    plotFlag = 1;
-end
-if nargin < 2
-    sessionSet = 'behvaior';
+    options = ccm_options;
+    options.plotFlag = 1;
+    options.printPlot = 1;
+    options.saveName = [];
 end
 
 task = 'ccm';
@@ -32,33 +32,36 @@ optInh.USE_TWO_COLORS = false;
 
 
 figureHandle = 4900;
-printFlag = true;
 plotSurface = false;
 
 switch lower(subjectID)
     case 'joule'
-        [td, S, E] =load_data(subjectID, sessionArray{1});
+        [td, S, E] =load_data(subjectID, sessionArray{1},ccm_min_vars);
         pSignalArray = E.pSignalArray;
     case 'human'
         pSignalArray = [.35 .42 .46 .5 .54 .58 .65];
     case 'broca'
-        %       switch sessionSet
-        %          case 'behavior'
-        %             pSignalArray = [.41 .45 .48 .5 .52 .55 .59];
-        %          case 'neural1'
-        %             pSignalArray = [.41 .44 .47 .53 .56 .59];
-        %          case 'neural2'
-        %             pSignalArray = [.42 .44 .46 .54 .56 .58];
-        %            otherwise
-        [td, S, E] =load_data(subjectID, sessionArray{1});
+        if iscell(sessionSet)
+        [td, S, E] =load_data(subjectID, sessionArray{1}, ccm_min_vars);
         pSignalArray = E.pSignalArray;
-        %                if length(pSignalArray) == 6
-        %                    pSignalArray([2 5]) = [];
-        %                elseif length(pSignalArray) == 7
-        %                    pSignalArray([2 4 6]) = [];
-        %                end
-        pSignalArray = [.43 .45 .47 .53 .55 .57];
-        %       end
+        else
+              switch sessionSet
+                 case 'behavior'
+                    pSignalArray = [.41 .45 .48 .5 .52 .55 .59];
+                 case 'behavior2'
+                    pSignalArray = [.43 .45 .47 .53 .55 .57];
+                 case 'neural1'
+                    pSignalArray = [.41 .44 .47 .53 .56 .59];
+                 case 'neural2'
+                    pSignalArray = [.42 .44 .46 .54 .56 .58];
+                   otherwise
+                       if length(pSignalArray) == 6
+                           pSignalArray([2 5]) = [];
+                       elseif length(pSignalArray) == 7
+                           pSignalArray([2 4 6]) = [];
+                       end
+              end
+        end
     case 'xena'
         pSignalArray = [.35 .42 .47 .5 .53 .58 .65];
 end
@@ -79,7 +82,7 @@ nSignalStrength = length(pSignalArray);
 
 nSession = length(sessionArray);
 
-if plotFlag
+if options.plotFlag
     nRow = 3;
     nColumn = 2;
     axSSRT = 1;
@@ -154,11 +157,18 @@ ssrtGrandInt = [];
 % OBSERVED VS. PREDICTED RTS  **********
 dataStopRespondRT = [];
 dataStopRespondRTPredict = [];
+
+% Mean number of canceled stop trials in each session
+nStopMean = nan(nSession, 1);
 for iSession = 1 : nSession
     
     disp(sessionArray{iSession})
     iData               = ccm_inhibition(subjectIDArray{iSession}, sessionArray{iSession}, optInh);
     iData.ssrtIntegration = cellfun(@nanmean, iData.ssrtIntegration);
+    
+    % Mean number of stop trials in each session for the case when canceled stop trials number at least 10
+    iOver10Trial = iData.nStopStop >= 10;
+    nStopMean(iSession) = mean(iData.nStop(iOver10Trial));
     
     
     % GRAND INHIBITION FN ***********************
@@ -324,6 +334,7 @@ g = @(x) sprintf('%.2f', x);
 group = cellfun(g, num2cell(pSignalArray'), 'uni', false);
 % group = pSignalArray';
 [p, table, stats] = anova1(ssrtIntWeight, group, 'off')
+eta2Sig = table{2,2}/table{end,2}
 c = multcompare(stats, 'display', 'off')
 ssrtIntWtMean = mean(ssrtGrandIntWeight)
 ssrtIntWtStd = std(ssrtGrandIntWeight)
@@ -333,6 +344,7 @@ data.table = table;
 disp('********************************************')
 disp('ANOVA for SSRT: Mean')
 [p, table, stats] = anova1(ssrtMean, group, 'off')
+eta2Sig = table{2,2}/table{end,2}
 c = multcompare(stats, 'display', 'off')
 ssrtMeanGrandMean = mean(ssrtGrandMean)
 ssrtMeanGrandStd = std(ssrtGrandMean)
@@ -372,7 +384,7 @@ eta2RTSSD = table{2,2} / (table{2,2} + table{end-1,2})
 
 
 
-if plotFlag
+if options.plotFlag
     
     
     % GRAND INHIBITION FN ***********************
@@ -396,9 +408,9 @@ if plotFlag
     % SSRT  ********************************
     %    plot(ax(axSSRT), pSignalArray, mean(ssrtInt, 1), '-ok', 'markeredgecolor', 'k', 'markerfacecolor', 'k', 'markersize', 10)
     errorbar(ax(axSSRT), pSignalArray ,ssrtPlotAvg, ssrtPlotStd, '.' , 'linestyle' , 'none', 'color', 'k', 'linewidth' , 2)
-    plot(ax(axSSRT), pSignalArray, mean(ssrtPlot, 1), '-or', 'markeredgecolor', 'r', 'markerfacecolor', 'r', 'markersize', 10)
+    plot(ax(axSSRT), pSignalArray, mean(ssrtPlot, 1), 'ok', 'markeredgecolor', 'k', 'markerfacecolor', 'k', 'markersize', 10)
     %    plot(ax(axSSRT), pSignalArray, mean(ssrtMean, 1), '-og', 'markeredgecolor', 'g', 'markerfacecolor', 'g', 'markersize', 10)
-     plot(ax(axSSRT), pSignalArray, mean(ssrtInt, 1), '-ob', 'markeredgecolor', 'r', 'markerfacecolor', 'r', 'markersize', 10)
+%      plot(ax(axSSRT), pSignalArray, mean(ssrtInt, 1), '-ob', 'markeredgecolor', 'r', 'markerfacecolor', 'r', 'markersize', 10)
    
     set(ax(axSSRT), 'Xlim', [pSignalArray(1) - choicePlotXMargin, pSignalArray(end) + choicePlotXMargin])
     set(ax(axSSRT), 'xtick', pSignalArray)
@@ -521,8 +533,8 @@ if plotFlag
     stopRespondRTPredict = round(stopRespondRTPredict)
     
     
-    if printFlag
-        print(figureHandle,fullfile(local_figure_path, subjectID,'ccm_population_inhibition'),'-dpdf', '-r300')
+    if options.printPlot
+        print(figureHandle,fullfile(local_figure_path, subjectID,['ccm_population_inhibition_',options.saveName]),'-dpdf', '-r300')
     end
 end
 
@@ -530,6 +542,7 @@ end
 data.ssrtIntWeight = ssrtIntWeight;
 data.ssrtGrandIntWeight = ssrtGrandIntWeight;
 data.rtGo = rtGo;
+data.nStopMean = nStopMean;
 
 
 

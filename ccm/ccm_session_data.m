@@ -90,7 +90,7 @@ nOutcome            = length(goOutcomeArray) + length(stopOutcomeArray);
 
 
 % tic
-        % Load (or get the input) data
+% Load (or get the input) data
 if ~isempty(Opt.trialData)
     trialData = Opt.trialData;
     SessionData = Opt.SessionData;
@@ -530,6 +530,16 @@ for kDataInd = 1 : nUnit
                             
                             
                             alignListStop = trialData.(mEpochName)(jStopTrial);
+                            
+                            % Save the list of alignement for stopStop
+                            % checkerOn, to use below for aligning stopStop
+                            % "responseOnset" to checker Onset plut mean Go
+                            % Slow RT
+                            if strcmp(stopOutcomeArray{s}, 'stopStop') && strcmp(mEpochName, 'checkerOn')
+                                stopStopCheckerTrial = jStopTrial;
+                                stopStopCheckerOnList = alignListStop;
+                            end
+                            
                             Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(stopOutcomeArray{s}).ssd(jSSDIndex).alignTimeList = alignListStop;   % Keep track of trial-by-trial alignemnt
                             
                             
@@ -630,9 +640,24 @@ for kDataInd = 1 : nUnit
                         goFastTrial = iGoTargTrial(goFastTrial);
                         goSlowTrial = iGoTargTrial(goSlowTrial);
                         
-                        % Move stop rts here
-                        if strcmp(mEpochName, 'checkerOn') && ~strcmp(stopOutcomeArray(s), 'goSlow')
+                        % Go fast and slow rts
+                        if strcmp(mEpochName, 'checkerOn')
                             Data(kDataInd, jTarg).checkerOn.colorCoh(iColor).goFast.ssd(jSSDIndex).rt = trialData.rt(goFastTrial);
+                            Data(kDataInd, jTarg).checkerOn.colorCoh(iColor).goSlow.ssd(jSSDIndex).rt = trialData.rt(goSlowTrial);
+                            
+                            % Use mean RTs during GO Slow trials to define
+                            % a "responseOnset" alignement for stopStop
+                            % trials
+                            alignListStop = stopStopCheckerOnList + round(nanmean(trialData.rt(goSlowTrial)));
+                            [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(stopStopCheckerTrial, kUnit), alignListStop);
+                            Data(kDataInd, jTarg).responseOnset.colorCoh(iColor).stopStop.ssd(jSSDIndex).alignTime = alignmentIndex;
+                            
+                            sdf = spike_density_function(alignedRasters, Kernel);
+                            Data(kDataInd, jTarg).responseOnset.colorCoh(iColor).stopStop.ssd(jSSDIndex).raster = alignedRasters;
+                            Data(kDataInd, jTarg).responseOnset.colorCoh(iColor).stopStop.ssd(jSSDIndex).sdf = sdf;
+                            Data(kDataInd, jTarg).responseOnset.colorCoh(iColor).stopStop.ssd(jSSDIndex).sdfMean = nanmean(sdf, 1);
+                            clear sdf alignedRasters
+                            
                         end
                         
                         alignListGoFast = trialData.(mEpochName)(goFastTrial);
@@ -745,8 +770,8 @@ for kDataInd = 1 : nUnit
                     if strcmp(howProcess, 'step')
                         pause
                     end
-                    if size(Data) > 1
-                    clear Data
+                    if nUnit > 1
+                        clear Data
                     end
             end
         end

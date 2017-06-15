@@ -143,15 +143,27 @@ prd.chiSquare   = chiSquare;
 allBic          = cell2mat(bic);
 allChiSquare    = cell2mat(chiSquare);
 
+% How many bins are we fitting?
+nBins = sum([cellfun(@length, obs.rtQGoCCorr);...
+    cellfun(@length, obs.rtQGoCError);...
+    cellfun(@length, obs.rtQStopICorr);...
+    cellfun(@length, obs.rtQStopIErrorCCorr);...
+    cellfun(@length, obs.rtQStopIErrorCError)]);
+
 switch lower(costStat)
   case 'bic'
-    cost    = sum(allBic);
+%     cost    = sum(allBic);
+%     cost    = sum(allBic) + nFree * log(sum(obs.nTotal));
+    cost    = sum(allBic) + nFree * log(nBins);
     altCost = sum(allChiSquare);
   case 'chisquare'
     cost    = sum(allChiSquare);
-    altCost = sum(allBic);
+%     altCost = sum(allBic);
+%     altCost    = sum(allBic) + nFree * log(sum(obs.nTotal));
+    altCost    = sum(allBic) + nFree * log(nBins);
 end
 
+    
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 4. NESTED FUNCTIONS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -175,6 +187,10 @@ function [bic,chiSquare] = compute_cost(rtPrd,rtQObs,probMassDefectiveObs,nSim,n
     chiSquare     = sam_chi_square(probMassDefectiveObs(:),probMassDefectivePrd(:),nTrialObs);
     bic           = sam_bic(probMassDefectiveObs(:),probMassDefectivePrd(:),nTrialObs,nFree);
 %     bic           = sam_bic(probMassDefectiveObs(:),probMassDefectivePrd(:),length(rtQObs),nFree);
+    if bic == -Inf
+        disp(bic)
+    end
+    bic(bic == -Inf) = 0;
   
 end
 end

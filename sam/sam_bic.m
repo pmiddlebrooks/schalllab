@@ -20,5 +20,6 @@ function bic = sam_bic(pMObs,pMPrd,nObs,nFree)
 % Bram Zandbelt, bramzandbelt@gmail.com 
 % $Created : Thu 10 Apr 2014 14:29:49 CDT by bram 
 % $Modified: Thu 10 Apr 2014 14:29:49 CDT by bram 
-bic = -2 * sum((pMObs*nObs) .* log(pMPrd)) + nFree * log(sum(nObs));
+% bic = -2 * sum((pMObs*nObs) .* log(pMPrd)) + nFree * log(sum(nObs));
+bic = -2 * sum((pMObs*nObs) .* log(pMPrd));
 

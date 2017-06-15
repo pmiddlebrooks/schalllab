@@ -21,7 +21,7 @@ tebaPath = '/Volumes/SchallLab/data/';
 
 
 for i = 1 : length(session)
-    [~, SessionData] = (subject, session{i});
+    [~, SessionData] = load_data(subject, session{i});
     
     SessionData.hemisphere = 'left';
     
@@ -553,7 +553,8 @@ end
 
 %%
 subject = 'joule';
-sessionList = memList;
+sessionList = {'jp116n01', 'jp119n01', 'jp121n01', 'jp123n01', 'jp124n01', 'jp125n01'};
+sessionList = {'jp106n01'};
 
 tOpt = plexon_translate_datafile_mac;
 tOpt.hemisphere = 'left';
@@ -639,14 +640,14 @@ sessionList = unique(neuronTypes.sessionID);
 
 for i = 1 : 1%length(sessionList)
     fprintf('\n\n\n\n%s\n\n\n\n', sessionList{i});
-%         data = ccm_session_behavior(subject, sessionList{i});
+    %         data = ccm_session_behavior(subject, sessionList{i});
     data = ccm_inhibition_ssd_metrics(subject, sessionList{i});
-%     data = ccm_inhibition_rt(subject, sessionList{i});
+    %     data = ccm_inhibition_rt(subject, sessionList{i});
     
     
     
     
-end   
+end
 
 %%    SSRT across color coherence within each SSD - Population
 opt = ccm_options;
@@ -657,16 +658,16 @@ opt.printPlot = 0;
 
 for i = 1 : 1%length(sessionList)
     fprintf('\n\n\n\n%s\n\n\n\n', sessionList{i});
-        data = ccm_session_behavior(subject, sessionList{i});
+    data = ccm_session_behavior(subject, sessionList{i});
     data = ccm_inhibition_rt(subject, sessionList{i});
     
     
     
     
     
-end   
+end
 
-    
+
 
 
 
@@ -696,13 +697,13 @@ ssdArray = unique(cell2mat(cancelData.stopStopSsd));
 
 
 for i = 1 :length(ssdArray)
-hardInd = cellfun(@(x) x == .58, cancelData.stopStopCoh, 'uni', false);
-ssdInd =  cellfun(@(x) x == ssdArray(i), cancelData.stopStopSsd, 'uni', false);
-
-iHardCoh = cellfun(@(x,y,z) x(y & z), cancelData.stopStopCoh, hardInd, ssdInd, 'uni', false);
-iSSD = cellfun(@(x,y,z) x(y & z), cancelData.stopStopSsd, hardInd, ssdInd, 'uni', false);
-iNeuralCancelTime = cellfun(@(x,y,z,k) x(y & z) - k(y & z), cancelData.cancelTime2Std, hardInd, ssdInd, cancelData.stopStopSsd, 'uni', false);
-% iSsrt = cellfun(@(x) x - cancel
+    hardInd = cellfun(@(x) x == .58, cancelData.stopStopCoh, 'uni', false);
+    ssdInd =  cellfun(@(x) x == ssdArray(i), cancelData.stopStopSsd, 'uni', false);
+    
+    iHardCoh = cellfun(@(x,y,z) x(y & z), cancelData.stopStopCoh, hardInd, ssdInd, 'uni', false);
+    iSSD = cellfun(@(x,y,z) x(y & z), cancelData.stopStopSsd, hardInd, ssdInd, 'uni', false);
+    iNeuralCancelTime = cellfun(@(x,y,z,k) x(y & z) - k(y & z), cancelData.cancelTime2Std, hardInd, ssdInd, cancelData.stopStopSsd, 'uni', false);
+    % iSsrt = cellfun(@(x) x - cancel
 end
 
 %% matlab
@@ -754,6 +755,229 @@ data = ccm_inhibition_population(subject, sessionList)
 
 
 %%
-        [td s] = load_data('joule', 'jp125n04', [ccm_min_vars,'spikeData']);
+[td s] = load_data('joule', 'jp125n04', [ccm_min_vars,'spikeData']);
+
+%%              Memory-guided spiking data for Kaleb
+% =======================================================================
+% Which computer are you on?
+
+if isdir('/Volumes/HD-1/Users/paulmiddlebrooks/')
+    projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/memory_guided_saccades';
+elseif isdir('/Volumes/Macintosh HD/Users/elseyjg/')
+    projectRoot = '/Volumes/Macintosh HD/Users/elseyjg/Memory-Guided-Saccade-Project';
+else
+    disp('You need to add another condition or the file path is wrong.')
+end
+
+dataRoot = fullfile(projectRoot, 'data');
+
+%%
+cd('~/schalllab')
+subject = 'joule';
+
+load(fullfile(dataRoot, subject, 'mem_units.mat'))
+sessionID = units.sessionID;
+unit = units.unit;
+
+opt = mem_options;
+opt.printPlot = true;
 
 
+sdfVis = cell(length(sessionID), 1);
+sdfMov = cell(length(sessionID), 1);
+visEpochWindow = -300:500;
+movEpochWindow = -500:300;
+poolID = parpool(4);
+parfor i = 1 : length(sessionID)
+    fprintf('%s\t%s\n',sessionID{i}, unit{i})
+    iUnit = [sessionID(i), unit(i)];
+    iData = mem_session_data(subject, iUnit, opt);
+    if isnan(iData.rf)
+        if strcmp(units.hemisphere{i}, 'left')
+            iData.rf = 'right';
+        else
+            iData.rf = 'left';
+        end
+    end
+    sdfVis{i} = iData.([iData.rf,'Targ']).targOn.signalMean(iData.([Data.rf,'Targ']).targOn.alignTime + visEpochWindow);
+    sdfMov{i} = iData.([iData.rf,'Targ']).responseOnset.signalMean(iData.([Data.rf,'Targ']).responseOnset.alignTime + movEpochWindow);
+end
+delete(poolID)
+
+%%
+sdf = [sdfVis, sdfMov];
+time = [repmat({visEpochWindow}, length(sessionID), 1), repmat({movEpochWindow}, length(sessionID), 1)];
+save([local_data_path, 'mem_data_joule'], 'sdf', 'time', 'sessionID', 'unit')
+
+
+
+
+%%              Delaye saccade spiking data for Kaleb
+
+load(fullfile(dataRoot, subject, 'mem_units.mat'))
+sessionList = unique(units.sessionID);
+subject = 'joule';
+% sessionList = {'jp116n01', 'jp119n01', 'jp121n01', 'jp123n01', 'jp124n01', 'jp125n01'};
+% sessionList = {'jp106n01'};
+
+tOpt = plexon_translate_datafile_mac;
+tOpt.hemisphere = 'left';
+
+for i = 1 : length(sessionList)
+    plexon_translate_datafile_mac(subject, sessionList{i},tOpt);
+end
+
+%%
+% =======================================================================
+% Which computer are you on?
+
+if isdir('/Volumes/HD-1/Users/paulmiddlebrooks/')
+    projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/memory_guided_saccades';
+elseif isdir('/Volumes/Macintosh HD/Users/elseyjg/')
+    projectRoot = '/Volumes/Macintosh HD/Users/elseyjg/Memory-Guided-Saccade-Project';
+else
+    disp('You need to add another condition or the file path is wrong.')
+end
+
+dataRoot = fullfile(projectRoot, 'data');
+
+%%
+
+subject = 'broca';
+%%
+load(fullfile(dataRoot, subject, 'del_units.mat'))
+sessionID = units.sessionID;
+unit = units.unit;
+
+opt = mem_options;
+opt.printPlot = true;
+opt.task = 'del';
+
+
+sdfVis = cell(length(sessionID), 1);
+sdfMov = cell(length(sessionID), 1);
+visEpochWindow = -300:500;
+movEpochWindow = -500:300;
+poolID = parpool(4);
+parfor i = 1 : length(sessionID)
+    fprintf('%s\t%s\n',sessionID{i}, unit{i})
+    iUnit = [sessionID(i), unit(i)];
+    iData = mem_session_data(subject, iUnit, opt);
+    if isnan(iData.rf)
+        if strcmp(units.hemisphere{i}, 'left')
+            iData.rf = 'right';
+        else
+            iData.rf = 'left';
+        end
+    end
+    sdfVis{i} = iData.([iData.rf,'Targ']).targOn.signalMean(iData.([Data.rf,'Targ']).targOn.alignTime + visEpochWindow);
+    sdfMov{i} = iData.([iData.rf,'Targ']).responseOnset.signalMean(iData.([Data.rf,'Targ']).responseOnset.alignTime + movEpochWindow);
+end
+delete(poolID)
+
+%%
+sdf = [sdfVis, sdfMov];
+time = [repmat({visEpochWindow}, length(sessionID), 1), repmat({movEpochWindow}, length(sessionID), 1)];
+save([local_data_path, 'del_data_broca'], 'sdf', 'time', 'sessionID', 'unit')
+
+
+%%
+lowRate = [1 10 50];
+highRate = [1 10 50 100];
+nTrial = [5 50 500];
+
+pSignRank = nan(length(lowRate), length(highRate), length(nTrial));
+pTTest = nan(length(lowRate), length(highRate), length(nTrial));
+for i = 1 : length(lowRate)
+    iHighRateInd = highRate >= lowRate(i);
+%     iHighRate = highRate(highRate >= lowRate(i));
+    for j = find(iHighRateInd) : length(highRate)
+        for k = 1 : length(nTrial);
+        jLowRand = poissrnd(lowRate(i), nTrial(k), 1);
+        jHighRand = poissrnd(highRate(j), nTrial(k), 1);
+        
+        [p,h,stats]   = signrank(jLowRand, jHighRand);
+        pSignRank(i,j,k) = p;
+
+        [h,p,ci,stats] = ttest(jLowRand, jHighRand);
+        pTTest(i,j,k) = p; 
+        end
+    end
+end
+
+        
+  
+%%
+[alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(trial, spikeDataInd), trialData.responseOnset(trial));
+Kernel.method = 'postsynaptic potential';
+Kernel.growth = 1;
+Kernel.decay = 20;
+sdf = spike_density_function(alignedRasters, Kernel);
+sdf = sdf(:,alignmentIndex+(-200:0));
+
+spikeData = cellfun(@(in1,in2,in3) sort(in1(in1 > in2 & in1 < in3)), trialData.spikeData(trial,spikeDataInd), saccadeWinBegin, saccadeWinEnd, 'uni', false);
+
+%%
+clf
+
+for i = 1 : size(sdf, 1)
+ figure(9)
+   plot(sdf(i,:))
+    Data.saccadeSpikeInterval{i}
+ figure(10)
+   
+    plot(1:length(Data.saccadeSpikeInterval{i}), Data.saccadeSpikeInterval{i})
+    spikeData{i}
+    pause
+end
+
+%%
+opt = ccm_options;
+opt.multiUnit = true;
+
+Data = ccm_interspike_interval('joule','jp125n04','spikeUnit17',opt);
+%%
+
+[trialData s] = load_data('joule', 'jp060n01', [mem_min_vars,'spikeData'], true);
+
+outcome = {'saccToTarget'};
+side = {'right'};
+trials = mem_trial_selection(trialData, outcome, side);
+
+%%
+unitIndex = 1;
+alignEvent = 'responseOnset';
+alignList = trialData.(alignEvent)(trials);
+ 
+    
+% Get the rasters (and what index they align to)
+[alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(trials, unitIndex), alignList);
+
+
+%%
+
+for i = 1 : size(classicDdmCancel, 1)
+options = ccm_options;
+
+options.multiUnit = true;
+options.plotFlag = true;
+options.printPlot = true;
+options.ms2Std = 75;
+
+
+
+Data = ccm_neuron_stop_vs_go('joule', classicDdmCancel.sessionID{i},  classicDdmCancel.unit(i), options);
+
+options.unitArray = classicDdmCancel.unit(i);
+options.doStops = false;
+
+Data = ccm_session_data('joule', classicDdmCancel.sessionID{i},  options);
+    
+end
+    
+%%
+opt = ccm_neuron_stop_vs_go;
+opt.multiUnit = true;
+
+data = ccm_neuron_stop_vs_go('broca', 'bp244n02', {'spikeUnit27'}, opt);
+    

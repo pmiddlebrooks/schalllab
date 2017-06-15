@@ -1,10 +1,10 @@
-function data = ccm_chronometric_population(subjectID, sessionSet, plotFlag)
+function data = ccm_chronometric_population(subjectID, sessionSet, options)
 
 if nargin < 3
-    plotFlag = 1;
-end
-if nargin < 2
-    sessionSet = 'behvaior';
+    options = ccm_options;
+    options.plotFlag = 1;
+    options.printPlot = 1;
+    options.saveName = [];
 end
 
 %%
@@ -33,7 +33,6 @@ end
 
 figureHandle = 4950;
 % end
-printFlag = true;
 
 
 
@@ -56,7 +55,7 @@ nSession = length(sessionArray);
 
 
 
-if plotFlag
+if options.plotFlag
     nRow = 3;
     nColumn = 2;
     rtAx = 1;
@@ -74,7 +73,8 @@ if plotFlag
         case 'Human'
             set(ax(rtAx), 'Ylim', [400 900])
         otherwise
-            set(ax(rtAx), 'Ylim', [250 500])
+            set(ax(rtAx), 'Ylim', [200 500])
+%             set(ax(rtAx), 'Ylim', [250 550])
     end
     hold(ax(rtAx), 'on')
     hold(ax(ssdAx), 'on')
@@ -234,7 +234,7 @@ fprintf('\nStop: Targ: %.0f (%.0f) \tDist: %.0f (%.0f)', stopTargMean, stopTargS
 
 
 
-if plotFlag
+if options.plotFlag
     % PLOT GO TRIALS
     plot(ax(rtAx), pSignalArrayLeft, goLeftTargMean, '-o', 'color', goColor, 'linewidth' , 2, 'markeredgecolor', goColor, 'markerfacecolor', [1 1 1], 'markersize', 10)
     errorbar(ax(rtAx), pSignalArrayLeft ,goLeftTargMean, goLeftTargStd, 'linestyle' , 'none', 'color', goColor, 'linewidth' , 2)
@@ -463,7 +463,7 @@ size(sessionNumber)
 
 datas = [rtData, groupInh, groupTarg, groupSig, sessionNumber];
 
-if printFlag
-    print(figureHandle,fullfile(local_figure_path, subjectID,'ccm_population_chronometric.pdf'),'-dpdf', '-r300')
+if options.printPlot
+    print(figureHandle,fullfile(local_figure_path, subjectID,['ccm_population_chronometric_',options.saveName]),'-dpdf', '-r300')
 end
-data = []
+

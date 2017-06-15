@@ -46,13 +46,15 @@ if nargin < 4
     %Data type to collect/analyze
     options.dataType        	= 'neuron';
     options.multiUnit        	= false;
+    options.ANALYZE_NONCANCELED = true;
+    options.ANALYZE_CANCELED    = true;
     
     options.collapseSignal   	= false;
     options.collapseTarg        = true;
     options.latencyMatchMethod 	= 'ssrt';
     options.minTrialPerCond     = 10;
     options.cellType            =      'move';
-    options.ssrt            =      c; % 'intWeightPerSession, inttPerSession, intWeightPerCoherence, intPerCoherence, intPerSsd
+    options.ssrt            =      'intWeightPerSession'; % 'intWeightPerSession, inttPerSession, intWeightPerCoherence, intPerCoherence, intPerSsd
     options.USE_PRE_SSD = true;
     options.ms2Std = 75;  % How many consecutive ms should neural signals be separated to "cancel"?
     
@@ -70,7 +72,8 @@ end
 % sessionID = 'bp093n02';
 % unitArray = {'spikeUnit17a'};
 
-ANALYZE_NONCANCELED = false;
+ANALYZE_CANCELED = options.ANALYZE_CANCELED;
+ANALYZE_NONCANCELED = options.ANALYZE_NONCANCELED;
 
 
 
@@ -102,7 +105,7 @@ markEvent   = 'responseOnset';
 encodeTime      = 10;
 
 epochRangeChecker      = 1 : 600;  % Make this big enough to catch really late cancel times.
-epochRangeSacc      = -199 : 200;
+epochRangeSacc      = -199 : 100;
 
 %%  Loop through Units and target pairs to collect and plot data
 [nUnit, nTargPair]  = size(unitArray);
@@ -116,6 +119,7 @@ for kUnitIndex = 1 : nUnit
     optSess             = ccm_options;
     optSess.multiUnit    = options.multiUnit;
     optSess.plotFlag    = false;
+    optSess.printPlot    = false;
     optSess.collapseTarg = options.collapseTarg;
     optSess.unitArray   = unitArray(kUnitIndex);
     optSess.USE_PRE_SSD   = options.USE_PRE_SSD;
@@ -317,7 +321,7 @@ for kUnitIndex = 1 : nUnit
     if plotFlag
         
         cMap = ccm_colormap(pSignalArray);
-        stopColor = [.8 0 0];
+        stopColorMap = [.9 0 0; .6 0 0; .6 0 0; .9 0 0];
         
         opt = ccm_concat_neural_conditions; % Get default options structure
         
@@ -373,6 +377,7 @@ for kUnitIndex = 1 : nUnit
     %             $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     
     %%
+    if ANALYZE_CANCELED
     %               Canceled Stop vs latency-matched (Slow) Go:
     if isempty(stopStopCoh)
         fprintf('Session %s doesn"t have enough canceled trials in any condiiton to analyze\n', sessionID)
@@ -614,7 +619,7 @@ for kUnitIndex = 1 : nUnit
                 title(ttl)
                 
                 % Data aligned on response onset
-                ax(i, colSacc) = axes('units', 'centimeters', 'position', [xAxesPosition(i, colSacc) yAxesPosition(i, colSacc) axisWidth axisHeight]);
+                ax(i, colSacc) = axes('units', 'centimeters', 'position', [xAxesPosition(i, colSacc) yAxesPosition(i, colSacc) axisWidth/2 axisHeight]);
                 set(ax(i, colSacc), 'ylim', [sdfMin sdfMax], 'xlim', [epochRangeSacc(1) epochRangeSacc(end)])
                 set(ax(i, colSacc), 'yticklabel', [], 'ycolor', [1 1 1])
                 cla
@@ -632,11 +637,11 @@ for kUnitIndex = 1 : nUnit
                 iGoTargSlowCheckerFn = goTargSlowCheckerFn{i}(goTargSlowCheckerAlign{i} + epochRangeChecker);
                 plot(ax(i, colChkr), epochRangeChecker, iGoTargSlowCheckerFn, 'color', cMap(pSignalArray == stopStopCoh(i),:), 'linewidth', goLineW)
                 if iGoTargRTMean < length(iGoTargSlowCheckerFn)
-                    plot(ax(i, colChkr), iGoTargRTMean, iGoTargSlowCheckerFn(iGoTargRTMean), '.k','markersize', markSize)
+                    plot(ax(i, colChkr), iGoTargRTMean, 0, '.k','markersize', markSize)
                 end
                 
                 iStopStopCheckerFn = stopStopCheckerFn{i}(stopStopCheckerAlign{i} + epochRangeChecker);
-                plot(ax(i, colChkr), epochRangeChecker, iStopStopCheckerFn, 'color', stopColor, 'linewidth', stopLineW)
+                plot(ax(i, colChkr), epochRangeChecker, iStopStopCheckerFn, '--', 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
                 %                 plot(ax(i, colChkr), epochRangeChecker, sdfDiff(sdfDiffCheckerOn-1:end), 'color', 'g', 'linewidth', stopLineW)
                 
                 % Cancel time
@@ -656,7 +661,7 @@ for kUnitIndex = 1 : nUnit
         
         
     end
-    
+    end
     
     %             $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     %             $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -813,7 +818,7 @@ for kUnitIndex = 1 : nUnit
                     title(ttl)
                     
                     % Data aligned on response onset
-                    ax(i, colSacc) = axes('units', 'centimeters', 'position', [xAxesPosition(i, colSacc) yAxesPosition(i, colSacc) axisWidth axisHeight]);
+                    ax(i, colSacc) = axes('units', 'centimeters', 'position', [xAxesPosition(i, colSacc) yAxesPosition(i, colSacc) axisWidth/2 axisHeight]);
                     set(ax(i, colSacc), 'ylim', [sdfMin sdfMax], 'xlim', [epochRangeSacc(1) epochRangeSacc(end)])
                     set(ax(i, colSacc), 'yticklabel', [], 'ycolor', [1 1 1])
                     cla
@@ -832,19 +837,22 @@ for kUnitIndex = 1 : nUnit
                     iGoTargFastCheckerFn = goTargFastCheckerFn{i}(goTargFastCheckerAlign{i} + epochRangeChecker);
                     plot(ax(i, colChkr), epochRangeChecker, iGoTargFastCheckerFn, 'color', cMap(pSignalArray == stopTargCoh(i),:), 'linewidth', goLineW)
                     iGoTargRTMean = round(nanmean(goTargFastCheckerEventLat{i}));
-                    plot(ax(i, colChkr), iGoTargRTMean, iGoTargFastCheckerFn(iGoTargRTMean), '.k','markersize', markSize)
+                    if iGoTargRTMean <= length(iGoTargFastCheckerFn)
+                    plot(ax(i, colChkr), iGoTargRTMean, 0, '.k','markersize', markSize)
+                    end
                     
                     iStopTargCheckerFn = stopTargCheckerFn{i}(stopTargCheckerAlign{i} + epochRangeChecker);
-                    plot(ax(i, colChkr), epochRangeChecker, iStopTargCheckerFn, 'color', stopColor, 'linewidth', stopLineW)
+                    plot(ax(i, colChkr), epochRangeChecker, iStopTargCheckerFn, '--', 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
                     iStopTargRTMean = round(nanmean(stopTargCheckerEventLat{i}));
-                    plot(ax(i, colChkr), iStopTargRTMean, iStopTargCheckerFn(iStopTargRTMean), '.k','markersize', markSize)
-                    
+                    if iStopTargRTMean <= length(iStopTargCheckerFn)
+                    plot(ax(i, colChkr), iStopTargRTMean, 0, '.k','markersize', markSize)
+                    end
                     
                     iGoTargFastSaccFn = goTargFastSaccFn{i}(goTargFastSaccAlign{i} + epochRangeSacc);
                     plot(ax(i, colSacc), epochRangeSacc, iGoTargFastSaccFn, 'color', cMap(pSignalArray == stopTargCoh(i),:), 'linewidth', goLineW)
                     
                     iStopTargSaccFn = stopTargSaccFn{i}(stopTargSaccAlign{i} + epochRangeSacc);
-                    plot(ax(i, colSacc), epochRangeSacc, iStopTargSaccFn, 'color', stopColor, 'linewidth', stopLineW)
+                    plot(ax(i, colSacc), epochRangeSacc, iStopTargSaccFn, 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
                     
                     
                 end
@@ -935,10 +943,12 @@ for kUnitIndex = 1 : nUnit
     
     
     if printPlot
+        if ANALYZE_CANCELED
         if ~isdir(fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt))
             mkdir(fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt))
         end
         print(stopStopFig,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, [sessionID, '_ccm_go_vs_canceled_',Unit(kUnitIndex).name, '.pdf']),'-dpdf', '-r300')
+        end
         
         if ANALYZE_NONCANCELED
             if ~isdir(fullfile(local_figure_path, subjectID, 'go_vs_noncanceled', options.ssrt))

@@ -1,16 +1,18 @@
-function data = ccm_psychometric_population(subjectID, sessionSet, plotFlag)
+function data = ccm_psychometric_population(subjectID, sessionSet, options)
 
 
 %%
 % *************************************************************************
 % Populaiton psychometric : Using mean choice proportion AVERAGED across sessions
 % *************************************************************************
+
 if nargin < 3
-   plotFlag = 1;
+    options = ccm_options;
+    options.plotFlag = 1;
+    options.printPlot = 1;
+    options.saveName = [];
 end
-if nargin < 2
-   sessionSet = 'behvaior';
-end
+
 
 figureHandle = 4946;
 
@@ -40,26 +42,43 @@ disp('Populaiton psychometric : Using mean choice proportion AVERAGED across ses
 
 
 switch lower(subjectID)
-  case 'joule'
-               [td, S, E] =load_data(subjectID, sessionArray{1});
-               pSignalArray = E.pSignalArray;
-   case 'human'
-      pSignalArray = [.35 .42 .46 .5 .54 .58 .65];
-   case 'broca'
-%       switch sessionSet
-%          case 'behavior'
-%             pSignalArray = [.41 .45 .48 .5 .52 .55 .59];
-%          case 'neural1'
-%             pSignalArray = [.41 .44 .47 .53 .56 .59];
-%          case 'neural2'
-%             pSignalArray = [.42 .44 .46 .54 .56 .58];
-%            otherwise
-               [td, S, E] =load_data(subjectID, sessionArray{1});
-               pSignalArray = E.pSignalArray;
-%       end
-   case 'xena'
-      pSignalArray = [.35 .42 .47 .5 .53 .58 .65];
+    case 'joule'
+        [td, S, E] =load_data(subjectID, sessionArray{1},ccm_min_vars);
+        pSignalArray = E.pSignalArray;
+    case 'human'
+        pSignalArray = [.35 .42 .46 .5 .54 .58 .65];
+    case 'broca'
+        if iscell(sessionSet)
+        [td, S, E] =load_data(subjectID, sessionArray{1}, ccm_min_vars);
+        pSignalArray = E.pSignalArray;
+        else
+              switch sessionSet
+                 case 'behavior'
+                    pSignalArray = [.41 .45 .48 .5 .52 .55 .59];
+                 case 'behavior2'
+                    pSignalArray = [.43 .45 .47 .53 .55 .57];
+                 case 'neural1'
+                    pSignalArray = [.41 .44 .47 .53 .56 .59];
+                 case 'neural2'
+                    pSignalArray = [.42 .44 .46 .54 .56 .58];
+                   otherwise
+                       if length(pSignalArray) == 6
+                           pSignalArray([2 5]) = [];
+                       elseif length(pSignalArray) == 7
+                           pSignalArray([2 4 6]) = [];
+                       end
+              end
+        end
+    case 'xena'
+        pSignalArray = [.35 .42 .47 .5 .53 .58 .65];
 end
+
+% Remove 50% coherence condition
+pSignalArray(pSignalArray == .5) = [];
+
+% Make sure pSignalArray has correct dimensions
+pSignalArray = reshape(pSignalArray, 1, length(pSignalArray));
+    
 
 if psyOpt.USE_TWO_COLORS
     if length(pSignalArray) == 6
@@ -72,7 +91,7 @@ end
 
 nSession = length(sessionArray);
 
-if plotFlag
+if options.plotFlag
     nRow = 3;
     nColumn = 2;
     psyAx = 1;
@@ -133,7 +152,7 @@ for iSession = 1 : nSession
     
     clear iData
 end
-pSignalArrayFit = repmat(pSignalArray', size(goRightProb, 1), 1);
+pSignalArrayFit = repmat(pSignalArray, size(goRightProb, 1), 1);
 
 
 [h,p, ci, stats] = ttest2(goSlope, stopSlope);
@@ -210,7 +229,7 @@ stopPsychometricFn = weibull_curve(fitParameters, propPoints);
 
 
 
-if plotFlag
+if options.plotFlag
     plot(ax(psyAx), pSignalArray, stopRightProbMean, 'o', 'linestyle' , 'none', 'markeredgecolor', stopColor, 'linewidth' , 2, 'markerfacecolor', [1 1 1], 'markersize', 10)
     errorbar(ax(psyAx), pSignalArray ,stopRightProbMean, stopRightProbStd, 'linestyle' , 'none', 'color', stopColor, 'linewidth' , 2)
     plot(ax(psyAx), propPoints, stopPsychometricFn, '-', 'color', stopColor, 'linewidth' , 2)
@@ -283,6 +302,6 @@ for iSession = 1 : nSession
 end
 
 % O = teg_repeated_measures_ANOVA(psyDataSession, [nSignalStrength, 2, 2], {'Signal Strength', 'Stop vs Go'})
-            print(figureHandle,fullfile(local_figure_path, subjectID,'ccm_population_psychometric'),'-dpdf', '-r300')
+            print(figureHandle,fullfile(local_figure_path, subjectID,['ccm_population_psychometric_',options.saveName]),'-dpdf', '-r300')
 
 

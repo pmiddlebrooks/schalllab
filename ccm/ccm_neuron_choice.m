@@ -47,7 +47,11 @@ Kernel.decay = 20;
 % aren't)
 choiceDependent     = false;
 coherenceDependent  = false;
+coherenceDependentRank  = false;
+coherenceDependentMean  = false;
 ddmLike             = false;
+ddmLikeRank             = false;
+ddmLikeMean             = false;
 
 % some constants
 alphaChoice     = .05;   % alpha criteria for choice dependence
@@ -306,12 +310,27 @@ for iUnit = 1 : length(spikeUnit)
     if nanmedian(spikeRate(leftTrial)) >= nanmedian(spikeRate(rightTrial))
         leftIsIn    = true;
         inTrial     = leftTrial;
+        easyInTrial = inTrial & easyLeftTrial;
+        hardInTrial = inTrial & ~easyInTrial;
         outTrial    = rightTrial;
+        easyOutTrial = outTrial & easyRightTrial;
+        hardOutTrial = outTrial & ~easyOutTrial;
     else
         leftIsIn    = false;
         inTrial     = rightTrial;
+        easyInTrial = inTrial & easyRightTrial;
+        hardInTrial = inTrial & ~easyInTrial;
         outTrial    = leftTrial;
+        easyOutTrial = outTrial & easyLeftTrial;
+        hardOutTrial = outTrial & ~easyOutTrial;
     end
+    
+    
+    
+    
+    
+    
+    
     
     
     
@@ -345,26 +364,21 @@ for iUnit = 1 : length(spikeUnit)
     pValOut     = statsOut.fstat.pval;
     
     
-    % Decision tree to determine whether the neuron/signal was "coherence dependent"
-    if pValIn < alphaCoherence
-        if pValOut > alphaCoherence
-            coherenceDependent = true;
-        elseif pValOut < alphaCoherence
-            % slopeOut must have opposite sign than slopeIn
-            if signSlopeIn ~= signSlopeOut
-                coherenceDependent = true;
-            end
-        end
-    elseif pValIn > alphaCoherence
-        if pValOut < alphaCoherence
-            coherenceDependent = true;
-        elseif pValOut > alphaCoherence
-            % slopeOut must have opposite sign than slopeIn
-            if signSlopeIn ~= signSlopeOut
-                coherenceDependent = true;
-            end
-        end
+% Decision tree to determine whether the neuron/signal was "coherence dependent"
+if pValIn < alphaCoherence && pValOut > alphaCoherence
+    coherenceDependent = true;
+elseif pValIn > alphaCoherence && pValOut < alphaCoherence
+    coherenceDependent = true;
+elseif pValIn < alphaCoherence && pValOut < alphaCoherence
+    % slopeOut must have opposite sign than slopeIn
+    if signSlopeIn ~= signSlopeOut
+        coherenceDependent = true;
     end
+end
+
+if choiceDependent && coherenceDependent
+    ddmLike = true;
+end
     
     if choiceDependent && coherenceDependent
         ddmLike = true;
@@ -372,7 +386,52 @@ for iUnit = 1 : length(spikeUnit)
     
     
     
-  
+  % Alternate Coherence Dependence test- Rank sum, like choice dependence
+    [pIn, h, stats]   = ranksum(spikeRate(easyInTrial), spikeRate(hardInTrial));
+    [pOut, h, stats]   = ranksum(spikeRate(easyOutTrial), spikeRate(hardOutTrial));
+    
+    % Decision tree to determine whether the neuron/signal was "coherence dependent"
+    if pIn <= alphaCoherence
+        if pOut > alphaCoherence
+            coherenceDependentRank = true;
+        else 
+            % slopeOut must have opposite sign than slopeIn
+            if signSlopeIn ~= signSlopeOut
+                coherenceDependentRank = true;
+            end
+        end
+    elseif pIn > alphaCoherence
+        if pOut < alphaCoherence
+            coherenceDependentRank = true;
+        else
+            % slopeOut must have opposite sign than slopeIn
+            if signSlopeIn ~= signSlopeOut
+                coherenceDependentRank = true;
+            end
+        end
+    end
+    
+    if choiceDependent && coherenceDependentRank
+        ddmLikeRank = true;
+    end
+   
+    
+    
+    
+  % Alternate Coherence Dependence test- Ranking spike rate means
+    inMeanDiff   = nanmean(spikeRate(easyInTrial)) - nanmean(spikeRate(hardInTrial));
+    outMeanDiff   = nanmean(spikeRate(easyOutTrial)) - nanmean(spikeRate(hardOutTrial));
+    
+    % Decision tree to determine whether the neuron/signal was "coherence dependent"
+    if inMeanDiff > 0
+        if outMeanDiff <= 0
+            coherenceDependentMean = true;
+        end 
+    end
+    
+    if choiceDependent && coherenceDependentMean
+        ddmLikeMean = true;
+    end
     
     
     
@@ -442,7 +501,13 @@ for iUnit = 1 : length(spikeUnit)
             otherwise
                 cohStr = 'NO';
         end
-        tt = sprintf('Coherence dependence: %s', cohStr);
+        switch coherenceDependentRank(iUnit)
+            case true
+                cohStrRank = 'YES';
+            otherwise
+                cohStrRank = 'NO';
+        end
+        tt = sprintf('Coh dependence: %s\tRank: %s', cohStr, cohStrRank);
         title(tt)
         
         
@@ -531,12 +596,15 @@ plot(ax(axCohR), [0 0], [0 yMax], '-k', 'linewidth', 2);
         
         
         h=axes('Position', [0 0 1 1], 'Visible', 'Off');
+            ddmStr = 'NO';
         if choiceDependent(iUnit) && coherenceDependent(iUnit)
             ddmStr = 'YES';
-        else
-            ddmStr = 'NO';
         end
-        titleString = sprintf('%s\t %s\t DDM-Like: %s', sessionID, SessionData.spikeUnitArray{spikeUnit(iUnit)}, ddmStr);
+            ddmRankStr = 'NO';
+        if choiceDependent(iUnit) && coherenceDependentRank(iUnit)
+            ddmRankStr = 'YES';
+        end
+        titleString = sprintf('%s\t %s\t DDM: %s\t DDM-Rank: %s', sessionID, SessionData.spikeUnitArray{spikeUnit(iUnit)}, ddmStr, ddmRankStr);
         text(0.5,1, titleString, 'HorizontalAlignment','Center', 'VerticalAlignment','Top')
         
         if options.printPlot
@@ -556,7 +624,10 @@ end
 unitInfo.rf                     = rf;
 unitInfo.choiceDependent        = choiceDependent;
 unitInfo.coherenceDependent     = coherenceDependent;
+unitInfo.coherenceDependentMean     = coherenceDependentMean;
 unitInfo.ddmLike                = ddmLike;
+unitInfo.ddmLikeRank          	= ddmLikeRank;
+unitInfo.ddmLikeMean          	= ddmLikeMean;
 unitInfo.tChoice                = tChoice;
 unitInfo.choiceSelectionTime    = choiceSelectionTime;
 unitInfo.leftIsIn               = leftIsIn;

@@ -1,10 +1,10 @@
-function data = ccm_rt_distribution_population(subjectID, sessionSet, plotFlag)
+function data = ccm_rt_distribution_population(subjectID, sessionSet, options)
 %%
 if nargin < 3
-   plotFlag = 1;
-end
-if nargin < 2
-   sessionSet = 'behvaior';
+    options = ccm_options;
+    options.plotFlag = 1;
+    options.printPlot = 1;
+    options.saveName = [];
 end
 
 task = 'ccm';
@@ -21,31 +21,38 @@ end
 % ****************************************************************************************
 
 switch lower(subjectID)
-   case 'joule'
-               [td, S, E] =load_data(subjectID, sessionArray{1});
-               pSignalArray = E.pSignalArray;
-   case 'human'
-      pSignalArray = [.35 .42 .46 .5 .54 .58 .65];
-   case 'broca'
-%       switch sessionSet
-%          case 'behavior'
-%             pSignalArray = [.41 .45 .48 .5 .52 .55 .59];
-%          case 'neural1'
-%             pSignalArray = [.41 .44 .47 .53 .56 .59];
-%          case 'neural2'
-%             pSignalArray = [.42 .44 .46 .54 .56 .58];
-%            otherwise
-               [td, S, E] =load_data(subjectID, sessionArray{1});
-               pSignalArray = E.pSignalArray;
-               if length(pSignalArray) == 6
-                   pSignalArray([2 5]) = [];
-               elseif length(pSignalArray) == 7
-                   pSignalArray([2 4 6]) = [];
-               end
-%       end
-   case 'xena'
-      pSignalArray = [.35 .42 .47 .5 .53 .58 .65];
+    case 'joule'
+        [td, S, E] =load_data(subjectID, sessionArray{1},ccm_min_vars);
+        pSignalArray = E.pSignalArray;
+    case 'human'
+        pSignalArray = [.35 .42 .46 .5 .54 .58 .65];
+    case 'broca'
+        if iscell(sessionSet)
+        [td, S, E] =load_data(subjectID, sessionArray{1}, ccm_min_vars);
+        pSignalArray = E.pSignalArray;
+        else
+              switch sessionSet
+                 case 'behavior'
+                    pSignalArray = [.41 .45 .48 .5 .52 .55 .59];
+                 case 'behavior2'
+                    pSignalArray = [.43 .45 .47 .53 .55 .57];
+                 case 'neural1'
+                    pSignalArray = [.41 .44 .47 .53 .56 .59];
+                 case 'neural2'
+                    pSignalArray = [.42 .44 .46 .54 .56 .58];
+                   otherwise
+                       if length(pSignalArray) == 6
+                           pSignalArray([2 5]) = [];
+                       elseif length(pSignalArray) == 7
+                           pSignalArray([2 4 6]) = [];
+                       end
+              end
+        end
+    case 'xena'
+        pSignalArray = [.35 .42 .47 .5 .53 .58 .65];
 end
+% Remove 50% coherence condition
+pSignalArray(pSignalArray == .5) = [];
 
 if mod(length(pSignalArray), 2)
     nSignalPerSide = ceil(length(pSignalArray) / 2);
@@ -75,6 +82,7 @@ switch lower(subjectID)
         set(ax(distAx), 'xlim', [100 1000])
     case 'xena'
         set(ax(cumAx), 'Xlim', [150 550])
+        set(ax(distAx), 'xlim', [150 600])
 end
 
 
@@ -173,14 +181,13 @@ fprintf('Kolmogorov-Smirnov test:  Go Incorrect vs Stop Incorrect: p = %1.2d\n',
 
 
 box(ax(cumAx), 'off')
-set(ax(cumAx), 'xlim', [100 1000]);
+% set(ax(cumAx), 'xlim', [100 1000]);
 plot(ax(cumAx), propGoTargRT, 'color', goColor, 'linewidth', 2)
 plot(ax(cumAx), propGoDistRT, '--', 'color', goColor, 'linewidth', 2)
 
 plot(ax(cumAx), propStopTargRT, 'color', stopColor, 'linewidth', 2)
 plot(ax(cumAx), propStopDistRT, '--', 'color', stopColor, 'linewidth', 2)
 legend(ax(cumAx), {'Go Target', 'Go Distractor', 'Stop Target', 'Stop Distractor'}, 'location', 'southeast');
-
 
 
 
@@ -201,11 +208,10 @@ distributionArea = sum(stopRTBinValues * timeStep);
 stopStopPDF = stopRTBinValues / distributionArea;
 stopStopBinCenters = min(stopRT)+timeStep/2 : timeStep : max(stopRT)-timeStep/2;
 
-set(ax(distAx), 'xlim', [100 1000]);
 plot(ax(distAx), goCorrectBinCenters, goCorrectPDF, '-', 'color', goColor, 'linewidth', 2)
 plot(ax(distAx), stopStopBinCenters, stopStopPDF, '-', 'color', stopColor, 'linewidth', 2)
 
-print(figureHandle,fullfile(local_figure_path, subjectID,'ccm_population_rt_distribution'),'-dpdf', '-r300')
+print(figureHandle,fullfile(local_figure_path, subjectID,['ccm_population_rt_distribution_',options.saveName]),'-dpdf', '-r300')
 
 
 
