@@ -2,7 +2,7 @@ function env = get_environment
 
 
 switch matlabroot
-    case '/Applications/MATLAB_R2016a.app'
+    case {'/Applications/MATLAB_R2016a.app', '/Applications/MATLAB_R2016b.app'}
         hostname = char( getHostName( java.net.InetAddress.getLocalHost ) );
         switch hostname
             case 'pmiddleb-Mac-Pro.local'

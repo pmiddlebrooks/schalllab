@@ -75,6 +75,8 @@ end
 ANALYZE_CANCELED = options.ANALYZE_CANCELED;
 ANALYZE_NONCANCELED = options.ANALYZE_NONCANCELED;
 
+maxSdfProportion = .5;
+
 
 
 dataType            = options.dataType;
@@ -106,6 +108,8 @@ encodeTime      = 10;
 
 epochRangeChecker      = 1 : 600;  % Make this big enough to catch really late cancel times.
 epochRangeSacc      = -199 : 100;
+
+
 
 %%  Loop through Units and target pairs to collect and plot data
 [nUnit, nTargPair]  = size(unitArray);
@@ -252,6 +256,7 @@ for kUnitIndex = 1 : nUnit
     
     
     % Pre-allocate cell arrays
+    cancelTimeDist = cell(length(stopStopCoh), 1);
     cancelTime6Std = nan(length(stopStopCoh), 1);
     cancelTime4Std = nan(length(stopStopCoh), 1);
     cancelTime2Std = nan(length(stopStopCoh), 1);  % The index in the sdf after checker onset at wich the differential sdf passes the 50ms test
@@ -289,7 +294,8 @@ for kUnitIndex = 1 : nUnit
     stopStopCheckerFn          = cell(length(stopStopCoh), 1);
     stopStopCheckerEventLat  	= cell(length(stopStopCoh), 1);
     stopStopCheckerAlign      	= cell(length(stopStopCoh), 1);
-    
+    stopStopCheckerSdf      	= cell(length(stopStopCoh), 1);
+
     goTargSlowCheckerData        = cell(length(stopStopCoh), 1);
     goTargSlowCheckerFn        = cell(length(stopStopCoh), 1);
     goTargSlowCheckerEventLat  	= cell(length(stopStopCoh), 1);
@@ -468,6 +474,7 @@ for kUnitIndex = 1 : nUnit
             stopStopCheckerData{i}        = iStopStopChecker.signal;
             stopStopCheckerAlign{i}     	= iStopStopChecker.align;
             stopStopCheckerEventLat{i}	= iStopStopChecker.eventLatency;
+            stopStopCheckerSdf{i} = spike_density_function(iStopStopChecker.signal, Kernel);
             
             goTargSlowCheckerData{i}      = iGoTargChecker.signal(iGoSlowTrial,:);
             goTargSlowCheckerAlign{i} 	= iGoTargChecker.align;
@@ -483,7 +490,6 @@ for kUnitIndex = 1 : nUnit
             stopStopCheckerFn{i} 	= iStopStopChecker.signalFn;
             goTargSlowCheckerFn{i}      = nanmean(spike_density_function(goTargSlowCheckerData{i}, Kernel), 1);
             goTargSlowSaccFn{i}         = nanmean(spike_density_function(goTargSlowSaccData{i}, Kernel), 1);
-            
             
             
             
@@ -657,6 +663,87 @@ for kUnitIndex = 1 : nUnit
                 %                 plot(ax(i, colSacc), epochRangeSacc, iStopStopSaccFn, 'color', stopColor, 'linewidth', stopLineW)
                 
             end
+            
+            
+            
+            
+            
+            
+                              % Cancel time trial-by-trial distribution analyses: no point in latency matching, since latency-matching depends on mean activation function/SDF.
+                            % Slow GO is commented out for this reason: see
+                            % also plot_inhibition.m 
+          
+            
+                             % Find maximum of SDFs after SSD
+                             % May need to cut off search for max before
+                             % the end of the signal, so later modulations
+                             % don't interfere with the analysis.
+                             stopSignalInd = iStopStopChecker.align + stopStopSsd(i);
+                             % Use the mean of the latency-matched Go
+                             % trials as the last index to look for maximum
+                             % SDF value during canceled stop trials
+                             meanRtInd = nanmean(iGoTargChecker.eventLatency(iGoSlowTrial,:));
+                            [maxStopStopSdf, maxInd] = max(stopStopCheckerSdf{i}(:, stopSignalInd : stopSignalInd + meanRtInd), [], 2);
+                            
+           
+                             % For each trial, determine first index of SDF
+                            % that falls below half-max
+                            iCancelTime = nan(size(iStopStopChecker.signal, 1), 1);
+                            for a = 1 : size(iStopStopChecker.signal, 1)
+                                
+ 
+                                
+                                
+                                % Find the minimum after the maximum, to
+                            % determine relative half-max index
+                            [aMinStopStopSdf, minInd] = min(stopStopCheckerSdf{i}(a, stopSignalInd + maxInd(a) : stopSignalInd + meanRtInd), [], 2);
+           
+                             % Use a proportion of the maximum relative to minimum to determine cancel time
+                            aHalfMaxStopStopSdf = aMinStopStopSdf + (maxStopStopSdf(a) - aMinStopStopSdf) * maxSdfProportion;
+
+                                aHalfMaxInd = find(stopStopCheckerSdf{i}(a,stopSignalInd + maxInd(a):end) < aHalfMaxStopStopSdf, 1);
+                                
+                                % optional- plot individual trials for
+                                % troubleshooting
+                               figure(24)
+                                clf
+                                hold 'all'
+                                % Canceled GO
+                                plot(stopStopCheckerSdf{i}(a,iStopStopChecker.align:iStopStopChecker.align+500), 'r')
+                                plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopSdf(a)*.8], '-r', 'linewidth', 3)
+                                plot([stopStopSsd(i) + maxInd(a), stopStopSsd(i) + maxInd(a)], [0 maxStopStopSdf(a)], '-k', 'linewidth', 3)
+                                plot([stopStopSsd(i) + maxInd(a) + aHalfMaxInd, stopStopSsd(i) + maxInd(a) + aHalfMaxInd], [0 aHalfMaxStopStopSdf], '-b', 'linewidth', 3)
+                                disp('here')
+
+                                
+                                % To calculate cancel time, use half the time between max and "half
+                                % max", relative to ssrt
+                                if ~isempty(aHalfMaxInd)
+                                    iCancelTime(a) = maxInd(a) + aHalfMaxInd/2 - iSsrt;
+                                end
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                            end
+           
+            
+                                        cancelTimeDist{i} = iCancelTime;
+
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
         end
         
         
@@ -931,6 +1018,8 @@ for kUnitIndex = 1 : nUnit
     Data(kUnitIndex).stopStopSsd    = stopStopSsd;
     Data(kUnitIndex).stopStopCond    = stopStopCond;
     
+    
+    Data(kUnitIndex).cancelTimeDist     = cancelTimeDist;
     Data(kUnitIndex).pValue40msStopStop     = pValue40msStopStop;
     Data(kUnitIndex).cancelTime2Std    = cancelTime2Std;
     Data(kUnitIndex).cancelTime4Std    = cancelTime4Std;
