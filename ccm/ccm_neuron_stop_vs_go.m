@@ -4,7 +4,7 @@ function Data = ccm_neuron_stop_vs_go(subjectID, sessionID, unitArray, options)
 %
 % Compares noncanceled stops trials vs. latency matched (fast) go trials and canceled stop trials vs. latency matched (slower) go trials.
 %
-% ALL CANCEL TIMES OUTPUT ARE RELATIVE TO CHECKERBOARD ONSET, SO YOU NEED
+% CANCEL TIMES ARE RELATIVE TO CHECKERBOARD ONSET, SO YOU NEED
 % TO SUBTRACT SSD AND SSRT TO CALCULATE CLASSIC "CANCEL TIME" (RELATIVE TO
 % SSRT)
 %
