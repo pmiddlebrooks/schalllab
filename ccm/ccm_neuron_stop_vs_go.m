@@ -682,9 +682,10 @@ for kUnitIndex = 1 : nUnit
                              % Use the mean of the latency-matched Go
                              % trials as the last index to look for maximum
                              % SDF value during canceled stop trials
-                             meanRtInd = nanmean(iGoTargChecker.eventLatency(iGoSlowTrial,:));
+                             meanRtInd = ceil(nanmean(iGoTargChecker.eventLatency(iGoSlowTrial,:)));
                             [maxStopStopSdf, maxInd] = max(stopStopCheckerSdf{i}(:, stopSignalInd : stopSignalInd + meanRtInd), [], 2);
-                            
+                            maxStopStopSdf(maxStopStopSdf == meanRtInd) = nan;
+                            maxInd(maxStopStopSdf == meanRtInd) = nan;
            
                              % For each trial, determine first index of SDF
                             % that falls below half-max
@@ -692,7 +693,7 @@ for kUnitIndex = 1 : nUnit
                             for a = 1 : size(iStopStopChecker.signal, 1)
                                 
  
-                                
+                             if maxInd(a) < meanRtInd   
                                 
                                 % Find the minimum after the maximum, to
                             % determine relative half-max index
@@ -703,6 +704,7 @@ for kUnitIndex = 1 : nUnit
 
                                 aHalfMaxInd = find(stopStopCheckerSdf{i}(a,stopSignalInd + maxInd(a):end) < aHalfMaxStopStopSdf, 1);
                                 
+                                if ~isempty(aHalfMaxInd)
                                 % optional- plot individual trials for
                                 % troubleshooting
                                figure(24)
@@ -718,11 +720,10 @@ for kUnitIndex = 1 : nUnit
                                 
                                 % To calculate cancel time, use half the time between max and "half
                                 % max", relative to ssrt
-                                if ~isempty(aHalfMaxInd)
                                     iCancelTime(a) = maxInd(a) + aHalfMaxInd/2 - iSsrt;
                                 end
                                 
-                                
+                             end 
                                 
                                 
                                 

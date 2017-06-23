@@ -63,4 +63,50 @@ Function(s) to visualize aspects of individual trials
 
 
 
+## Functions/scripts in root:
+#### batch.m
+Scripts (junk) to run batches of other functions
+
+#### cell_to_mat.m
+Converts translated files' cell arrays to doubles if needed. Gets called by load_data.m
+
+#### data_file_path.m
+Determines where date files are
+
+#### eeg_electrode_map.m
+Maps monkey eeg electrode placements a la human coordinates
+
+#### find_eeg_sessions.m
+Finds data files with eeg data
+
+#### find_sessions_data.m
+Finds sessions with a particular data type (lfp, spike, eeg, etc)
+
+#### find_task_sessions.m
+Finds sessions associate with a particular task
+
+#### get_environment.m
+Determines whether you're working on your local computer or on ACCRE
+
+#### load_data.m
+Loads a single session dataset
+
+#### local_data_path.m
+Defines root folder to look for or save files on local computer
+
+#### local_figure_path.m
+Defines root folder to save figures on local computer
+
+#### psychometric_function.m
+Unknown. Variant of Weibull
+
+#### scratch.m
+Junk scripts to run sets of functions
+
+#### subject_data_path.m
+Defines where to look for data files locally or on Teba
+
+#### task_session_array
+Returns a set of sessions depending on what set you ask for.
+
 
