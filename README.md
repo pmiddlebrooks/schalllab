@@ -15,7 +15,7 @@ Behavioral and neural analyses functions to analyze performance and brain activi
 Cognitive modeling toolbox. Just one file to calculate distribution function.
 
 ### create_datafile_pgm
-Files written to translate data from Plexon to matlab readable format. 
+Files written to translate data from Plexon to matlab readable format.
 
 ### dPCA
 A demixed principle component analysis code:
@@ -108,5 +108,3 @@ Defines where to look for data files locally or on Teba
 
 #### task_session_array
 Returns a set of sessions depending on what set you ask for.
-
-

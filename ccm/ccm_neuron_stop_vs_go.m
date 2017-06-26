@@ -257,6 +257,7 @@ for kUnitIndex = 1 : nUnit
     
     % Pre-allocate cell arrays
     cancelTimeDist = cell(length(stopStopCoh), 1);
+    cancelTimeSdf = nan(length(stopStopCoh), 1);
     cancelTime6Std = nan(length(stopStopCoh), 1);
     cancelTime4Std = nan(length(stopStopCoh), 1);
     cancelTime2Std = nan(length(stopStopCoh), 1);  % The index in the sdf after checker onset at wich the differential sdf passes the 50ms test
@@ -295,7 +296,7 @@ for kUnitIndex = 1 : nUnit
     stopStopCheckerEventLat  	= cell(length(stopStopCoh), 1);
     stopStopCheckerAlign      	= cell(length(stopStopCoh), 1);
     stopStopCheckerSdf      	= cell(length(stopStopCoh), 1);
-
+    
     goTargSlowCheckerData        = cell(length(stopStopCoh), 1);
     goTargSlowCheckerFn        = cell(length(stopStopCoh), 1);
     goTargSlowCheckerEventLat  	= cell(length(stopStopCoh), 1);
@@ -384,371 +385,426 @@ for kUnitIndex = 1 : nUnit
     
     %%
     if ANALYZE_CANCELED
-    %               Canceled Stop vs latency-matched (Slow) Go:
-    if isempty(stopStopCoh)
-        fprintf('Session %s doesn"t have enough canceled trials in any condiiton to analyze\n', sessionID)
-    else
-        fprintf('\nGo vs. Canceled:\n')
-        for i = 1 : length(stopStopCoh)
-            
-            switch options.ssrt
-                case 'intWeightPerSession'
-                    iSsrt = round(nanmean(dataInh.ssrtIntegrationWeighted));
-                case 'intPerSsd'
-                    % Find the ssrt to use
-                    iCohSsrtInd = dataInh.pSignalArray == stopStopCoh(i);
-                    iSsdSsrtInd = dataInh.ssd{iCohSsrtInd} == stopStopSsd(i);
-                    iSsrt = dataInh.ssrtIntegration{iCohSsrtInd}(iSsdSsrtInd);
-            end
-            if isnan(iSsrt)
-                continue
-            end
-                     stopStopSsrt(i) = iSsrt;
-           
-            
-            % Get the go trial data: these need to be split to latency-match with
-            % the stop trial data
-            opt                 = options; % Get default options structure
-            
-            opt.epochName       = epochName;
-            opt.eventMarkName   = markEvent;
-            opt.conditionArray  = {'goTarg'};
-            opt.colorCohArray   = stopStopCoh(i);
-            opt.ssdArray        = [];
-            iGoTargChecker      = ccm_concat_neural_conditions(Unit(kUnitIndex), opt);
-            
-            opt.epochName       = 'responseOnset';
-            opt.eventMarkName   = 'checkerOn';
-            iGoTargSacc         = ccm_concat_neural_conditions(Unit(kUnitIndex), opt);
-            
-            % Get the stop trial data
-            opt.epochName       = epochName;
-            opt.eventMarkName   = 'targOn';
-            opt.conditionArray  = {'stopStop'};
-            opt.ssdArray        = stopStopSsd(i);
-            iStopStopChecker    = ccm_concat_neural_conditions(Unit(kUnitIndex), opt);
-            
-            opt.epochName       = epochName;
-            opt.eventMarkName   = markEvent;
-            opt.conditionArray  = {'stopTarg'};
-            iStopTargChecker       = ccm_concat_neural_conditions(Unit(kUnitIndex), opt);
-            
-            
-            % Figure out the minimum length and SDF/raster can be to
-            % analyze:
-            checkerEpochEnd = min([epochRangeChecker(end), length(iStopStopChecker.signalFn) - iStopStopChecker.align - stopStopSsd(i)]);
-            
-            % Use a latency-matching method to get a (fast)
-            % subsample of go trials that match the noncanceled
-            % stop trials
-            switch latencyMatchMethod
+        %               Canceled Stop vs latency-matched (Slow) Go:
+        if isempty(stopStopCoh)
+            fprintf('Session %s doesn"t have enough canceled trials in any condiiton to analyze\n', sessionID)
+        else
+            fprintf('\nGo vs. Canceled:\n')
+            for i = 1 : length(stopStopCoh)
                 
-                case 'ssrt'
-                    iStopLatency = stopStopSsd(i) + iSsrt;
-                    iGoSlowTrial = iGoTargChecker.eventLatency > iStopLatency;
-                case 'mean'
-                    iGoTargRT = sort(iGoTargChecker.eventLatency);
-                    meanStopTargRT = nanmean(iStopTargChecker.eventLatency);
-                    while nanmean(iGoTargRT) > meanStopTargRT
-                        iGoTargRT(end) = [];
+                switch options.ssrt
+                    case 'intWeightPerSession'
+                        iSsrt = round(nanmean(dataInh.ssrtIntegrationWeighted));
+                    case 'intPerSsd'
+                        % Find the ssrt to use
+                        iCohSsrtInd = dataInh.pSignalArray == stopStopCoh(i);
+                        iSsdSsrtInd = dataInh.ssd{iCohSsrtInd} == stopStopSsd(i);
+                        iSsrt = dataInh.ssrtIntegration{iCohSsrtInd}(iSsdSsrtInd);
+                end
+                if isnan(iSsrt)
+                    continue
+                end
+                stopStopSsrt(i) = iSsrt;
+                
+                
+                % Get the go trial data: these need to be split to latency-match with
+                % the stop trial data
+                opt                 = options; % Get default options structure
+                
+                opt.epochName       = epochName;
+                opt.eventMarkName   = markEvent;
+                opt.conditionArray  = {'goTarg'};
+                opt.colorCohArray   = stopStopCoh(i);
+                opt.ssdArray        = [];
+                iGoTargChecker      = ccm_concat_neural_conditions(Unit(kUnitIndex), opt);
+                
+                opt.epochName       = 'responseOnset';
+                opt.eventMarkName   = 'checkerOn';
+                iGoTargSacc         = ccm_concat_neural_conditions(Unit(kUnitIndex), opt);
+                
+                % Get the stop trial data
+                opt.epochName       = epochName;
+                opt.eventMarkName   = 'targOn';
+                opt.conditionArray  = {'stopStop'};
+                opt.ssdArray        = stopStopSsd(i);
+                iStopStopChecker    = ccm_concat_neural_conditions(Unit(kUnitIndex), opt);
+                
+                opt.epochName       = epochName;
+                opt.eventMarkName   = markEvent;
+                opt.conditionArray  = {'stopTarg'};
+                iStopTargChecker       = ccm_concat_neural_conditions(Unit(kUnitIndex), opt);
+                
+                
+                % Figure out the minimum length and SDF/raster can be to
+                % analyze:
+                checkerEpochEnd = min([epochRangeChecker(end), length(iStopStopChecker.signalFn) - iStopStopChecker.align - stopStopSsd(i)]);
+                
+                % Use a latency-matching method to get a (fast)
+                % subsample of go trials that match the noncanceled
+                % stop trials
+                switch latencyMatchMethod
+                    
+                    case 'ssrt'
+                        iStopLatency = stopStopSsd(i) + iSsrt;
+                        iGoSlowTrial = iGoTargChecker.eventLatency > iStopLatency;
+                    case 'mean'
+                        iGoTargRT = sort(iGoTargChecker.eventLatency);
+                        meanStopTargRT = nanmean(iStopTargChecker.eventLatency);
+                        while nanmean(iGoTargRT) > meanStopTargRT
+                            iGoTargRT(end) = [];
+                        end
+                        iStopLatency = iGoTargRT(end);
+                        iGoSlowTrial = iGoTargChecker.eventLatency > iStopLatency;
+                    case 'match'
+                        % Use nearest neighbor method to get rt-matched
+                        % trials
+                        nStopCorrect = size(iStopStopChecker.signal, 1);
+                        data = ccm_match_rt(iGoTargChecker.eventLatency, iStopTargChecker.eventLatency(iStopTargTrial), nStopCorrect);
+                        iGoSlowTrial = data.goSlowTrial;
+                end
+                
+                
+                
+                
+                
+                
+                
+                % ****************************************************************
+                % COLLECT (AND ANALYZE) THE RELEVANT DATA
+                
+                stopStopCheckerData{i}        = iStopStopChecker.signal;
+                stopStopCheckerAlign{i}     	= iStopStopChecker.align;
+                stopStopCheckerEventLat{i}	= iStopStopChecker.eventLatency;
+                stopStopCheckerSdf{i} = spike_density_function(iStopStopChecker.signal, Kernel);
+                
+                goTargSlowCheckerData{i}      = iGoTargChecker.signal(iGoSlowTrial,:);
+                goTargSlowCheckerAlign{i} 	= iGoTargChecker.align;
+                goTargSlowCheckerEventLat{i}	= iGoTargChecker.eventLatency(iGoSlowTrial,:);
+                
+                goTargSlowSaccData{i}         = iGoTargSacc.signal(iGoSlowTrial,:);
+                goTargSlowSaccAlign{i}       = iGoTargSacc.align;
+                goTargSlowSaccEventLat{i}    = iGoTargSacc.eventLatency(iGoSlowTrial,:);
+                
+                
+                
+                
+                stopStopCheckerFn{i} 	= iStopStopChecker.signalFn;
+                goTargSlowCheckerFn{i}      = nanmean(spike_density_function(goTargSlowCheckerData{i}, Kernel), 1);
+                goTargSlowSaccFn{i}         = nanmean(spike_density_function(goTargSlowSaccData{i}, Kernel), 1);
+                
+                
+                
+                
+                % TEST #1:
+                % Hanes et al 1998 (p.822) t-test of spike rates 40 ms surrounding estimated ssrt
+                stopStopSpike{i}     = sum(iStopStopChecker.signal(:, spikeWindow + iStopStopChecker.align + stopStopSsd(i) + iSsrt), 2) / length(spikeWindow) * 1000;
+                goTargSlowSpike{i}   = sum(iGoTargChecker.signal(iGoSlowTrial, spikeWindow + iGoTargChecker.align + stopStopSsd(i) + iSsrt), 2) / length(spikeWindow) * 1000;
+                [h,p,ci,sts]       	= ttest2(stopStopSpike{i}, goTargSlowSpike{i});
+                
+                pValue40msStopStop(i)    = p;
+                stats{i}     = sts;
+                
+                
+                
+                % TEST #2:
+                % Hanes et al 1998 (p.822) differential sdf test
+                % ------------------------------------------------------------------------
+                sdfDiffCheckerOn = 500;
+                % Differential sdf go - stopStop
+                
+                % Baseline sdf differential to caclulate SDF
+                sdfDiffBase = goChecker.signalFn(goChecker.align + (-sdfDiffCheckerOn : 1))' - stopChecker.signalFn(stopChecker.align + (-sdfDiffCheckerOn : 1))';
+                
+                % Get the standard deviation of the differential sdf during the
+                % 500 ms before checkerboard onset
+                stdDiff = std(sdfDiffBase);
+                
+                % GoTarg - stopStop SDF from checker Onset to end of checker epoch.
+                sdfDiff = goTargSlowCheckerFn{i}(iGoTargChecker.align+stopStopSsd(i) : iGoTargChecker.align+stopStopSsd(i) + checkerEpochEnd)' - stopStopCheckerFn{i}(iStopStopChecker.align+stopStopSsd(i) : iStopStopChecker.align+stopStopSsd(i) + checkerEpochEnd)';
+                
+                % If user thinks it's a fixation/stopping type cell, flip
+                % the sign of the differential sdf
+                if strcmp(options.cellType, 'fix')
+                    sdfDiff = -sdfDiff;
+                end
+                
+                
+                
+                % are there times at which the difference between sdfs is
+                % greater than 2 standard deviations of the difference 500
+                % ms before checkerboard onset? Check from checkerboard onset
+                % to end of the checkerboard epoch.
+                % So std2Ind starts at checkerboard onset.
+                std2Ind = sdfDiff > 2*stdDiff;
+                
+                % Look for a sequence of options.ms2Std ms for which the go sdf is 2
+                % std greater than the stop sdf.
+                % First whether the differential sdf was > 2*Std for the
+                % first options.ms2Std ms
+                if sum(std2Ind(1:options.ms2Std)) == options.ms2Std
+                    cancelTime2Std(i) = stopStopSsd(i);
+                else
+                    % If it wasn't, determein whether there was a time
+                    % after the checkerboard onset that the differential
+                    % sdf was > 2*Std for at least options.ms2Std ms.
+                    riseAbove2Std = find([0; diff(std2Ind)] == 1);
+                    sinkBelow2Std = find([0; diff(std2Ind)] == -1);
+                    if ~isempty(riseAbove2Std)
+                        % Get rid of occasions for which the signals differ
+                        % going into the epoch (and therefore they will
+                        % cease to differ before they begin again to
+                        % differ)
+                        if ~isempty(sinkBelow2Std)
+                            sinkBelow2Std(sinkBelow2Std < riseAbove2Std(1)) = [];
+                        end
+                        
+                        % If there's one more riseAbove2Std than sinkBelow2Std, the last riseAbove2Std
+                        % will last until the end of the sdf: Add to
+                        % singkBelowStd the end of the epoch
+                        if length(riseAbove2Std) > length(sinkBelow2Std)
+                            sinkBelow2Std = [sinkBelow2Std; checkerEpochEnd];
+                        end
+                        
+                        % Now riseAbove2Std length should be equal. See if
+                        % any of the riseAbove2Std streaks go longer than
+                        % 50ms
+                        ind = find(sinkBelow2Std - riseAbove2Std >= options.ms2Std, 1);
+                        if ~isempty(ind)
+                            cancelTime2Std(i) = riseAbove2Std(ind) + stopStopSsd(i);
+                        end
+                        % If they're not equal, the last riseAbove2Std
+                        % will last until the end of the sdf: Add to
+                        % singkBelowStd the end of the epoch
                     end
-                    iStopLatency = iGoTargRT(end);
-                    iGoSlowTrial = iGoTargChecker.eventLatency > iStopLatency;
-                case 'match'
-                    % Use nearest neighbor method to get rt-matched
-                    % trials
-                    nStopCorrect = size(iStopStopChecker.signal, 1);
-                    data = ccm_match_rt(iGoTargChecker.eventLatency, iStopTargChecker.eventLatency(iStopTargTrial), nStopCorrect);
-                    iGoSlowTrial = data.goSlowTrial;
-            end
-            
-            
-            
-            
-            
-            
-            
-            % ****************************************************************
-            % COLLECT (AND ANALYZE) THE RELEVANT DATA
-            
-            stopStopCheckerData{i}        = iStopStopChecker.signal;
-            stopStopCheckerAlign{i}     	= iStopStopChecker.align;
-            stopStopCheckerEventLat{i}	= iStopStopChecker.eventLatency;
-            stopStopCheckerSdf{i} = spike_density_function(iStopStopChecker.signal, Kernel);
-            
-            goTargSlowCheckerData{i}      = iGoTargChecker.signal(iGoSlowTrial,:);
-            goTargSlowCheckerAlign{i} 	= iGoTargChecker.align;
-            goTargSlowCheckerEventLat{i}	= iGoTargChecker.eventLatency(iGoSlowTrial,:);
-            
-            goTargSlowSaccData{i}         = iGoTargSacc.signal(iGoSlowTrial,:);
-            goTargSlowSaccAlign{i}       = iGoTargSacc.align;
-            goTargSlowSaccEventLat{i}    = iGoTargSacc.eventLatency(iGoSlowTrial,:);
-            
-            
-            
-            
-            stopStopCheckerFn{i} 	= iStopStopChecker.signalFn;
-            goTargSlowCheckerFn{i}      = nanmean(spike_density_function(goTargSlowCheckerData{i}, Kernel), 1);
-            goTargSlowSaccFn{i}         = nanmean(spike_density_function(goTargSlowSaccData{i}, Kernel), 1);
-            
-            
-            
-            
-            % TEST #1:
-            % Hanes et al 1998 (p.822) t-test of spike rates 40 ms surrounding estimated ssrt
-            stopStopSpike{i}     = sum(iStopStopChecker.signal(:, spikeWindow + iStopStopChecker.align + stopStopSsd(i) + iSsrt), 2) / length(spikeWindow) * 1000;
-            goTargSlowSpike{i}   = sum(iGoTargChecker.signal(iGoSlowTrial, spikeWindow + iGoTargChecker.align + stopStopSsd(i) + iSsrt), 2) / length(spikeWindow) * 1000;
-            [h,p,ci,sts]       	= ttest2(stopStopSpike{i}, goTargSlowSpike{i});
-            
-            pValue40msStopStop(i)    = p;
-            stats{i}     = sts;
-            
-            
-            
-            % TEST #2:
-            % Hanes et al 1998 (p.822) differential sdf test
-            % ------------------------------------------------------------------------
-            sdfDiffCheckerOn = 500;
-            % Differential sdf go - stopStop
-            
-            % Baseline sdf differential to caclulate SDF
-            sdfDiffBase = goChecker.signalFn(goChecker.align + (-sdfDiffCheckerOn : 1))' - stopChecker.signalFn(stopChecker.align + (-sdfDiffCheckerOn : 1))';
-            
-            % Get the standard deviation of the differential sdf during the
-            % 500 ms before checkerboard onset
-            stdDiff = std(sdfDiffBase);
-            
-            % GoTarg - stopStop SDF from checker Onset to end of checker epoch.
-            sdfDiff = goTargSlowCheckerFn{i}(iGoTargChecker.align+stopStopSsd(i) : iGoTargChecker.align+stopStopSsd(i) + checkerEpochEnd)' - stopStopCheckerFn{i}(iStopStopChecker.align+stopStopSsd(i) : iStopStopChecker.align+stopStopSsd(i) + checkerEpochEnd)';
-            
-            % If user thinks it's a fixation/stopping type cell, flip
-            % the sign of the differential sdf
-            if strcmp(options.cellType, 'fix')
-                sdfDiff = -sdfDiff;
-            end
-            
-            
-            
-            % are there times at which the difference between sdfs is
-            % greater than 2 standard deviations of the difference 500
-            % ms before checkerboard onset? Check from checkerboard onset
-            % to end of the checkerboard epoch.
-            % So std2Ind starts at checkerboard onset.
-            std2Ind = sdfDiff > 2*stdDiff;
-            
-            % Look for a sequence of options.ms2Std ms for which the go sdf is 2
-            % std greater than the stop sdf.
-            % First whether the differential sdf was > 2*Std for the
-            % first options.ms2Std ms
-            if sum(std2Ind(1:options.ms2Std)) == options.ms2Std
-                cancelTime2Std(i) = stopStopSsd(i);
-            else
-                % If it wasn't, determein whether there was a time
-                % after the checkerboard onset that the differential
-                % sdf was > 2*Std for at least options.ms2Std ms.
-                riseAbove2Std = find([0; diff(std2Ind)] == 1);
-                sinkBelow2Std = find([0; diff(std2Ind)] == -1);
-                if ~isempty(riseAbove2Std)
-                    % Get rid of occasions for which the signals differ
-                    % going into the epoch (and therefore they will
-                    % cease to differ before they begin again to
-                    % differ)
-                    if ~isempty(sinkBelow2Std)
-                        sinkBelow2Std(sinkBelow2Std < riseAbove2Std(1)) = [];
+                end
+                
+                
+                % If there werwe options.ms2Std consecutive ms of sdfDiff > 2*Std,
+                % check whether the difference ever reached 4*Std
+                if ~isnan(cancelTime2Std(i))
+                    
+                    
+                    std4Ind = sdfDiff(cancelTime2Std(i) : end) > 4*stdDiff;
+                    if sum(std4Ind)
+                        
+                        % Cancel time will be Negative if
+                        % go SDF > stop SDF BEFORE SSRT (which is a good thing-
+                        % means the neuron can contribute to controlling saccade
+                        % initiation/inhibition.
+                        cancelTime4Std(i) = find(std4Ind, 1) + cancelTime2Std(i);
                     end
                     
-                    % If there's one more riseAbove2Std than sinkBelow2Std, the last riseAbove2Std
-                    % will last until the end of the sdf: Add to
-                    % singkBelowStd the end of the epoch
-                    if length(riseAbove2Std) > length(sinkBelow2Std)
-                        sinkBelow2Std = [sinkBelow2Std; checkerEpochEnd];
+                    % If it reached 4*Std, check whether and when it reached
+                    % 6*Std:
+                    if ~isnan(cancelTime4Std(i))
+                        std6Ind = sdfDiff(cancelTime4Std(i) : end) > 6*stdDiff;
+                        if sum(std6Ind)
+                            cancelTime6Std(i) = find(std6Ind, 1) + cancelTime4Std(i);
+                        end
+                    end
+                    % If it didn't pass the 6 Std test, don't consider it to
+                    % have canceled (reset the 2 Std test to NaN
+                    %                 if isnan(cancelTime6Std(i))
+                    %                     cancelTime2Std(i) = nan;
+                    %                 end
+                end
+                
+                fprintf('ssd: %d  \tcolor: %.2f  \tgo v. stop: %.1f  %.1f sp, p = %.2f\t canceltime = %d\n',...
+                    stopStopSsd(i), stopStopCoh(i), mean(goTargSlowSpike{i}), mean(stopStopSpike{i}), p, cancelTime2Std(i) - iSsrt -  stopStopSsd(i));
+                
+                
+                if plotFlag && i <= nPlot
+                    figure(stopStopFig)
+                    
+                    % Data aligned on checkerboard onset
+                    ax(i, colChkr) = axes('units', 'centimeters', 'position', [xAxesPosition(i, colChkr) yAxesPosition(i, colChkr) axisWidth axisHeight]);
+                    set(ax(i, colChkr), 'ylim', [sdfMin sdfMax], 'xlim', [epochRangeChecker(1) epochRangeChecker(end)])
+                    cla
+                    hold(ax(i, colChkr), 'on')
+                    plot(ax(i, colChkr), [1 1], [sdfMin sdfMax * .9], '-k', 'linewidth', 2)
+                    ttl = sprintf('SSD: %d  pMag: %.2f  nStop: %d', stopStopSsd(i), stopStopCoh(i), size(iStopStopChecker.signal, 1));
+                    title(ttl)
+                    
+                    % Data aligned on response onset
+                    ax(i, colSacc) = axes('units', 'centimeters', 'position', [xAxesPosition(i, colSacc) yAxesPosition(i, colSacc) axisWidth/2 axisHeight]);
+                    set(ax(i, colSacc), 'ylim', [sdfMin sdfMax], 'xlim', [epochRangeSacc(1) epochRangeSacc(end)])
+                    set(ax(i, colSacc), 'yticklabel', [], 'ycolor', [1 1 1])
+                    cla
+                    hold(ax(i, colSacc), 'on')
+                    plot(ax(i, colSacc), [1 1], [sdfMin sdfMax * .9], '-k', 'linewidth', 2)
+                    
+                    
+                    
+                    plot(ax(i, colChkr), [stopStopSsd(i), stopStopSsd(i)], [sdfMin sdfMax], 'color', [.2 .2 .2], 'linewidth', 1)
+                    plot(ax(i, colChkr), [stopStopSsd(i) + iSsrt, stopStopSsd(i) + iSsrt], [sdfMin sdfMax], '--', 'color', [0 0 0], 'linewidth', 1)
+                    
+                    iGoTargRTMean = round(nanmean(goTargSlowCheckerEventLat{i}));
+                    
+                    % Checkerboard onset aligned
+                    iGoTargSlowCheckerFn = goTargSlowCheckerFn{i}(goTargSlowCheckerAlign{i} + epochRangeChecker);
+                    plot(ax(i, colChkr), epochRangeChecker, iGoTargSlowCheckerFn, 'color', cMap(pSignalArray == stopStopCoh(i),:), 'linewidth', goLineW)
+                    if iGoTargRTMean < length(iGoTargSlowCheckerFn)
+                        plot(ax(i, colChkr), iGoTargRTMean, 0, '.k','markersize', markSize)
                     end
                     
-                    % Now riseAbove2Std length should be equal. See if
-                    % any of the riseAbove2Std streaks go longer than
-                    % 50ms
-                    ind = find(sinkBelow2Std - riseAbove2Std >= options.ms2Std, 1);
-                    if ~isempty(ind)
-                        cancelTime2Std(i) = riseAbove2Std(ind) + stopStopSsd(i);
-                    end
-                    % If they're not equal, the last riseAbove2Std
-                    % will last until the end of the sdf: Add to
-                    % singkBelowStd the end of the epoch
-                end
-            end
-            
-            
-            % If there werwe options.ms2Std consecutive ms of sdfDiff > 2*Std,
-            % check whether the difference ever reached 4*Std
-            if ~isnan(cancelTime2Std(i))
-                
-                
-                std4Ind = sdfDiff(cancelTime2Std(i) : end) > 4*stdDiff;
-                if sum(std4Ind)
+                    iStopStopCheckerFn = stopStopCheckerFn{i}(stopStopCheckerAlign{i} + epochRangeChecker);
+                    plot(ax(i, colChkr), epochRangeChecker, iStopStopCheckerFn, '--', 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
+                    %                 plot(ax(i, colChkr), epochRangeChecker, sdfDiff(sdfDiffCheckerOn-1:end), 'color', 'g', 'linewidth', stopLineW)
                     
-                    % Cancel time will be Negative if
-                    % go SDF > stop SDF BEFORE SSRT (which is a good thing-
-                    % means the neuron can contribute to controlling saccade
-                    % initiation/inhibition.
-                    cancelTime4Std(i) = find(std4Ind, 1) + cancelTime2Std(i);
+                    % Cancel time
+                    if ~isnan(cancelTime2Std(i)) && cancelTime2Std(i) < epochRangeChecker(end)
+                        plot(ax(i, colChkr), [cancelTime2Std(i) cancelTime2Std(i)], [0 .9*iGoTargSlowCheckerFn(cancelTime2Std(i))], 'color', 'b', 'linewidth', stopLineW)
+                    end
+                    
+                    % Saccade-aligned
+                    iGoTargSlowSaccFn = goTargSlowSaccFn{i}(goTargSlowSaccAlign{i} + epochRangeSacc);
+                    plot(ax(i, colSacc), epochRangeSacc, iGoTargSlowSaccFn, 'color', cMap(pSignalArray == stopStopCoh(i),:), 'linewidth', goLineW)
+                    
+                    %                 iStopStopSaccFn = stopStopCheckerFn{i}(stopStopCheckerAlign{i} + iGoTargRTMean + epochRangeSacc);
+                    %                 plot(ax(i, colSacc), epochRangeSacc, iStopStopSaccFn, 'color', stopColor, 'linewidth', stopLineW)
+                    
                 end
                 
-                % If it reached 4*Std, check whether and when it reached
-                % 6*Std:
-                if ~isnan(cancelTime4Std(i))
-                    std6Ind = sdfDiff(cancelTime4Std(i) : end) > 6*stdDiff;
-                    if sum(std6Ind)
-                        cancelTime6Std(i) = find(std6Ind, 1) + cancelTime4Std(i);
+                
+                
+                
+                
+                
+                
+                % Cancel time SDF deflection analyses:
+                % #############################################################################
+                % #############################################################################
+                % #############################################################################
+                
+                
+                
+                % Cancel time trial-by-trial distribution and average SDF deflection analyses: no point in latency matching, since latency-matching depends on mean activation function/SDF.
+                % Slow GO is commented out for this reason: see
+                % also plot_inhibition.m
+                % #############################################################################
+                % #############################################################################
+                % #############################################################################
+                
+                % Find maximum of SDFs after SSD
+                % May need to cut off search for max before
+                % the end of the signal, so later modulations
+                % don't interfere with the analysis.
+                stopSignalInd = iStopStopChecker.align + stopStopSsd(i);
+                % Use the mean of the latency-matched Go
+                % trials as the last index to look for maximum
+                % SDF value during canceled stop trials
+                meanRtInd = ceil(nanmean(iGoTargChecker.eventLatency(iGoSlowTrial,:)));
+                [maxStopStopSdf, maxInd] = max(stopStopCheckerSdf{i}(:, stopSignalInd : stopSignalInd + meanRtInd), [], 2);
+                %                 maxStopStopSdf(maxInd >= meanRtInd) = nan;
+                %                 maxInd(maxInd >= meanRtInd) = nan;
+                
+                
+                % Average SDF deflection analysis
+                % ------------------------------------------------------------------------
+                [maxStopStopFn, maxFnInd] = max(stopStopCheckerFn{i}(stopSignalInd : stopSignalInd + meanRtInd));
+                %                 maxStopStopFn(maxFnInd >= meanRtInd) = nan;
+                %                 maxFnInd(maxFnInd >= meanRtInd) = nan;
+                
+                % Cancel time only gets calculated if max SDF occurs before mean Go slow Rts
+                if maxFnInd < meanRtInd
+                    
+                    % Find the minimum after the maximum, to
+                    % determine relative half-max index
+                    [minStopStopFn, minFnInd] = min(stopStopCheckerFn{i}(stopSignalInd + maxFnInd : stopSignalInd + meanRtInd));
+                    
+                    % Use a proportion of the maximum relative to minimum to determine cancel time
+                    halfMaxStopStopFn = minStopStopFn + (maxStopStopFn - minStopStopFn) * maxSdfProportion;
+                    
+                    halfMaxFnInd = find(stopStopCheckerFn{i}(stopSignalInd + maxFnInd:end) < halfMaxStopStopFn, 1);
+                    
+                    % To calculate cancel time, use half the time between max and "half
+                    % max", relative to ssrt
+                    iCancelTimeSdf = nan;
+                    
+                    if ~isempty(halfMaxFnInd)
+                        iCancelTimeSdf = maxFnInd + halfMaxFnInd/2 - iSsrt;
+                        %                             % optional- plot individual trials for
+                        %                             % troubleshooting
+                        %                             figure(27)
+                        %                             clf
+                        %                             hold 'all'
+                        %                             % Canceled GO
+                        %                             plot(stopStopCheckerFn{i}(iStopStopChecker.align:iStopStopChecker.align+700), 'k')
+                        %                             plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopFn*.8], '-r', 'linewidth', 3)
+                        %                             plot([stopStopSsd(i)+iSsrt stopStopSsd(i)+iSsrt], [0 maxStopStopFn*.8], '--r', 'linewidth', 3)
+                        %                             plot([stopStopSsd(i) + maxFnInd, stopStopSsd(i) + maxFnInd], [0 maxStopStopFn], '-k', 'linewidth', 3)
+                        %                             plot([stopStopSsd(i) + maxFnInd + halfMaxFnInd, stopStopSsd(i) + maxFnInd + halfMaxFnInd], [0 halfMaxStopStopFn], '-k', 'linewidth', 3)
+                        %                             plot([stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2), stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2)], [0 maxStopStopFn*.8], '--k', 'linewidth', 3)
+                        % printName = sprintf('%s_canceled_Coh%s_Ssd%d_nTrial%d.pdf',Unit(kUnitIndex).name, num2str(stopStopCoh(i)*100), stopStopSsd(i), size(stopStopCheckerSdf{i}, 1));
+                        %             print(gcf,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID,  printName),'-dpdf', '-r300')
                     end
                 end
-                % If it didn't pass the 6 Std test, don't consider it to
-                % have canceled (reset the 2 Std test to NaN
-                %                 if isnan(cancelTime6Std(i))
-                %                     cancelTime2Std(i) = nan;
-                %                 end
-            end
-            
-            fprintf('ssd: %d  \tcolor: %.2f  \tgo v. stop: %.1f  %.1f sp, p = %.2f\t canceltime = %d\n',...
-                stopStopSsd(i), stopStopCoh(i), mean(goTargSlowSpike{i}), mean(stopStopSpike{i}), p, cancelTime2Std(i) - iSsrt -  stopStopSsd(i));
-            
-            
-            if plotFlag && i <= nPlot
-                figure(stopStopFig)
                 
-                % Data aligned on checkerboard onset
-                ax(i, colChkr) = axes('units', 'centimeters', 'position', [xAxesPosition(i, colChkr) yAxesPosition(i, colChkr) axisWidth axisHeight]);
-                set(ax(i, colChkr), 'ylim', [sdfMin sdfMax], 'xlim', [epochRangeChecker(1) epochRangeChecker(end)])
-                cla
-                hold(ax(i, colChkr), 'on')
-                plot(ax(i, colChkr), [1 1], [sdfMin sdfMax * .9], '-k', 'linewidth', 2)
-                ttl = sprintf('SSD: %d  pMag: %.2f  nStop: %d', stopStopSsd(i), stopStopCoh(i), size(iStopStopChecker.signal, 1));
-                title(ttl)
+                % ------------------------------------------------------------------------
                 
-                % Data aligned on response onset
-                ax(i, colSacc) = axes('units', 'centimeters', 'position', [xAxesPosition(i, colSacc) yAxesPosition(i, colSacc) axisWidth/2 axisHeight]);
-                set(ax(i, colSacc), 'ylim', [sdfMin sdfMax], 'xlim', [epochRangeSacc(1) epochRangeSacc(end)])
-                set(ax(i, colSacc), 'yticklabel', [], 'ycolor', [1 1 1])
-                cla
-                hold(ax(i, colSacc), 'on')
-                plot(ax(i, colSacc), [1 1], [sdfMin sdfMax * .9], '-k', 'linewidth', 2)
-                
-                
-                
-                plot(ax(i, colChkr), [stopStopSsd(i), stopStopSsd(i)], [sdfMin sdfMax], 'color', [.2 .2 .2], 'linewidth', 1)
-                plot(ax(i, colChkr), [stopStopSsd(i) + iSsrt, stopStopSsd(i) + iSsrt], [sdfMin sdfMax], '--', 'color', [0 0 0], 'linewidth', 1)
-                
-                iGoTargRTMean = round(nanmean(goTargSlowCheckerEventLat{i}));
-                
-                % Checkerboard onset aligned
-                iGoTargSlowCheckerFn = goTargSlowCheckerFn{i}(goTargSlowCheckerAlign{i} + epochRangeChecker);
-                plot(ax(i, colChkr), epochRangeChecker, iGoTargSlowCheckerFn, 'color', cMap(pSignalArray == stopStopCoh(i),:), 'linewidth', goLineW)
-                if iGoTargRTMean < length(iGoTargSlowCheckerFn)
-                    plot(ax(i, colChkr), iGoTargRTMean, 0, '.k','markersize', markSize)
+                % Trial-by-trial analysis: For each trial, determine first index of SDF
+                % that falls below half-max
+                % ------------------------------------------------------------------------
+                iCancelTime = nan(size(iStopStopChecker.signal, 1), 1);
+                for a = 1 : size(iStopStopChecker.signal, 1)
+                    
+                    % Cancel time only gets calculated if max SDF occurs before mean Go slow Rts
+                    if maxInd(a) < meanRtInd
+                        
+                        % Find the minimum after the maximum, to
+                        % determine relative half-max index
+                        [aMinStopStopSdf, minInd] = min(stopStopCheckerSdf{i}(a, stopSignalInd + maxInd(a) : stopSignalInd + meanRtInd), [], 2);
+                        
+                        % Use a proportion of the maximum relative to minimum to determine cancel time
+                        aHalfMaxStopStopSdf = aMinStopStopSdf + (maxStopStopSdf(a) - aMinStopStopSdf) * maxSdfProportion;
+                        
+                        aHalfMaxInd = find(stopStopCheckerSdf{i}(a,stopSignalInd + maxInd(a):end) < aHalfMaxStopStopSdf, 1);
+                        
+                        if ~isempty(aHalfMaxInd)
+                            %                             % optional- plot individual trials for
+                            %                             % troubleshooting
+                            %                             figure(24)
+                            %                             clf
+                            %                             hold 'all'
+                            %                             % Canceled GO
+                            %                             plot(stopStopCheckerSdf{i}(a,iStopStopChecker.align:iStopStopChecker.align+700), 'k')
+                            %                             plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopSdf(a)*.8], '-r', 'linewidth', 3)
+                            %                             plot([stopStopSsd(i)+iSsrt stopStopSsd(i)+iSsrt], [0 maxStopStopSdf(a)*.8], '--r', 'linewidth', 3)
+                            %                             plot([stopStopSsd(i) + maxInd(a), stopStopSsd(i) + maxInd(a)], [0 maxStopStopSdf(a)], '-k', 'linewidth', 3)
+                            %                             plot([stopStopSsd(i) + maxInd(a) + aHalfMaxInd, stopStopSsd(i) + maxInd(a) + aHalfMaxInd], [0 aHalfMaxStopStopSdf], '-k', 'linewidth', 3)
+                            %                             plot([stopStopSsd(i)+(maxInd(a) + aHalfMaxInd/2), stopStopSsd(i)+(maxInd(a) + aHalfMaxInd/2)], [0 maxStopStopSdf(a)*.8], '--k', 'linewidth', 3)
+                            % printName = sprintf('%s_canceled_Coh%s_Ssd%d_Trial%d.pdf',Unit(kUnitIndex).name, num2str(stopStopCoh(i)*100), stopStopSsd(i), a);
+                            %             print(gcf,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID,  printName),'-dpdf', '-r300')
+                            
+                            
+                            % To calculate cancel time, use half the time between max and "half
+                            % max", relative to ssrt
+                            iCancelTime(a) = maxInd(a) + aHalfMaxInd/2 - iSsrt;
+                        end
+                        
+                    end
+                    
+                    
                 end
+                % ------------------------------------------------------------------------
                 
-                iStopStopCheckerFn = stopStopCheckerFn{i}(stopStopCheckerAlign{i} + epochRangeChecker);
-                plot(ax(i, colChkr), epochRangeChecker, iStopStopCheckerFn, '--', 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
-                %                 plot(ax(i, colChkr), epochRangeChecker, sdfDiff(sdfDiffCheckerOn-1:end), 'color', 'g', 'linewidth', stopLineW)
                 
-                % Cancel time
-                if ~isnan(cancelTime2Std(i)) && cancelTime2Std(i) < epochRangeChecker(end)
-                    plot(ax(i, colChkr), [cancelTime2Std(i) cancelTime2Std(i)], [0 .9*iGoTargSlowCheckerFn(cancelTime2Std(i))], 'color', 'b', 'linewidth', stopLineW)
-                end
+                cancelTimeDist{i} = iCancelTime;
+                cancelTimeSdf(i) = iCancelTimeSdf;
                 
-                % Saccade-aligned
-                iGoTargSlowSaccFn = goTargSlowSaccFn{i}(goTargSlowSaccAlign{i} + epochRangeSacc);
-                plot(ax(i, colSacc), epochRangeSacc, iGoTargSlowSaccFn, 'color', cMap(pSignalArray == stopStopCoh(i),:), 'linewidth', goLineW)
                 
-                %                 iStopStopSaccFn = stopStopCheckerFn{i}(stopStopCheckerAlign{i} + iGoTargRTMean + epochRangeSacc);
-                %                 plot(ax(i, colSacc), epochRangeSacc, iStopStopSaccFn, 'color', stopColor, 'linewidth', stopLineW)
+                
+                
+                
+                
+                
+                
+                
                 
             end
-            
-            
-            
-            
-            
-            
-                              % Cancel time trial-by-trial distribution analyses: no point in latency matching, since latency-matching depends on mean activation function/SDF.
-                            % Slow GO is commented out for this reason: see
-                            % also plot_inhibition.m 
-          
-            
-                             % Find maximum of SDFs after SSD
-                             % May need to cut off search for max before
-                             % the end of the signal, so later modulations
-                             % don't interfere with the analysis.
-                             stopSignalInd = iStopStopChecker.align + stopStopSsd(i);
-                             % Use the mean of the latency-matched Go
-                             % trials as the last index to look for maximum
-                             % SDF value during canceled stop trials
-                             meanRtInd = ceil(nanmean(iGoTargChecker.eventLatency(iGoSlowTrial,:)));
-                            [maxStopStopSdf, maxInd] = max(stopStopCheckerSdf{i}(:, stopSignalInd : stopSignalInd + meanRtInd), [], 2);
-                            maxStopStopSdf(maxStopStopSdf == meanRtInd) = nan;
-                            maxInd(maxStopStopSdf == meanRtInd) = nan;
-           
-                             % For each trial, determine first index of SDF
-                            % that falls below half-max
-                            iCancelTime = nan(size(iStopStopChecker.signal, 1), 1);
-                            for a = 1 : size(iStopStopChecker.signal, 1)
-                                
- 
-                             if maxInd(a) < meanRtInd   
-                                
-                                % Find the minimum after the maximum, to
-                            % determine relative half-max index
-                            [aMinStopStopSdf, minInd] = min(stopStopCheckerSdf{i}(a, stopSignalInd + maxInd(a) : stopSignalInd + meanRtInd), [], 2);
-           
-                             % Use a proportion of the maximum relative to minimum to determine cancel time
-                            aHalfMaxStopStopSdf = aMinStopStopSdf + (maxStopStopSdf(a) - aMinStopStopSdf) * maxSdfProportion;
-
-                                aHalfMaxInd = find(stopStopCheckerSdf{i}(a,stopSignalInd + maxInd(a):end) < aHalfMaxStopStopSdf, 1);
-                                
-                                if ~isempty(aHalfMaxInd)
-                                % optional- plot individual trials for
-                                % troubleshooting
-                               figure(24)
-                                clf
-                                hold 'all'
-                                % Canceled GO
-                                plot(stopStopCheckerSdf{i}(a,iStopStopChecker.align:iStopStopChecker.align+500), 'r')
-                                plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopSdf(a)*.8], '-r', 'linewidth', 3)
-                                plot([stopStopSsd(i) + maxInd(a), stopStopSsd(i) + maxInd(a)], [0 maxStopStopSdf(a)], '-k', 'linewidth', 3)
-                                plot([stopStopSsd(i) + maxInd(a) + aHalfMaxInd, stopStopSsd(i) + maxInd(a) + aHalfMaxInd], [0 aHalfMaxStopStopSdf], '-b', 'linewidth', 3)
-                                disp('here')
-
-                                
-                                % To calculate cancel time, use half the time between max and "half
-                                % max", relative to ssrt
-                                    iCancelTime(a) = maxInd(a) + aHalfMaxInd/2 - iSsrt;
-                                end
-                                
-                             end 
-                                
-                                
-                                
-                                
-                                
-                                
-                            end
-           
-            
-                                        cancelTimeDist{i} = iCancelTime;
-
-            
-            
-            
-            
-            
-            
-            
-            
             
             
         end
-        
-        
-    end
     end
     
     %             $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -766,19 +822,19 @@ for kUnitIndex = 1 : nUnit
                 
                 
                 
-            switch options.ssrt
-                case 'intWeightPerSession'
-                    iSsrt = round(nanmean(dataInh.ssrtIntegrationWeighted));
-                case 'intPerSsd'
-                    % Find the ssrt to use
-                    iCohSsrtInd = dataInh.pSignalArray == stopTargCoh(i);
-                    iSsdSsrtInd = dataInh.ssd{iCohSsrtInd} == stopTargSsd(i);
-                    iSsrt = dataInh.ssrtIntegration{iCohSsrtInd}(iSsdSsrtInd);
-            end
+                switch options.ssrt
+                    case 'intWeightPerSession'
+                        iSsrt = round(nanmean(dataInh.ssrtIntegrationWeighted));
+                    case 'intPerSsd'
+                        % Find the ssrt to use
+                        iCohSsrtInd = dataInh.pSignalArray == stopTargCoh(i);
+                        iSsdSsrtInd = dataInh.ssd{iCohSsrtInd} == stopTargSsd(i);
+                        iSsrt = dataInh.ssrtIntegration{iCohSsrtInd}(iSsdSsrtInd);
+                end
                 if isnan(iSsrt)
                     continue
                 end
-                     stopTargSsrt(i) = iSsrt;
+                stopTargSsrt(i) = iSsrt;
                 
                 
                 % Get the go trial data: these need to be split to latency-match with
@@ -926,14 +982,14 @@ for kUnitIndex = 1 : nUnit
                     plot(ax(i, colChkr), epochRangeChecker, iGoTargFastCheckerFn, 'color', cMap(pSignalArray == stopTargCoh(i),:), 'linewidth', goLineW)
                     iGoTargRTMean = round(nanmean(goTargFastCheckerEventLat{i}));
                     if iGoTargRTMean <= length(iGoTargFastCheckerFn)
-                    plot(ax(i, colChkr), iGoTargRTMean, 0, '.k','markersize', markSize)
+                        plot(ax(i, colChkr), iGoTargRTMean, 0, '.k','markersize', markSize)
                     end
                     
                     iStopTargCheckerFn = stopTargCheckerFn{i}(stopTargCheckerAlign{i} + epochRangeChecker);
                     plot(ax(i, colChkr), epochRangeChecker, iStopTargCheckerFn, '--', 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
                     iStopTargRTMean = round(nanmean(stopTargCheckerEventLat{i}));
                     if iStopTargRTMean <= length(iStopTargCheckerFn)
-                    plot(ax(i, colChkr), iStopTargRTMean, 0, '.k','markersize', markSize)
+                        plot(ax(i, colChkr), iStopTargRTMean, 0, '.k','markersize', markSize)
                     end
                     
                     iGoTargFastSaccFn = goTargFastSaccFn{i}(goTargFastSaccAlign{i} + epochRangeSacc);
@@ -1020,6 +1076,7 @@ for kUnitIndex = 1 : nUnit
     Data(kUnitIndex).stopStopCond    = stopStopCond;
     
     
+    Data(kUnitIndex).cancelTimeSdf     = cancelTimeSdf;
     Data(kUnitIndex).cancelTimeDist     = cancelTimeDist;
     Data(kUnitIndex).pValue40msStopStop     = pValue40msStopStop;
     Data(kUnitIndex).cancelTime2Std    = cancelTime2Std;
@@ -1034,10 +1091,10 @@ for kUnitIndex = 1 : nUnit
     
     if printPlot
         if ANALYZE_CANCELED
-        if ~isdir(fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt))
-            mkdir(fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt))
-        end
-        print(stopStopFig,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, [sessionID, '_ccm_go_vs_canceled_',Unit(kUnitIndex).name, '.pdf']),'-dpdf', '-r300')
+            if ~isdir(fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt))
+                mkdir(fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt))
+            end
+            print(stopStopFig,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, [sessionID, '_ccm_go_vs_canceled_',Unit(kUnitIndex).name, '.pdf']),'-dpdf', '-r300')
         end
         
         if ANALYZE_NONCANCELED
