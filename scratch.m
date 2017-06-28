@@ -978,9 +978,12 @@ end
 %%
 opt = ccm_neuron_stop_vs_go;
 opt.multiUnit = true;
+opt.minTrialPerCond     = 10;
 
 % data = ccm_neuron_stop_vs_go('joule', 'jp125n04', {'spikeUnit26'}, opt);
+% data = ccm_neuron_stop_vs_go('joule', 'jp125n04', {'spikeUnit32'}, opt);
 data = ccm_neuron_stop_vs_go('broca', 'bp244n02', {'spikeUnit27'}, opt);
+% data = ccm_neuron_stop_vs_go('broca', 'bp247n02', {'spikeUnit12'}, opt);
   
 
 

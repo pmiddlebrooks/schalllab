@@ -671,10 +671,6 @@ for kUnitIndex = 1 : nUnit
                 
                 
                 
-                % Cancel time SDF deflection analyses:
-                % #############################################################################
-                % #############################################################################
-                % #############################################################################
                 
                 
                 
@@ -723,20 +719,21 @@ for kUnitIndex = 1 : nUnit
                     
                     if ~isempty(halfMaxFnInd)
                         iCancelTimeSdf = maxFnInd + halfMaxFnInd/2 - iSsrt;
-                        %                             % optional- plot individual trials for
-                        %                             % troubleshooting
-                        %                             figure(27)
-                        %                             clf
-                        %                             hold 'all'
-                        %                             % Canceled GO
-                        %                             plot(stopStopCheckerFn{i}(iStopStopChecker.align:iStopStopChecker.align+700), 'k')
-                        %                             plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopFn*.8], '-r', 'linewidth', 3)
-                        %                             plot([stopStopSsd(i)+iSsrt stopStopSsd(i)+iSsrt], [0 maxStopStopFn*.8], '--r', 'linewidth', 3)
-                        %                             plot([stopStopSsd(i) + maxFnInd, stopStopSsd(i) + maxFnInd], [0 maxStopStopFn], '-k', 'linewidth', 3)
-                        %                             plot([stopStopSsd(i) + maxFnInd + halfMaxFnInd, stopStopSsd(i) + maxFnInd + halfMaxFnInd], [0 halfMaxStopStopFn], '-k', 'linewidth', 3)
-                        %                             plot([stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2), stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2)], [0 maxStopStopFn*.8], '--k', 'linewidth', 3)
-                        % printName = sprintf('%s_canceled_Coh%s_Ssd%d_nTrial%d.pdf',Unit(kUnitIndex).name, num2str(stopStopCoh(i)*100), stopStopSsd(i), size(stopStopCheckerSdf{i}, 1));
-                        %             print(gcf,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID,  printName),'-dpdf', '-r300')
+                                                    % optional- plot individual trials for
+                                                    % troubleshooting
+                                                    figure(27)
+                                                    clf
+                                                    hold 'all'
+                                                    % Canceled GO goTargSlowCheckerFn
+                                                    plot(goTargSlowCheckerFn{i}(goTargSlowCheckerAlign{i}:goTargSlowCheckerAlign{i}+700), 'g')
+                                                    plot(stopStopCheckerFn{i}(iStopStopChecker.align:iStopStopChecker.align+700), 'k')
+                                                    plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopFn*.8], '-r', 'linewidth', 3)
+                                                    plot([stopStopSsd(i)+iSsrt stopStopSsd(i)+iSsrt], [0 maxStopStopFn*.8], '--r', 'linewidth', 3)
+                                                    plot([stopStopSsd(i) + maxFnInd, stopStopSsd(i) + maxFnInd], [0 maxStopStopFn], '-k', 'linewidth', 3)
+                                                    plot([stopStopSsd(i) + maxFnInd + halfMaxFnInd, stopStopSsd(i) + maxFnInd + halfMaxFnInd], [0 halfMaxStopStopFn], '-k', 'linewidth', 3)
+                                                    plot([stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2), stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2)], [0 maxStopStopFn*.8], '--k', 'linewidth', 3)
+                        printName = sprintf('%s_canceled_Coh%s_Ssd%d_nTrial%d.pdf',Unit(kUnitIndex).name, num2str(stopStopCoh(i)*100), stopStopSsd(i), size(stopStopCheckerSdf{i}, 1));
+                                    print(gcf,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID,  printName),'-dpdf', '-r300')
                     end
                 end
                 
