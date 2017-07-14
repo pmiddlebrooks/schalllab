@@ -328,7 +328,11 @@ for kUnitIndex = 1 : nUnit
     if plotFlag
         
         cMap = ccm_colormap(pSignalArray);
-        stopColorMap = [.9 0 0; .6 0 0; .6 0 0; .9 0 0];
+        if length(pSignalArray) > 4
+        stopColorMap = [1 0 0; .7 0 0; .4 0 0; .4 0 0; .7 0 0; 1 0 0];
+        elseif length(pSignalArray) == 4
+        stopColorMap = [1 0 0; .7 0 0; .7 0 0; 1 0 0];
+        end
         
         opt = ccm_concat_neural_conditions; % Get default options structure
         
@@ -702,7 +706,8 @@ for kUnitIndex = 1 : nUnit
                 %                 maxFnInd(maxFnInd >= meanRtInd) = nan;
                 
                 % Cancel time only gets calculated if max SDF occurs before mean Go slow Rts
-                if maxFnInd < meanRtInd
+                     iCancelTimeSdf = nan;
+               if maxFnInd < meanRtInd
                     
                     % Find the minimum after the maximum, to
                     % determine relative half-max index
@@ -715,7 +720,6 @@ for kUnitIndex = 1 : nUnit
                     
                     % To calculate cancel time, use half the time between max and "half
                     % max", relative to ssrt
-                    iCancelTimeSdf = nan;
                     
                     if ~isempty(halfMaxFnInd)
                         iCancelTimeSdf = maxFnInd + halfMaxFnInd/2 - iSsrt;
