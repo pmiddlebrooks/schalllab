@@ -1052,14 +1052,20 @@ for kUnitIndex = 1 : nUnit
     Data(kUnitIndex).stopStopCheckerData        = stopStopCheckerData;
     Data(kUnitIndex).stopStopCheckerAlign        = stopStopCheckerAlign;
     Data(kUnitIndex).stopStopCheckerEventLat        = stopStopCheckerEventLat;
+    Data(kUnitIndex).stopStopCheckerSdf        = stopStopCheckerFn;
+    Data(kUnitIndex).stopStopCheckerAlign        = stopStopCheckerAlign;
     
     Data(kUnitIndex).goTargSlowCheckerData      = goTargSlowCheckerData;
     Data(kUnitIndex).goTargSlowCheckerAlign      = goTargSlowCheckerAlign;
     Data(kUnitIndex).goTargSlowCheckerEventLat     = goTargSlowCheckerEventLat;
+    Data(kUnitIndex).goTargSlowCheckerSdf     = goTargSlowCheckerFn;
+    Data(kUnitIndex).goTargSlowCheckerAlign     = goTargSlowCheckerAlign;
     
     Data(kUnitIndex).goTargSlowSaccData 	= goTargSlowSaccData;
     Data(kUnitIndex).goTargSlowSaccAlign      = goTargSlowSaccAlign;
     Data(kUnitIndex).goTargSlowSaccEventLat     = goTargSlowSaccEventLat;
+    Data(kUnitIndex).goTargSlowSaccSdf     = goTargSlowSaccFn;
+    Data(kUnitIndex).goTargSlowSaccAlign     = goTargSlowSaccAlign;
     
     Data(kUnitIndex).stopStopSpike      = stopStopSpike;
     Data(kUnitIndex).goTargSlowSpike    = goTargSlowSpike;
