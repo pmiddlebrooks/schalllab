@@ -269,22 +269,22 @@ for kUnitIndex = 1 : nUnit
     stopTargCheckerData          = cell(length(stopTargCoh), 1);
     stopTargCheckerFn          = cell(length(stopTargCoh), 1);
     stopTargCheckerEventLat  	= cell(length(stopTargCoh), 1);
-    stopTargCheckerAlign      	= cell(length(stopTargCoh), 1);
+    stopTargCheckerAlign      	= nan(length(stopTargCoh), 1);
     
     stopTargSaccData             = cell(length(stopTargCoh), 1);
     stopTargSaccFn             = cell(length(stopTargCoh), 1);
     stopTargSaccEventLat        = cell(length(stopTargCoh), 1);
-    stopTargSaccAlign           = cell(length(stopTargCoh), 1);
+    stopTargSaccAlign           = nan(length(stopTargCoh), 1);
     
     goTargFastCheckerData        = cell(length(stopTargCoh), 1);
     goTargFastCheckerFn        = cell(length(stopTargCoh), 1);
     goTargFastCheckerEventLat  	= cell(length(stopTargCoh), 1);
-    goTargFastCheckerAlign    	= cell(length(stopTargCoh), 1);
+    goTargFastCheckerAlign    	= nan(length(stopTargCoh), 1);
     
     goTargFastSaccData        	= cell(length(stopTargCoh), 1);
     goTargFastSaccFn           = cell(length(stopTargCoh), 1);
     goTargFastSaccEventLat      = cell(length(stopTargCoh), 1);
-    goTargFastSaccAlign         = cell(length(stopTargCoh), 1);
+    goTargFastSaccAlign         = nan(length(stopTargCoh), 1);
     
     stopTargSpike               = cell(length(stopTargCoh), 1);
     goTargFastSpike               = cell(length(stopTargCoh), 1);
@@ -294,18 +294,18 @@ for kUnitIndex = 1 : nUnit
     stopStopCheckerData          = cell(length(stopStopCoh), 1);
     stopStopCheckerFn          = cell(length(stopStopCoh), 1);
     stopStopCheckerEventLat  	= cell(length(stopStopCoh), 1);
-    stopStopCheckerAlign      	= cell(length(stopStopCoh), 1);
+    stopStopCheckerAlign      	= nan(length(stopStopCoh), 1);
     stopStopCheckerSdf      	= cell(length(stopStopCoh), 1);
     
     goTargSlowCheckerData        = cell(length(stopStopCoh), 1);
     goTargSlowCheckerFn        = cell(length(stopStopCoh), 1);
     goTargSlowCheckerEventLat  	= cell(length(stopStopCoh), 1);
-    goTargSlowCheckerAlign    	= cell(length(stopStopCoh), 1);
+    goTargSlowCheckerAlign    	= nan(length(stopStopCoh), 1);
     
     goTargSlowSaccData        	= cell(length(stopStopCoh), 1);
     goTargSlowSaccFn           = cell(length(stopStopCoh), 1);
     goTargSlowSaccEventLat      = cell(length(stopStopCoh), 1);
-    goTargSlowSaccAlign         = cell(length(stopStopCoh), 1);
+    goTargSlowSaccAlign         = nan(length(stopStopCoh), 1);
     
     
     stopStopSpike               = cell(length(stopStopCoh), 1);
@@ -477,16 +477,16 @@ for kUnitIndex = 1 : nUnit
                 % COLLECT (AND ANALYZE) THE RELEVANT DATA
                 
                 stopStopCheckerData{i}        = iStopStopChecker.signal;
-                stopStopCheckerAlign{i}     	= iStopStopChecker.align;
+                stopStopCheckerAlign(i)     	= iStopStopChecker.align;
                 stopStopCheckerEventLat{i}	= iStopStopChecker.eventLatency;
                 stopStopCheckerSdf{i} = spike_density_function(iStopStopChecker.signal, Kernel);
                 
                 goTargSlowCheckerData{i}      = iGoTargChecker.signal(iGoSlowTrial,:);
-                goTargSlowCheckerAlign{i} 	= iGoTargChecker.align;
+                goTargSlowCheckerAlign(i) 	= iGoTargChecker.align;
                 goTargSlowCheckerEventLat{i}	= iGoTargChecker.eventLatency(iGoSlowTrial,:);
                 
                 goTargSlowSaccData{i}         = iGoTargSacc.signal(iGoSlowTrial,:);
-                goTargSlowSaccAlign{i}       = iGoTargSacc.align;
+                goTargSlowSaccAlign(i)       = iGoTargSacc.align;
                 goTargSlowSaccEventLat{i}    = iGoTargSacc.eventLatency(iGoSlowTrial,:);
                 
                 
@@ -645,13 +645,13 @@ for kUnitIndex = 1 : nUnit
                     iGoTargRTMean = round(nanmean(goTargSlowCheckerEventLat{i}));
                     
                     % Checkerboard onset aligned
-                    iGoTargSlowCheckerFn = goTargSlowCheckerFn{i}(goTargSlowCheckerAlign{i} + epochRangeChecker);
+                    iGoTargSlowCheckerFn = goTargSlowCheckerFn{i}(goTargSlowCheckerAlign(i) + epochRangeChecker);
                     plot(ax(i, colChkr), epochRangeChecker, iGoTargSlowCheckerFn, 'color', cMap(pSignalArray == stopStopCoh(i),:), 'linewidth', goLineW)
                     if iGoTargRTMean < length(iGoTargSlowCheckerFn)
                         plot(ax(i, colChkr), iGoTargRTMean, 0, '.k','markersize', markSize)
                     end
                     
-                    iStopStopCheckerFn = stopStopCheckerFn{i}(stopStopCheckerAlign{i} + epochRangeChecker);
+                    iStopStopCheckerFn = stopStopCheckerFn{i}(stopStopCheckerAlign(i) + epochRangeChecker);
                     plot(ax(i, colChkr), epochRangeChecker, iStopStopCheckerFn, '--', 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
                     %                 plot(ax(i, colChkr), epochRangeChecker, sdfDiff(sdfDiffCheckerOn-1:end), 'color', 'g', 'linewidth', stopLineW)
                     
@@ -661,10 +661,10 @@ for kUnitIndex = 1 : nUnit
                     end
                     
                     % Saccade-aligned
-                    iGoTargSlowSaccFn = goTargSlowSaccFn{i}(goTargSlowSaccAlign{i} + epochRangeSacc);
+                    iGoTargSlowSaccFn = goTargSlowSaccFn{i}(goTargSlowSaccAlign(i) + epochRangeSacc);
                     plot(ax(i, colSacc), epochRangeSacc, iGoTargSlowSaccFn, 'color', cMap(pSignalArray == stopStopCoh(i),:), 'linewidth', goLineW)
                     
-                    %                 iStopStopSaccFn = stopStopCheckerFn{i}(stopStopCheckerAlign{i} + iGoTargRTMean + epochRangeSacc);
+                    %                 iStopStopSaccFn = stopStopCheckerFn{i}(stopStopCheckerAlign(i) + iGoTargRTMean + epochRangeSacc);
                     %                 plot(ax(i, colSacc), epochRangeSacc, iStopStopSaccFn, 'color', stopColor, 'linewidth', stopLineW)
                     
                 end
@@ -723,21 +723,21 @@ for kUnitIndex = 1 : nUnit
                     
                     if ~isempty(halfMaxFnInd)
                         iCancelTimeSdf = maxFnInd + halfMaxFnInd/2 - iSsrt;
-                                                    % optional- plot individual trials for
-                                                    % troubleshooting
-                                                    figure(27)
-                                                    clf
-                                                    hold 'all'
-                                                    % Canceled GO goTargSlowCheckerFn
-                                                    plot(goTargSlowCheckerFn{i}(goTargSlowCheckerAlign{i}:goTargSlowCheckerAlign{i}+700), 'g')
-                                                    plot(stopStopCheckerFn{i}(iStopStopChecker.align:iStopStopChecker.align+700), 'k')
-                                                    plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopFn*.8], '-r', 'linewidth', 3)
-                                                    plot([stopStopSsd(i)+iSsrt stopStopSsd(i)+iSsrt], [0 maxStopStopFn*.8], '--r', 'linewidth', 3)
-                                                    plot([stopStopSsd(i) + maxFnInd, stopStopSsd(i) + maxFnInd], [0 maxStopStopFn], '-k', 'linewidth', 3)
-                                                    plot([stopStopSsd(i) + maxFnInd + halfMaxFnInd, stopStopSsd(i) + maxFnInd + halfMaxFnInd], [0 halfMaxStopStopFn], '-k', 'linewidth', 3)
-                                                    plot([stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2), stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2)], [0 maxStopStopFn*.8], '--k', 'linewidth', 3)
-                        printName = sprintf('%s_canceled_Coh%s_Ssd%d_nTrial%d.pdf',Unit(kUnitIndex).name, num2str(stopStopCoh(i)*100), stopStopSsd(i), size(stopStopCheckerSdf{i}, 1));
-                                    print(gcf,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID,  printName),'-dpdf', '-r300')
+%                                                     % optional- plot individual trials for
+%                                                     % troubleshooting
+%                                                     figure(27)
+%                                                     clf
+%                                                     hold 'all'
+%                                                     % Canceled GO goTargSlowCheckerFn
+%                                                     plot(goTargSlowCheckerFn{i}(goTargSlowCheckerAlign(i):goTargSlowCheckerAlign(i)+700), 'g')
+%                                                     plot(stopStopCheckerFn{i}(iStopStopChecker.align:iStopStopChecker.align+700), 'k')
+%                                                     plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopFn*.8], '-r', 'linewidth', 3)
+%                                                     plot([stopStopSsd(i)+iSsrt stopStopSsd(i)+iSsrt], [0 maxStopStopFn*.8], '--r', 'linewidth', 3)
+%                                                     plot([stopStopSsd(i) + maxFnInd, stopStopSsd(i) + maxFnInd], [0 maxStopStopFn], '-k', 'linewidth', 3)
+%                                                     plot([stopStopSsd(i) + maxFnInd + halfMaxFnInd, stopStopSsd(i) + maxFnInd + halfMaxFnInd], [0 halfMaxStopStopFn], '-k', 'linewidth', 3)
+%                                                     plot([stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2), stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2)], [0 maxStopStopFn*.8], '--k', 'linewidth', 3)
+%                         printName = sprintf('%s_canceled_Coh%s_Ssd%d_nTrial%d.pdf',Unit(kUnitIndex).name, num2str(stopStopCoh(i)*100), stopStopSsd(i), size(stopStopCheckerSdf{i}, 1));
+%                                     print(gcf,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID,  printName),'-dpdf', '-r300')
                     end
                 end
                 
@@ -914,19 +914,19 @@ for kUnitIndex = 1 : nUnit
                 % COLLECT (AND ANALYZE) THE RELEVANT DATA
                 
                 stopTargCheckerData{i}        = iStopTargChecker.signal(iStopTargTrial,:);
-                stopTargCheckerAlign{i}     	= iStopTargChecker.align;
+                stopTargCheckerAlign(i)     	= iStopTargChecker.align;
                 stopTargCheckerEventLat{i}	= iStopTargChecker.eventLatency(iStopTargTrial,:);
                 
                 stopTargSaccData{i}           = iStopTargSacc.signal(iStopTargTrial,:);
-                stopTargSaccAlign{i}         = iStopTargSacc.align;
+                stopTargSaccAlign(i)         = iStopTargSacc.align;
                 stopTargSaccEventLat{i}      = iStopTargSacc.eventLatency(iStopTargTrial,:);
                 
                 goTargFastCheckerData{i}      = iGoTargChecker.signal(iGoFastTrial,:);
-                goTargFastCheckerAlign{i} 	= iGoTargChecker.align;
+                goTargFastCheckerAlign(i) 	= iGoTargChecker.align;
                 goTargFastCheckerEventLat{i}	= iGoTargChecker.eventLatency(iGoFastTrial,:);
                 
                 goTargFastSaccData{i}         = iGoTargSacc.signal(iGoFastTrial,:);
-                goTargFastSaccAlign{i}       = iGoTargSacc.align;
+                goTargFastSaccAlign(i)       = iGoTargSacc.align;
                 goTargFastSaccEventLat{i}    = iGoTargSacc.eventLatency(iGoFastTrial,:);
                 
                 
@@ -979,24 +979,24 @@ for kUnitIndex = 1 : nUnit
                     plot(ax(i, colChkr), [stopTargSsd(i), stopTargSsd(i)], [sdfMin sdfMax], 'color', [.2 .2 .2], 'linewidth', 1)
                     plot(ax(i, colChkr), [stopTargSsd(i) + iSsrt, stopTargSsd(i) + iSsrt], [sdfMin sdfMax], '--', 'color', [0 0 0], 'linewidth', 1)
                     
-                    iGoTargFastCheckerFn = goTargFastCheckerFn{i}(goTargFastCheckerAlign{i} + epochRangeChecker);
+                    iGoTargFastCheckerFn = goTargFastCheckerFn{i}(goTargFastCheckerAlign(i) + epochRangeChecker);
                     plot(ax(i, colChkr), epochRangeChecker, iGoTargFastCheckerFn, 'color', cMap(pSignalArray == stopTargCoh(i),:), 'linewidth', goLineW)
                     iGoTargRTMean = round(nanmean(goTargFastCheckerEventLat{i}));
                     if iGoTargRTMean <= length(iGoTargFastCheckerFn)
                         plot(ax(i, colChkr), iGoTargRTMean, 0, '.k','markersize', markSize)
                     end
                     
-                    iStopTargCheckerFn = stopTargCheckerFn{i}(stopTargCheckerAlign{i} + epochRangeChecker);
+                    iStopTargCheckerFn = stopTargCheckerFn{i}(stopTargCheckerAlign(i) + epochRangeChecker);
                     plot(ax(i, colChkr), epochRangeChecker, iStopTargCheckerFn, '--', 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
                     iStopTargRTMean = round(nanmean(stopTargCheckerEventLat{i}));
                     if iStopTargRTMean <= length(iStopTargCheckerFn)
                         plot(ax(i, colChkr), iStopTargRTMean, 0, '.k','markersize', markSize)
                     end
                     
-                    iGoTargFastSaccFn = goTargFastSaccFn{i}(goTargFastSaccAlign{i} + epochRangeSacc);
+                    iGoTargFastSaccFn = goTargFastSaccFn{i}(goTargFastSaccAlign(i) + epochRangeSacc);
                     plot(ax(i, colSacc), epochRangeSacc, iGoTargFastSaccFn, 'color', cMap(pSignalArray == stopTargCoh(i),:), 'linewidth', goLineW)
                     
-                    iStopTargSaccFn = stopTargSaccFn{i}(stopTargSaccAlign{i} + epochRangeSacc);
+                    iStopTargSaccFn = stopTargSaccFn{i}(stopTargSaccAlign(i) + epochRangeSacc);
                     plot(ax(i, colSacc), epochRangeSacc, iStopTargSaccFn, 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
                     
                     
@@ -1057,19 +1057,16 @@ for kUnitIndex = 1 : nUnit
     Data(kUnitIndex).stopStopCheckerAlign        = stopStopCheckerAlign;
     Data(kUnitIndex).stopStopCheckerEventLat        = stopStopCheckerEventLat;
     Data(kUnitIndex).stopStopCheckerSdf        = stopStopCheckerFn;
-    Data(kUnitIndex).stopStopCheckerAlign        = stopStopCheckerAlign;
     
     Data(kUnitIndex).goTargSlowCheckerData      = goTargSlowCheckerData;
     Data(kUnitIndex).goTargSlowCheckerAlign      = goTargSlowCheckerAlign;
     Data(kUnitIndex).goTargSlowCheckerEventLat     = goTargSlowCheckerEventLat;
     Data(kUnitIndex).goTargSlowCheckerSdf     = goTargSlowCheckerFn;
-    Data(kUnitIndex).goTargSlowCheckerAlign     = goTargSlowCheckerAlign;
     
     Data(kUnitIndex).goTargSlowSaccData 	= goTargSlowSaccData;
     Data(kUnitIndex).goTargSlowSaccAlign      = goTargSlowSaccAlign;
     Data(kUnitIndex).goTargSlowSaccEventLat     = goTargSlowSaccEventLat;
     Data(kUnitIndex).goTargSlowSaccSdf     = goTargSlowSaccFn;
-    Data(kUnitIndex).goTargSlowSaccAlign     = goTargSlowSaccAlign;
     
     Data(kUnitIndex).stopStopSpike      = stopStopSpike;
     Data(kUnitIndex).goTargSlowSpike    = goTargSlowSpike;
