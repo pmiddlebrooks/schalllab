@@ -732,8 +732,8 @@ for kUnitIndex = 1 : nUnit
                     
                     
                     if printPlot
-                        if ~isdir(fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt))
-                            mkdir(fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt))
+                        if ~isdir(fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID))
+                            mkdir(fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID))
                         end
                         printName = sprintf('%s_canceled_Coh%s_Ssd%d.pdf',Unit(kUnitIndex).name, num2str(stopStopCoh(i)*100), stopStopSsd(i));
                         
