@@ -87,7 +87,6 @@ minTrialPerCond     = options.minTrialPerCond;
 plotFlag            = options.plotFlag;
 printPlot           = options.printPlot;
 stopStopFig        = 100;
-stopStopFigSingle 	= 120;
 stopTargFig        = 150;
 nPlot               = 4; % plot only 3 conditions- those with highest number of stop trials
 
@@ -330,9 +329,9 @@ for kUnitIndex = 1 : nUnit
         
         cMap = ccm_colormap(pSignalArray);
         if length(pSignalArray) > 4
-            stopColorMap = [1 0 0; .7 0 0; .4 0 0; .4 0 0; .7 0 0; 1 0 0];
+        stopColorMap = [1 0 0; .7 0 0; .4 0 0; .4 0 0; .7 0 0; 1 0 0];
         elseif length(pSignalArray) == 4
-            stopColorMap = [1 0 0; .7 0 0; .7 0 0; 1 0 0];
+        stopColorMap = [1 0 0; .7 0 0; .7 0 0; 1 0 0];
         end
         
         opt = ccm_concat_neural_conditions; % Get default options structure
@@ -358,23 +357,14 @@ for kUnitIndex = 1 : nUnit
         
         stopStopFig = stopStopFig + 1;
         stopTargFig = stopTargFig + 1;
+        %         if printPlot
+        [axisWidth, axisHeight, xAxesPosition, yAxesPosition] = standard_figure(nRow, nColumn, 'portrait', stopStopFig);
+        clf
+        h=axes('Position', [0 0 1 1], 'Visible', 'Off');
+        set(gcf, 'Name','Go v Canceled','NumberTitle','off')
+        titleString = sprintf('%s \t %s', sessionID, Unit(kUnitIndex).name);
+        text(0.5,1, titleString, 'HorizontalAlignment','Center', 'VerticalAlignment','Top')
         
-        if ANALYZE_CANCELED
-            [axisWidth, axisHeight, xAxesPosition, yAxesPosition] = standard_figure(nRow, nColumn, 'portrait', stopStopFig);
-            clf
-            h=axes('Position', [0 0 1 1], 'Visible', 'Off');
-            set(gcf, 'Name','Go v Canceled','NumberTitle','off')
-            titleString = sprintf('%s \t %s', sessionID, Unit(kUnitIndex).name);
-            text(0.5,1, titleString, 'HorizontalAlignment','Center', 'VerticalAlignment','Top')
-            
-            
-            [axisW, axisH, xAxesPos, yAxesPos] = standard_figure(1, 2, 'portrait', stopStopFigSingle);
-            clf
-            h=axes('Position', [0 0 1 1], 'Visible', 'Off');
-            set(gcf, 'Name','Go v Canceled','NumberTitle','off')
-            titleString = sprintf('%s \t %s', sessionID, Unit(kUnitIndex).name);
-            text(0.5,1, titleString, 'HorizontalAlignment','Center', 'VerticalAlignment','Top')
-        end
         
         if ANALYZE_NONCANCELED
             [~, ~, ~, ~] = standard_figure(nRow, nColumn, 'portrait', stopTargFig);
@@ -627,10 +617,6 @@ for kUnitIndex = 1 : nUnit
                     stopStopSsd(i), stopStopCoh(i), mean(goTargSlowSpike{i}), mean(stopStopSpike{i}), p, cancelTime2Std(i) - iSsrt -  stopStopSsd(i));
                 
                 
-                
-                
-                
-                % Summary Plot of the nPlot conditions with most trials
                 if plotFlag && i <= nPlot
                     figure(stopStopFig)
                     
@@ -685,6 +671,7 @@ for kUnitIndex = 1 : nUnit
                 
                 
                 
+<<<<<<< HEAD
                 % Plot the each single valid condition
                 if plotFlag
                     figure(stopStopFigSingle)
@@ -741,6 +728,8 @@ for kUnitIndex = 1 : nUnit
                     end
                     
                 end
+=======
+>>>>>>> parent of b2e8754... Updated ccm_neuron_stop_vs_go
                 
                 
                 
@@ -776,8 +765,8 @@ for kUnitIndex = 1 : nUnit
                 %                 maxFnInd(maxFnInd >= meanRtInd) = nan;
                 
                 % Cancel time only gets calculated if max SDF occurs before mean Go slow Rts
-                iCancelTimeSdf = nan;
-                if maxFnInd < meanRtInd
+                     iCancelTimeSdf = nan;
+               if maxFnInd < meanRtInd
                     
                     % Find the minimum after the maximum, to
                     % determine relative half-max index
@@ -793,21 +782,21 @@ for kUnitIndex = 1 : nUnit
                     
                     if ~isempty(halfMaxFnInd)
                         iCancelTimeSdf = maxFnInd + halfMaxFnInd/2 - iSsrt;
-                        %                                                     % optional- plot individual trials for
-                        %                                                     % troubleshooting
-                        %                                                     figure(27)
-                        %                                                     clf
-                        %                                                     hold 'all'
-                        %                                                     % Canceled GO goTargSlowCheckerFn
-                        %                                                     plot(goTargSlowCheckerFn{i}(goTargSlowCheckerAlign(i):goTargSlowCheckerAlign(i)+700), 'g')
-                        %                                                     plot(stopStopCheckerFn{i}(iStopStopChecker.align:iStopStopChecker.align+700), 'k')
-                        %                                                     plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopFn*.8], '-r', 'linewidth', 3)
-                        %                                                     plot([stopStopSsd(i)+iSsrt stopStopSsd(i)+iSsrt], [0 maxStopStopFn*.8], '--r', 'linewidth', 3)
-                        %                                                     plot([stopStopSsd(i) + maxFnInd, stopStopSsd(i) + maxFnInd], [0 maxStopStopFn], '-k', 'linewidth', 3)
-                        %                                                     plot([stopStopSsd(i) + maxFnInd + halfMaxFnInd, stopStopSsd(i) + maxFnInd + halfMaxFnInd], [0 halfMaxStopStopFn], '-k', 'linewidth', 3)
-                        %                                                     plot([stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2), stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2)], [0 maxStopStopFn*.8], '--k', 'linewidth', 3)
-                        %                         printName = sprintf('%s_canceled_Coh%s_Ssd%d_nTrial%d.pdf',Unit(kUnitIndex).name, num2str(stopStopCoh(i)*100), stopStopSsd(i), size(stopStopCheckerSdf{i}, 1));
-                        %                                     print(gcf,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID,  printName),'-dpdf', '-r300')
+%                                                     % optional- plot individual trials for
+%                                                     % troubleshooting
+%                                                     figure(27)
+%                                                     clf
+%                                                     hold 'all'
+%                                                     % Canceled GO goTargSlowCheckerFn
+%                                                     plot(goTargSlowCheckerFn{i}(goTargSlowCheckerAlign(i):goTargSlowCheckerAlign(i)+700), 'g')
+%                                                     plot(stopStopCheckerFn{i}(iStopStopChecker.align:iStopStopChecker.align+700), 'k')
+%                                                     plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopFn*.8], '-r', 'linewidth', 3)
+%                                                     plot([stopStopSsd(i)+iSsrt stopStopSsd(i)+iSsrt], [0 maxStopStopFn*.8], '--r', 'linewidth', 3)
+%                                                     plot([stopStopSsd(i) + maxFnInd, stopStopSsd(i) + maxFnInd], [0 maxStopStopFn], '-k', 'linewidth', 3)
+%                                                     plot([stopStopSsd(i) + maxFnInd + halfMaxFnInd, stopStopSsd(i) + maxFnInd + halfMaxFnInd], [0 halfMaxStopStopFn], '-k', 'linewidth', 3)
+%                                                     plot([stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2), stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2)], [0 maxStopStopFn*.8], '--k', 'linewidth', 3)
+%                         printName = sprintf('%s_canceled_Coh%s_Ssd%d_nTrial%d.pdf',Unit(kUnitIndex).name, num2str(stopStopCoh(i)*100), stopStopSsd(i), size(stopStopCheckerSdf{i}, 1));
+%                                     print(gcf,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID,  printName),'-dpdf', '-r300')
                     end
                 end
                 

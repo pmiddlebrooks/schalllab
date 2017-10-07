@@ -13,8 +13,8 @@ if nargin < 4
 end
 
 
-% switch get_environment
-%     case 'work'
+switch get_environment
+    case 'work'
 switch orientation
     case 'portrait'  % standard letter paper size
         cmHeight = 27.9;
@@ -25,16 +25,16 @@ switch orientation
     otherwise
         error('orientation needs to be portrait or landscape')
 end
-%     case 'home'
-%         scaleFactor = .8;
-%         cmHeight = scrsz(4) * scaleFactor;
-%         squareAxes = false;
-%         if squareAxes
-%             cmWidth = cmHeight;
-%         else
-%             cmWidth = scrsz(3) * scaleFactor;
-%         end
-% end
+    case 'home'
+        scaleFactor = .8;
+        cmHeight = scrsz(4) * scaleFactor;
+        squareAxes = false;
+        if squareAxes
+            cmWidth = cmHeight;
+        else
+            cmWidth = scrsz(3) * scaleFactor;
+        end
+end
 
 sumFig = figure(figureHandle);
 clf

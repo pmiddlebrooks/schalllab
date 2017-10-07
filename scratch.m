@@ -1002,7 +1002,6 @@ opt = ccm_neuron_stop_vs_go;
 opt.multiUnit = true;
 opt.minTrialPerCond     = 10;
 opt.plotFlag     = true;
-opt.ANALYZE_NONCANCELED     = false;
 
 % data = ccm_neuron_stop_vs_go('joule', 'jp125n04', {'spikeUnit26'}, opt);
 % data = ccm_neuron_stop_vs_go('joule', 'jp125n04', {'spikeUnit32'}, opt);
