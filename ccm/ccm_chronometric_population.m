@@ -38,12 +38,12 @@ figureHandle = 4950;
 
 switch lower(subjectID)
     case 'joule'
-        [td, S, E] =load_data(subjectID, sessionArray{1});
+        [td, S, E] =load_data(subjectID, sessionArray{1}, ccm_min_vars);
         pSignalArray = E.pSignalArray;
     case 'human'
         pSignalArray = [.35 .42 .46 .5 .54 .58 .65];
     case 'broca'
-[~, ~, E] = load_data(subjectID, sessionArray{end});
+[~, ~, E] = load_data(subjectID, sessionArray{end}, ccm_min_vars);
         pSignalArray = E.pSignalArray;
     case 'xena'
         pSignalArray = [.35 .42 .47 .5 .53 .58 .65];
@@ -190,25 +190,29 @@ yVal = p(1) * xVal + p(2);
 
 
 
-goLeftTargMean = nanmean(goLeftToTarg);
-goLeftTargStd = nanstd(goLeftToTarg)/sqrt(length(goLeftToTarg));
-goRightDistMean = nanmean(goRightToDist);
-goRightDistStd = nanstd(goRightToDist);
+goLeftTargMean = nanmean(goLeftToTarg, 1);
+goLeftTargStd = nanstd(goLeftToTarg, 1);
+goLeftTargSem = nanstd(goLeftToTarg, 1)/sqrt(size(goLeftToTarg, 1));
+goRightDistMean = nanmean(goRightToDist, 1);
+goRightDistStd = nanstd(goRightToDist, 1);
 
-goRightTargMean = nanmean(goRightToTarg);
-goRightTargStd = nanstd(goRightToTarg)/sqrt(length(goRightToTarg));
-goLeftDistMean = nanmean(goLeftToDist);
-goLeftDistStd = nanstd(goLeftToDist);
+goRightTargMean = nanmean(goRightToTarg, 1);
+goRightTargStd = nanstd(goRightToTarg, 1);
+goRightTargSem = nanstd(goRightToTarg, 1)/sqrt(size(goRightToTarg, 1));
+goLeftDistMean = nanmean(goLeftToDist, 1);
+goLeftDistStd = nanstd(goLeftToDist, 1);
 
-stopLeftTargMean = nanmean(stopLeftToTarg);
-stopLeftTargStd = nanstd(stopLeftToTarg)/sqrt(length(stopLeftToTarg));
-stopRightDistMean = nanmean(stopRightToDist);
-stopRightDistStd = nanstd(stopRightToDist);
+stopLeftTargMean = nanmean(stopLeftToTarg, 1);
+stopLeftTargStd = nanstd(stopLeftToTarg, 1);
+stopLeftTargSem = nanstd(stopLeftToTarg, 1)/sqrt(size(stopLeftToTarg, 1));
+stopRightDistMean = nanmean(stopRightToDist, 1);
+stopRightDistStd = nanstd(stopRightToDist, 1);
 
-stopRightTargMean = nanmean(stopRightToTarg);
-stopRightTargStd = nanstd(stopRightToTarg)/sqrt(length(stopRightToTarg));
-stopLeftDistMean = nanmean(stopLeftToDist);
-stopLeftDistStd = nanstd(stopLeftToDist);
+stopRightTargMean = nanmean(stopRightToTarg, 1);
+stopRightTargStd = nanstd(stopRightToTarg, 1);
+stopRightTargSem = nanstd(stopRightToTarg, 1)/sqrt(size(stopRightToTarg, 1));
+stopLeftDistMean = nanmean(stopLeftToDist, 1);
+stopLeftDistStd = nanstd(stopLeftToDist, 1);
 
 
 
@@ -238,12 +242,14 @@ if options.plotFlag
     % PLOT GO TRIALS
     plot(ax(rtAx), pSignalArrayLeft, goLeftTargMean, '-o', 'color', goColor, 'linewidth' , 2, 'markeredgecolor', goColor, 'markerfacecolor', [1 1 1], 'markersize', 10)
     errorbar(ax(rtAx), pSignalArrayLeft ,goLeftTargMean, goLeftTargStd, 'linestyle' , 'none', 'color', goColor, 'linewidth' , 2)
+%     errorbar(ax(rtAx), pSignalArrayLeft ,goLeftTargMean, goLeftTargSem, 'linestyle' , 'none', 'color', goColor, 'linewidth' , 2)
     
     plot(ax(rtAx), pSignalArrayLeft, goRightDistMean, 'd', 'markeredgecolor', goColor, 'markersize', 10)
     % errorbar(ax(rtAx), pSignalArray ,goRightDistMean, goRightDistStd, '.' , 'linestyle' , 'none', 'color', goColor, 'linewidth' , 2)
     
     plot(ax(rtAx), pSignalArrayRight, goRightTargMean, '-o', 'color', goColor, 'linewidth' , 2, 'markeredgecolor', goColor, 'markerfacecolor', [1 1 1], 'markersize', 10)
     errorbar(ax(rtAx), pSignalArrayRight ,goRightTargMean, goRightTargStd, 'linestyle' , 'none', 'color', goColor, 'linewidth' , 2)
+%     errorbar(ax(rtAx), pSignalArrayRight ,goRightTargMean, goRightTargSem, 'linestyle' , 'none', 'color', goColor, 'linewidth' , 2)
     
     plot(ax(rtAx), pSignalArrayRight, goLeftDistMean, 'd', 'markeredgecolor', goColor, 'markersize', 10)
     % errorbar(ax(rtAx), pSignalArray ,goRightDistMean, goRightDistStd, '.' , 'linestyle' , 'none', 'color', goColor, 'linewidth' , 2)
@@ -252,12 +258,14 @@ if options.plotFlag
     % PLOT STOP TRIALS
     plot(ax(rtAx), pSignalArrayLeft, stopLeftTargMean, '-o', 'color', stopColor, 'linewidth' , 2, 'markeredgecolor', stopColor, 'markerfacecolor', [1 1 1], 'markersize', 10)
     errorbar(ax(rtAx), pSignalArrayLeft ,stopLeftTargMean, stopLeftTargStd, 'linestyle' , 'none', 'color', stopColor, 'linewidth' , 2)
+%     errorbar(ax(rtAx), pSignalArrayLeft ,stopLeftTargMean, stopLeftTargSem, 'linestyle' , 'none', 'color', stopColor, 'linewidth' , 2)
     
     plot(ax(rtAx), pSignalArrayLeft, stopRightDistMean, 'd', 'markeredgecolor', stopColor, 'markersize', 10)
     % errorbar(ax(rtAx), pSignalArray ,stopRightDistMean, stopRightDistStd, '.' , 'linestyle' , 'none', 'color', stopColor, 'linewidth' , 2)
     
     plot(ax(rtAx), pSignalArrayRight, stopRightTargMean, '-o', 'color', stopColor, 'linewidth' , 2, 'markeredgecolor', stopColor, 'markerfacecolor', [1 1 1], 'markersize', 10)
     errorbar(ax(rtAx), pSignalArrayRight ,stopRightTargMean, stopRightTargStd, 'linestyle' , 'none', 'color', stopColor, 'linewidth' , 2)
+%     errorbar(ax(rtAx), pSignalArrayRight ,stopRightTargMean, stopRightTargSem, 'linestyle' , 'none', 'color', stopColor, 'linewidth' , 2)
     
     plot(ax(rtAx), pSignalArrayRight, stopLeftDistMean, 'd', 'markeredgecolor', stopColor, 'markersize', 10)
     % errorbar(ax(rtAx), pSignalArray ,stopRightDistMean, stopRightDistStd, '.' , 'linestyle' , 'none', 'color', stopColor, 'linewidth' , 2)

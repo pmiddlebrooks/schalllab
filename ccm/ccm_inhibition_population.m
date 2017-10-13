@@ -272,7 +272,7 @@ ssrtIntegrationSem = ssrtIntegrationStd ./ nSession;
 ssrtPlot = ssrtIntWeight;
 ssrtPlotAvg = mean(ssrtPlot, 1);
 ssrtPlotStd = std(ssrtPlot, 1);
-ssrtPlotStdSem = ssrtPlotStd ./ nSession;
+ssrtPlotSem = ssrtPlotStd ./ nSession;
 
 
 % OBSERVED VS. PREDICTED NON-CANCELED RTS  ********************************
@@ -407,8 +407,9 @@ if options.plotFlag
     
     % SSRT  ********************************
     %    plot(ax(axSSRT), pSignalArray, mean(ssrtInt, 1), '-ok', 'markeredgecolor', 'k', 'markerfacecolor', 'k', 'markersize', 10)
-    errorbar(ax(axSSRT), pSignalArray ,ssrtPlotAvg, ssrtPlotStd, '.' , 'linestyle' , 'none', 'color', 'k', 'linewidth' , 2)
+    errorbar(ax(axSSRT), pSignalArray ,ssrtPlotAvg, ssrtPlotStd, '.' , 'linestyle' , 'none', 'color', 'k', 'linewidth' , 3)
     plot(ax(axSSRT), pSignalArray, mean(ssrtPlot, 1), 'ok', 'markeredgecolor', 'k', 'markerfacecolor', 'k', 'markersize', 10)
+    errorbar(ax(axSSRT), pSignalArray ,ssrtPlotAvg, ssrtPlotSem, '.' , 'linestyle' , 'none', 'color', 'g', 'linewidth' , 2)
     %    plot(ax(axSSRT), pSignalArray, mean(ssrtMean, 1), '-og', 'markeredgecolor', 'g', 'markerfacecolor', 'g', 'markersize', 10)
 %      plot(ax(axSSRT), pSignalArray, mean(ssrtInt, 1), '-ob', 'markeredgecolor', 'r', 'markerfacecolor', 'r', 'markersize', 10)
    

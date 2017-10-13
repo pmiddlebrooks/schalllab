@@ -671,7 +671,6 @@ for kUnitIndex = 1 : nUnit
                 
                 
                 
-<<<<<<< HEAD
                 % Plot the each single valid condition
                 if plotFlag
                     figure(stopStopFigSingle)
@@ -728,8 +727,6 @@ for kUnitIndex = 1 : nUnit
                     end
                     
                 end
-=======
->>>>>>> parent of b2e8754... Updated ccm_neuron_stop_vs_go
                 
                 
                 
