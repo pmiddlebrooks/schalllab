@@ -26,14 +26,24 @@ switch orientation
         error('orientation needs to be portrait or landscape')
 end
     case 'home'
-        scaleFactor = .8;
-        cmHeight = scrsz(4) * scaleFactor;
-        squareAxes = false;
-        if squareAxes
-            cmWidth = cmHeight;
-        else
-            cmWidth = scrsz(3) * scaleFactor;
-        end
+switch orientation
+    case 'portrait'  % standard letter paper size
+        cmHeight = 27.9;
+        cmWidth = 21.6;
+    case 'landscape'  % standard letter paper size
+        cmHeight = 21.6;
+        cmWidth = 27.9;
+    otherwise
+        error('orientation needs to be portrait or landscape')
+end
+%         scaleFactor = .8;
+%         cmHeight = scrsz(4) * scaleFactor;
+%         squareAxes = false;
+%         if squareAxes
+%             cmWidth = cmHeight;
+%         else
+%             cmWidth = scrsz(3) * scaleFactor;
+%         end
 end
 
 sumFig = figure(figureHandle);

@@ -23,7 +23,8 @@ end
 switch monkeyOrHuman
    case 'monkey'
       
-      localDataPath = ['/Users/paulmiddlebrooks/schalllab/local_data/',lower(subjectID),'/'];
+%       localDataPath = ['/Users/paulmiddlebrooks/schalllab/local_data/',lower(subjectID),'/'];
+      localDataPath = ['/Users/paulmiddlebrooks/Dropbox/local_data/',lower(subjectID),'/'];
       switch location
          case 'work'
             

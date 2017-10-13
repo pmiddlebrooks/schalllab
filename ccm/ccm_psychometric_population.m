@@ -43,7 +43,7 @@ disp('Populaiton psychometric : Using mean choice proportion AVERAGED across ses
 
 switch lower(subjectID)
     case 'joule'
-        [td, S, E] =load_data(subjectID, sessionArray{1},ccm_min_vars);
+        [td, S, E] =load_data(subjectID, sessionArray{1}, ccm_min_vars);
         pSignalArray = E.pSignalArray;
     case 'human'
         pSignalArray = [.35 .42 .46 .5 .54 .58 .65];
@@ -174,7 +174,7 @@ for i = 1 : length(pSignalArray)
     groupSig = [groupSig; repmat(i, length(goRightProb(:,i)), 1); repmat(i, length(stopRightProb(:,i)), 1)];
 end
 [p,table,stats] = anovan(anovaData,{groupInh, groupSig}, 'varnames', {'Stop vs Go', 'Signal Strength'}, 'display', 'off')
-eta2Sig = table{2,2} / (table{2,2} + table{end,2})
+eta2Sig = table{3,2} / (table{3,2} + table{end,2})
 % fprintf('\n\n %s \n', subjectID)
 fprintf('RT ANOVA:\nStop vs. Go: \t\tp = %d\nSignal Strength: \tp = %d\n', p(1), p(2))
 
@@ -187,7 +187,7 @@ for i = 1 : length(pSignalArray)
     groupSig = [groupSig; repmat(i, length(goMatchRightProb(:,i)), 1); repmat(i, length(stopRightProb(:,i)), 1)];
 end
 [p,table,stats] = anovan(anovaData,{groupInh, groupSig}, 'varnames', {'Stop vs Go Matched', 'Signal Strength'}, 'display', 'off')
-eta2Sig = table{2,2} / (table{2,2} + table{end,2})
+eta2Sig = table{3,2} / (table{3,2} + table{end,2})
 % fprintf('\n\n %s \n', subjectID)
 fprintf('RT ANOVA:\nStop vs. Matched Go: \t\tp = %d\nSignal Strength: \tp = %d\n', p(1), p(2))
 
@@ -200,6 +200,7 @@ fprintf('RT ANOVA:\nStop vs. Matched Go: \t\tp = %d\nSignal Strength: \tp = %d\n
 % ******************  Go   ******************
 goRightProbMean = mean(goRightProb, 1);
 goRightProbStd = std(goRightProb, 1);
+goRightProbSem = std(goRightProb, 1)/sqrt(size(goRightProb, 1));
 
 [fitParameters, lowestSSE] = psychometric_weibull_fit(pSignalArrayFit(:), goRightProb(:));
 % [fitParameters, lowestSSE] = Weibull(pSignalArray*100, goRightProbMean);
@@ -210,6 +211,7 @@ goPsychometricFn = weibull_curve(fitParameters, propPoints);
 % *************  Go Matched RT   **************
 goMatchRightProbMean = mean(goMatchRightProb, 1);
 goMatchRightProbStd = std(goMatchRightProb, 1);
+goMatchRightProbSem = std(goMatchRightProb, 1)/sqrt(size(goMatchRightProb, 1));
 
 [fitParameters, lowestSSE] = psychometric_weibull_fit(pSignalArrayFit(:), goMatchRightProb(:));
 % [fitParameters, lowestSSE] = Weibull(pSignalArray*100, goRightProbMean);
@@ -221,6 +223,7 @@ goMatchPsychometricFn = weibull_curve(fitParameters, propPoints);
 % ******************  Stop   ******************
 stopRightProbMean = mean(stopRightProb, 1);
 stopRightProbStd = std(stopRightProb, 1);
+stopRightProbSem = std(stopRightProb, 1)/sqrt(size(stopRightProb, 1));
 
 [fitParameters, lowestSSE] = psychometric_weibull_fit(pSignalArrayFit(:), stopRightProb(:));
 % [fitParameters, lowestSSE] = Weibull(pSignalArray*100, stopRightProbMean);
@@ -231,7 +234,8 @@ stopPsychometricFn = weibull_curve(fitParameters, propPoints);
 
 if options.plotFlag
     plot(ax(psyAx), pSignalArray, stopRightProbMean, 'o', 'linestyle' , 'none', 'markeredgecolor', stopColor, 'linewidth' , 2, 'markerfacecolor', [1 1 1], 'markersize', 10)
-    errorbar(ax(psyAx), pSignalArray ,stopRightProbMean, stopRightProbStd, 'linestyle' , 'none', 'color', stopColor, 'linewidth' , 2)
+%     errorbar(ax(psyAx), pSignalArray ,stopRightProbMean, stopRightProbStd, 'linestyle' , 'none', 'color', stopColor, 'linewidth' , 2)
+    errorbar(ax(psyAx), pSignalArray ,stopRightProbMean, stopRightProbSem, 'linestyle' , 'none', 'color', stopColor, 'linewidth' , 2)
     plot(ax(psyAx), propPoints, stopPsychometricFn, '-', 'color', stopColor, 'linewidth' , 2)
     
     
@@ -240,7 +244,8 @@ if options.plotFlag
     % plot(ax(psyAx), propPoints, goMatchPsychometricFn, '--', 'color', goColor, 'linewidth' , 2)
     %
     plot(ax(psyAx), pSignalArray, goRightProbMean, 'o', 'linestyle' , 'none', 'markeredgecolor', goColor, 'linewidth' , 2, 'markerfacecolor', [1 1 1], 'markersize', 10)
-    errorbar(ax(psyAx), pSignalArray ,goRightProbMean, goRightProbStd, 'linestyle' , 'none', 'color', goColor, 'linewidth' , 2)
+%     errorbar(ax(psyAx), pSignalArray ,goRightProbMean, goRightProbStd, 'linestyle' , 'none', 'color', goColor, 'linewidth' , 2)
+    errorbar(ax(psyAx), pSignalArray ,goRightProbMean, goRightProbSem, 'linestyle' , 'none', 'color', goColor, 'linewidth' , 2)
     plot(ax(psyAx), propPoints, goPsychometricFn, '-', 'color', goColor, 'linewidth' , 2)
     
     
@@ -301,7 +306,7 @@ for iSession = 1 : nSession
     groupSession = [groupSession; group];
 end
 
-% O = teg_repeated_measures_ANOVA(psyDataSession, [nSignalStrength, 2, 2], {'Signal Strength', 'Stop vs Go'})
+if options.printPlot
             print(figureHandle,fullfile(local_figure_path, subjectID,['ccm_population_psychometric_',options.saveName]),'-dpdf', '-r300')
-
+end
 

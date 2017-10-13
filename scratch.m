@@ -762,7 +762,7 @@ data = ccm_inhibition_population(subject, sessionList)
 % Which computer are you on?
 
 if isdir('/Volumes/HD-1/Users/paulmiddlebrooks/')
-    projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/memory_guided_saccades';
+    projectRoot = '~/memory_guided_saccades';
 elseif isdir('/Volumes/Macintosh HD/Users/elseyjg/')
     projectRoot = '/Volumes/Macintosh HD/Users/elseyjg/Memory-Guided-Saccade-Project';
 else
@@ -803,7 +803,29 @@ parfor i = 1 : length(sessionID)
     sdfMov{i} = iData.([iData.rf,'Targ']).responseOnset.signalMean(iData.([Data.rf,'Targ']).responseOnset.alignTime + movEpochWindow);
 end
 delete(poolID)
+%%
 
+session = 'jp110n01';
+session = 'jp121n01';
+session = 'jp124n01';
+
+unitInd = strcmp(sessionID, session);
+unitList = unit(unitInd);
+
+opt = mem_options;
+opt.printPlot = true;
+opt.multiUnit = true;
+
+for i = 1 : 32
+    
+    iUnitName = sprintf('spikeUnit%.2d', i);
+    iUnit = {session, iUnitName};
+        iData = mem_session_data(subject, iUnit, opt);
+end
+ 
+%%
+iUnit = {'jp110n01', 'spikeUnit01'};
+iData = mem_session_data(subject, iUnit, opt)
 %%
 sdf = [sdfVis, sdfMov];
 time = [repmat({visEpochWindow}, length(sessionID), 1), repmat({movEpochWindow}, length(sessionID), 1)];
@@ -979,6 +1001,7 @@ end
 opt = ccm_neuron_stop_vs_go;
 opt.multiUnit = true;
 opt.minTrialPerCond     = 10;
+opt.plotFlag     = true;
 
 % data = ccm_neuron_stop_vs_go('joule', 'jp125n04', {'spikeUnit26'}, opt);
 % data = ccm_neuron_stop_vs_go('joule', 'jp125n04', {'spikeUnit32'}, opt);

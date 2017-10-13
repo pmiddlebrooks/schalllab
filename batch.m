@@ -1495,8 +1495,35 @@ end
 
 
 
-%% Population behavioral measures
+%% Population behavioral measures Xena behavior modeled sessions
 opt = ccm_options;
+opt.plotFlag = false;
+opt.printPlot = false;
+opt.saveName = 'behavior1';
+subject = 'xena';
+
+sessionSet = 'behavior1';
+% ccm_chronometric_population(subject, sessionSet, opt);
+ccm_psychometric_population(subject, sessionSet, opt);
+% ccm_rt_distribution_population(subject, sessionSet, opt);
+% data = ccm_inhibition_population(subject, sessionSet, opt);
+
+%% Population behavioral measures: Broca behavior modeled sessions
+opt = ccm_options;
+opt.plotFlag = false;
+opt.printPlot = false;
+subject = 'broca';
+
+sessionSet = 'behavior2';
+% ccm_chronometric_population(subject, sessionSet, opt);
+ccm_psychometric_population(subject, sessionSet, opt);
+% ccm_rt_distribution_population(subject, sessionSet, opt);
+% data = ccm_inhibition_population(subject, sessionSet, opt);
+
+%% Population behavioral measures:  Broca neural modeled sessions
+opt = ccm_options;
+opt.plotFlag = false;
+opt.printPlot = false;
 opt.saveName = 'neural_model';
 subject = 'broca';
 sessionSet = {...
@@ -1506,13 +1533,15 @@ sessionSet = {...
     'bp246n02';...
     'bp247n02'};
 % ccm_chronometric_population(subject, sessionSet, opt);
-% ccm_psychometric_population(subject, sessionSet, opt);
+ccm_psychometric_population(subject, sessionSet, opt);
 % ccm_rt_distribution_population(subject, sessionSet, opt);
-data = ccm_inhibition_population(subject, sessionSet, opt);
+% data = ccm_inhibition_population(subject, sessionSet, opt);
 
 
-%% Population behavioral measures
+%% Population behavioral measures: Joule neural modeled sessions
 opt = ccm_options;
+opt.plotFlag = false;
+opt.printPlot = false;
 opt.saveName = 'neural_model';
 subject = 'joule';
 
@@ -1523,32 +1552,90 @@ sessionSet = {...
     'jp124n04';...
     'jp125n04'};
 % ccm_chronometric_population(subject, sessionSet, opt);
-% ccm_psychometric_population(subject, sessionSet, opt);
+ccm_psychometric_population(subject, sessionSet, opt);
 % ccm_rt_distribution_population(subject, sessionSet, opt);
-data = ccm_inhibition_population(subject, sessionSet, opt);
-%% Population behavioral measures
-opt = ccm_options;
-opt.saveName = 'behavior2';
+% data = ccm_inhibition_population(subject, sessionSet, opt);
+
+
+%% Population behavioral measures: Broca all neural sessions
 subject = 'broca';
-
-sessionSet = 'behavior2';
-% ccm_chronometric_population(subject, sessionSet, opt);
-% ccm_psychometric_population(subject, sessionSet, opt);
-% ccm_rt_distribution_population(subject, sessionSet, opt);
-data = ccm_inhibition_population(subject, sessionSet, opt);
-
-%% Population behavioral measures
 opt = ccm_options;
-opt.saveName = 'behavior1';
-subject = 'xena';
+opt.plotFlag = false;
+opt.printPlot = false;
+opt.saveName = 'neural_all';
 
-sessionSet = 'behavior1';
+% Figure out which sessions to use
+projectDate = '2017-01-11';
+projectRoot = '~/perceptualchoice_stop_spikes_population';
+
+addpath(genpath(fullfile(projectRoot,'src/code',projectDate)));
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+
+multiUnit = true;
+deleteSessions = true;
+
+if multiUnit
+    addMulti = '_multiUnit';
+else
+    addMulti = [];
+end
+
+sessionRemove = ccm_exclude_sessions(subject);
+
+% LOAD ALL RELEVANT DATA AND LISTS
+
+% Load full popuulation of neurons
+load(fullfile(dataPath, ['ccm_neuronTypes', addMulti]));
+if deleteSessions
+    neuronTypes = neuronTypes(~ismember(neuronTypes.sessionID, sessionRemove),:);
+end
+
+
+
+sessionSet = unique(neuronTypes.sessionID);
 % ccm_chronometric_population(subject, sessionSet, opt);
 % ccm_psychometric_population(subject, sessionSet, opt);
 % ccm_rt_distribution_population(subject, sessionSet, opt);
-data = ccm_inhibition_population(subject, sessionSet, opt);
+% data = ccm_inhibition_population(subject, sessionSet, opt);
+
+%% Population behavioral measures: Joule all neural sessions
+subject = 'joule';
+opt = ccm_options;
+opt.plotFlag = false;
+opt.printPlot = false;
+opt.saveName = 'neural_all';
+
+% Figure out which sessions to use
+projectDate = '2017-01-11';
+projectRoot = '~/perceptualchoice_stop_spikes_population';
+
+addpath(genpath(fullfile(projectRoot,'src/code',projectDate)));
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+
+multiUnit = true;
+deleteSessions = true;
+
+if multiUnit
+    addMulti = '_multiUnit';
+else
+    addMulti = [];
+end
+
+sessionRemove = ccm_exclude_sessions(subject);
+
+% LOAD ALL RELEVANT DATA AND LISTS
+
+% Load full popuulation of neurons
+load(fullfile(dataPath, ['ccm_neuronTypes', addMulti]));
+if deleteSessions
+    neuronTypes = neuronTypes(~ismember(neuronTypes.sessionID, sessionRemove),:);
+end
 
 
 
-
+sessionSet = unique(neuronTypes.sessionID);
+% ccm_chronometric_population(subject, sessionSet, opt);
+% ccm_psychometric_population(subject, sessionSet, opt);
+% ccm_rt_distribution_population(subject, sessionSet, opt);
+% data = ccm_inhibition_population(subject, sessionSet, opt);
 

@@ -22,7 +22,7 @@ end
 
 switch lower(subjectID)
     case 'joule'
-        [td, S, E] =load_data(subjectID, sessionArray{1},ccm_min_vars);
+        [td, S, E] =load_data(subjectID, sessionArray{1}, ccm_min_vars);
         pSignalArray = E.pSignalArray;
     case 'human'
         pSignalArray = [.35 .42 .46 .5 .54 .58 .65];

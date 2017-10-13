@@ -29,8 +29,12 @@ end
 
 % If the file hasn't already been copied to a local directory, do it now
 if exist(localDataFile, 'file') ~= 2
+    if ~isempty(dataFile)
     copyfile(dataFile, localDataPath)
     disp(sessionID)
+    else
+        error(sprintf('You don"t seem to have access to that data file from your local computer\n'))
+    end
 end
 
 if nargin > 2
