@@ -1,21 +1,22 @@
 function transform_spike_lfp_data(subject)
 
-localDataPath = ['/Users/paulmiddlebrooks/Dropbox/local_data/',lower(subject),'/'];
+localDataPath = ['~/Dropbox/local_data/',lower(subject),'/'];
 
 d = dir(localDataPath);
 
-% for i = 1 : size(d, 1)
-for i = 208 : 208
+for i = 1 : size(d, 1)
+% for i = 1 : 1
     spikeFlag = 0;
     lfpFlag = 0;
     if regexp(d(i).name, '.*n0.*.mat')
         tic
         disp(d(i).name(1:end-4))
         
-        % Check to see if the file has spike or lfp data. If it does, splay out
+        % Check to see if the file has spike or lfp data in the old format. If it does, splay out
         % the data, naming each column by its ID
-        load(fullfile(localDataPath,d(i).name),'SessionData')
-        if isfield(SessionData, 'spikeUnitArray') || isfield(SessionData, 'lfpChannel')
+        v = who(matfile(fullfile(localDataPath,d(i).name)), 'spikeData', 'lfpData');
+        
+        if ~isempty(v)
             
             trialData = load(fullfile(localDataPath,d(i).name));
             
@@ -43,11 +44,13 @@ for i = 208 : 208
                 trialData = rmfield(trialData, 'lfpData');
                 clear lfpData
             end
+            
+            if spikeFlag || lfpFlag
+                save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
+            end
+            clear trialData
         end
         
-        if spikeFlag || lfpFlag
-            save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
-        end
         toc
     end
 end

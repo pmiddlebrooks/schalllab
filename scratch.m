@@ -992,4 +992,39 @@ opt.doStops 	= false;
 Data = ccm_rt_history_neural(subject, session, opt)
 
 
+%%
+tic
+unitArray = {'spikeUnit01a','spikeUnit01b','spikeUnit02a','spikeUnit02b','spikeUnit02c','spikeUnit03a','spikeUnit03b','spikeUnit04a','spikeUnit04b'};
+trialData = load_data('joule','jp125n03',[ccm_min_vars,unitArray]);
+fprintf('\nall single units: %.2f\n', toc)
+
+%%
+tic
+trialData = load_data('joule','jp125n03',[ccm_min_vars]);
+unitArray = {'spikeUnit01a','spikeUnit01b','spikeUnit02a','spikeUnit02b','spikeUnit02c','spikeUnit03a','spikeUnit03b','spikeUnit04a','spikeUnit04b'};
+for i = 1 : length(unitArray)
+t = load_data('joule','jp125n03',[ccm_min_vars,unitArray(i)]);
+trialData.(unitArray{i}) = t.(unitArray{i});
+end
+fprintf('\nlooped single units: %.2f\n', toc)
+
+%%
+tic
+unitArray = {'spikeUnit01','spikeUnit02','spikeUnit03','spikeUnit04'};
+trialData = load_data('joule','jp125n03',[ccm_min_vars,unitArray], 1);
+fprintf('\nall multi units: %.2f\n', toc)
+
+%%
+tic
+trialData = load_data('joule','jp125n03',[ccm_min_vars]);
+unitArray = {'spikeUnit01','spikeUnit02','spikeUnit03','spikeUnit04'};
+for i = 1 : length(unitArray)
+t = load(fullfile(localDataPath, 'jp125n03'),unitArray{i}, 1);
+trialData.(unitArray{i}) = t.(unitArray{i});
+end
+fprintf('\nlooped multi units: %.2f\n', toc)
+
+
+
+
 
