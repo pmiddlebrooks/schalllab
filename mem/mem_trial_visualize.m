@@ -18,7 +18,7 @@ function mem_trial_visualize(subjectID, sessionID, options)
 %%
 subjectID   = 'broca';
 sessionID   = 'bp211n01';
-jUnit       = 1;
+unit       = 'spikeUnit01a';
 
 % Load the data
 [trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID);
@@ -83,7 +83,7 @@ for i = 1 : nTrial
     
     %   Raster
     % ************************
-    iRas            = spike_to_raster(trialData.spikeData{i,jUnit});
+    iRas            = spike_to_raster(trialData.(unit){i});
     iTick           = fat_raster(iRas, TICK_WIDTH);
     %    return
     axes(ax(axRas))
@@ -339,7 +339,7 @@ for kDataIndex = 1 : nUnit
         switch dataType
             case 'neuron'
                 % Right Target trials
-                [alignedRasters, alignIndex] = spike_to_raster(trialData.spikeData(rightTargTrial, kUnit), alignListR);
+                [alignedRasters, alignIndex] = spike_to_raster(trialData.(unit)(rightTargTrial), alignListR);
                 Data(kDataIndex).rightTarg.(mEpochName).alignTime = alignIndex;
                 sdf = spike_density_function(alignedRasters, Kernel);
                 if ~isempty(sdf); yMax(kDataIndex, mEpoch, 1) = nanmax(nanmean(sdf, 1)); end;
@@ -348,7 +348,7 @@ for kDataIndex = 1 : nUnit
                 Data(kDataIndex).rightTarg.(mEpochName).signalMean = nanmean(sdf, 1);
                 
                 % Left Target trials
-                [alignedRasters, alignIndex] = spike_to_raster(trialData.spikeData(leftTargTrial, kUnit), alignListL);
+                [alignedRasters, alignIndex] = spike_to_raster(trialData.(unit)(leftTargTrial), alignListL);
                 Data(kDataIndex).leftTarg.(mEpochName).alignTime = alignIndex;
                 sdf = spike_density_function(alignedRasters, Kernel);
                 if ~isempty(sdf); yMax(kDataIndex, mEpoch, 2) = nanmax(nanmean(sdf, 1)); end;

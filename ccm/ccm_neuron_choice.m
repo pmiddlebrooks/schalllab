@@ -67,7 +67,7 @@ alphaCoherence  = .05;   % alpha criteria for coherence dependence
 
     
     
-[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, [ccm_min_vars, 'spikeData'], options.multiUnit);
+[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, [ccm_min_vars, unitArray], options.multiUnit);
 pSignalArray = ExtraVar.pSignalArray;
 pSignalArray = pSignalArray(pSignalArray ~= .5);
 
@@ -77,7 +77,6 @@ keepTrial = strcmp(trialData.trialOutcome, 'goCorrectTarget');
 trialData = structfun(@(x) x(keepTrial,:), trialData, 'uni', false);
 keepCoh = ~(trialData.targ1CheckerProp == .5);
 trialData = structfun(@(x) x(keepCoh,:), trialData, 'uni', false);
-[a, spikeUnit] = ismember(unitArray, SessionData.spikeUnitArray);
 
 
 % RT must be after the sum of the following to be included in analyses:
@@ -103,8 +102,8 @@ medianLeftRT = nanmedian(trialData.rt(easyLeftTrial));
 medianRightRT = nanmedian(trialData.rt(easyRightTrial));
 
 
-for iUnit = 1 : length(spikeUnit)
-    fprintf('%s: %s\n',sessionID, (unitArray{iUnit}))
+for iUnit = 1 : length(unitArray)
+    fprintf('%s: %s\n',sessionID, unitArray{iUnit})
     
     %   Get the saccade receptive field
     %   Get neural data from the session/unit:
@@ -123,7 +122,7 @@ for iUnit = 1 : length(spikeUnit)
     
     % Go to Target trials
     alignmentTimeList = trialData.checkerOn;
-    [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(:, spikeUnit(iUnit)), alignmentTimeList);
+    [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(unitArray{iUnit}), alignmentTimeList);
     sdf = spike_density_function(alignedRasters, Kernel);
     alignedRasters = num2cell(alignedRasters, 2);
     
@@ -604,7 +603,7 @@ plot(ax(axCohR), [0 0], [0 yMax], '-k', 'linewidth', 2);
         if choiceDependent(iUnit) && coherenceDependentRank(iUnit)
             ddmRankStr = 'YES';
         end
-        titleString = sprintf('%s\t %s\t DDM: %s\t DDM-Rank: %s', sessionID, SessionData.spikeUnitArray{spikeUnit(iUnit)}, ddmStr, ddmRankStr);
+        titleString = sprintf('%s\t %s\t DDM: %s\t DDM-Rank: %s', sessionID, unitArray{iUnit}, ddmStr, ddmRankStr);
         text(0.5,1, titleString, 'HorizontalAlignment','Center', 'VerticalAlignment','Top')
         
         if options.printPlot
@@ -612,7 +611,7 @@ plot(ax(axCohR), [0 0], [0 yMax], '-k', 'linewidth', 2);
                 mkdir(fullfile(local_figure_path, subjectID, 'choice'))
             end
             
-            print(options.figureHandle,fullfile(local_figure_path, subjectID, 'choice', [sessionID, '_', SessionData.spikeUnitArray{spikeUnit(iUnit)}, '_ccm_ddm_like', '.pdf']),'-dpdf', '-r300')
+            print(options.figureHandle,fullfile(local_figure_path, subjectID, 'choice', [sessionID, '_', unitArray{iUnit}, '_ccm_ddm_like', '.pdf']),'-dpdf', '-r300')
         end
     end % if options.plotFlag
 

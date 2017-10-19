@@ -1254,10 +1254,10 @@ switch Opt.whichData
                     iData{iTrial} = spikeRealTime - (firstTrialStart + trialData.trialOnset(iTrial)+1);
                 end
                 
-                % Fill the spikeData from all the trials for this jUnit
-                trialData.spikeData(:,nUnitInd) = iData;
-                
+                % Fill the spike data from all the trials for this jUnit
                 unitName = sprintf('spikeUnit%s%s', num2str(iChannel, '%02i'), jUnitAppend); %figure out the channel name
+                trialData.(unitName) = iData;
+                
                 SessionData.spikeUnitArray = [SessionData.spikeUnitArray, unitName];
                 
                 
@@ -1369,7 +1369,8 @@ for iChannel = 1:nADChannel
         trialData.eegData(:,iEEG) = iData;
         iEEG = iEEG + 1;
     elseif ismember(iChannel, LFP_CHANNELS)
-        trialData.lfpData(:,iLFP) = iData;
+        unitName = sprintf('lfp%s', num2str(iChannel, '%02i')); %figure out the channel name
+        trialData.(unitName) = iData;
         SessionData.lfpChannel = [SessionData.lfpChannel; iChannel];
         iLFP = iLFP + 1;
     end
@@ -1409,8 +1410,10 @@ end
 %__________________________________________________________________________
 if strncmp(sessionID, 'jp125', 5)
     for i = 22 : 89
-        iShifted = cellfun(@(x) x + 85, trialData.spikeData(:,i), 'uni', false);
-        trialData.spikeData(:,i) = iShifted;
+                unitName = sprintf('spikeUnit%s%s', num2str(iChannel, '%02i'), i); %figure out the channel name
+        
+        iShifted = cellfun(@(x) x + 85, trialData.(unitName), 'uni', false);
+        trialData.(unitName) = iShifted;
     end
 end
 

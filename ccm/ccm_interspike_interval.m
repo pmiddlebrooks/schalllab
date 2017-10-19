@@ -1,6 +1,7 @@
 function Data = ccm_interspike_interval(subject, session, unit, Opt)
 %
-% function Data = ccm_session_data(subject, sessionID, plotFlag, Opt.unitArray)
+% Data = ccm_interspike_interval(subject, session, unit, Opt)
+%
 %
 % Creates a processed data struct for other functions to use, and
 % optionally plots session neurophysiology data

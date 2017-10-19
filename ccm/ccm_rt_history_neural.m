@@ -1,4 +1,4 @@
-function Data = ccm_rt_history_neural(subjectID, sessionID, Opt)
+function ccm_rt_history_neural(subjectID, sessionID, Opt)
 
 % triplet analysis:
 % Replicating Pouget et al
@@ -38,7 +38,7 @@ function Data = ccm_rt_history_neural(subjectID, sessionID, Opt)
 %     Opt.epochName  = perform the analysis on which epoch?
 %     Opt.epochWindow  = [-300:300] (default). Perform the analysis on which epoch window relative to epoch alignment?
 
-if nargin < 3;
+if nargin < 3
     Opt = ccm_options;
     Opt.responseDir = {'left', 'right'};
     Opt.pairTriplet = 'pair';
@@ -62,7 +62,7 @@ Data = struct;
             end
             variables = [ccm_min_vars, addVar];
             
-[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, variables);
+[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, variables, Opt.multiUnit);
 if ~strcmp(SessionData.taskID, 'ccm')
     fprintf('Not a chioce countermanding saccade session, try again\n')
     return
@@ -142,7 +142,9 @@ if DELETE_ABORTS
     selectOpt.outcome = {...
         'noFixation', 'fixationAbort'};
     invalidTrial = ccm_trial_selection(trialData, selectOpt);
-    trialData(invalidTrial,:) = [];
+    invalidLogic = zeros(length(trialData.trialOutcome), 1);
+    invalidLogic(invalidTrial) = 1;
+trialData = structfun(@(x) x(~invalidLogic,:), trialData, 'uni', false);
 end
 
 
@@ -163,7 +165,6 @@ for kDataInd = 1 : N_UNIT
     
     switch Opt.dataType
         case 'neuron'
-            [a, kUnit] = ismember(Opt.unitArray{kDataInd}, SessionData.spikeUnitArray);
             yLimit      = [0 80];
         case 'lfp'
             [a, kUnit] = ismember(chNum(kDataInd), SessionData.lfpChannel);
@@ -177,7 +178,6 @@ for kDataInd = 1 : N_UNIT
     [axisWidth, axisHeight, xAxesPosition, yAxesPosition] = standard_landscape(nRow, nCol, Opt.figureHandle);
      axisWidth = axisWidth * .95;
     clf
-%             title(sprintf('%s_%s',sessionID, Opt.unitArray{kDataInd}))
     
     
     
@@ -356,7 +356,7 @@ for kDataInd = 1 : N_UNIT
         
         switch Opt.dataType
             case 'neuron'
-                [rasNs, alignNs] = spike_to_raster(trialData.spikeData(rtNsTrial+1, kUnit), alignList);
+                [rasNs, alignNs] = spike_to_raster(trialData.(Opt.unitArray{kDataInd})(rtNsTrial+1), alignList);
                 signalNs = spike_density_function(rasNs, Kernel);
             case {'lfp', 'erp'}
                 [signalNs, alignNs] 	= align_signals(trialData.lfpData(rtNsTrial+1, kUnit), alignList, cropWindow);
@@ -377,7 +377,7 @@ for kDataInd = 1 : N_UNIT
         
         switch Opt.dataType
             case 'neuron'
-                [rasC, alignC] = spike_to_raster(trialData.spikeData(rtCTrial+1, kUnit), alignList);
+                [rasC, alignC] = spike_to_raster(trialData.(Opt.unitArray{kDataInd})(rtCTrial+1), alignList);
                 signalC = spike_density_function(rasC, Kernel);
             case {'lfp', 'erp'}
                 [signalC, alignC] 	= align_signals(trialData.lfpData(rtCTrial+1, kUnit), alignList, cropWindow);
@@ -393,7 +393,7 @@ for kDataInd = 1 : N_UNIT
         
         switch Opt.dataType
             case 'neuron'
-                [rasNc, alignNc] = spike_to_raster(trialData.spikeData(rtNcTrial+1, kUnit), alignList);
+                [rasNc, alignNc] = spike_to_raster(trialData.(Opt.unitArray{kDataInd})(rtNcTrial+1), alignList);
                 signalNc = spike_density_function(rasNc, Kernel);
             case {'lfp', 'erp'}
                 [signalNc, alignNc] 	= align_signals(trialData.lfpData(rtNcTrial+1, kUnit), alignList, cropWindow);
@@ -408,7 +408,7 @@ for kDataInd = 1 : N_UNIT
         
         switch Opt.dataType
             case 'neuron'
-                [rasE, alignE] = spike_to_raster(trialData.spikeData(rtETrial+1, kUnit), alignList);
+                [rasE, alignE] = spike_to_raster(trialData.(Opt.unitArray{kDataInd})(rtETrial+1), alignList);
                 signalE = spike_density_function(rasE, Kernel);
             case {'lfp', 'erp'}
                 [signalE, alignE] 	= align_signals(trialData.lfpData(rtETrial+1, kUnit), alignList, cropWindow);

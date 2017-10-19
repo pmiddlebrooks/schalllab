@@ -855,36 +855,6 @@ end
 
 
 
-
-
-
-%% Total number of sessions, trial numbers for all recorded sessions
-subject = 'broca';
-% subject = 'joule';
-
-projectDate = '2016-08-12';
-projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/perceptualchoice_stop_spikes_population';
-dataPath = fullfile(projectRoot,'data',projectDate,subject);
-
-
-% Total channels recorded, total modulation neurons
-load(fullfile(dataPath, 'ccm_neuronTypes'))
-sessions = unique(neuronTypes.sessionID);
-for i = 1 : length(sessions)
-    
-    [td, S] = load_data(subject,sessions{i});
-    nUnit = length(S.spikeUnitArray);
-    
-    for j = 1 : nUnit
-        jUnitName = S.spikeUnitArray{j};
-        saveFileName = [sessions{i}, '_', jUnitName];
-        
-        spikeData = td.spikeData(:, j);
-        save(fullfile(local_data_path, subject, saveFileName), 'spikeData')
-    end
-    
-end
-
 %% Correlate SSRT with mean RT per session
 subject = 'broca';
 dataPath = fullfile(projectRoot,'data',projectDate,subject);

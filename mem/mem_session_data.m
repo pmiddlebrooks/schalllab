@@ -79,7 +79,7 @@ switch Opt.dataType
 end
 variables = [mem_min_vars, addVar, 'trialDuration'];
 
-[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, variables);
+[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, variables, Opt.mulitUnit);
 
 if ~(strcmp(SessionData.taskID, 'mem') || strcmp(SessionData.taskID, 'del'))
     fprintf('Not a memory guided saccade session, try again\n')
@@ -196,7 +196,7 @@ yMin = zeros(nUnit, nEpoch, nTarg);  % Keep track of maximum sdf values, for set
 for kDataIndex = 1 : nUnit
     switch dataType
         case 'neuron'
-            [a, kUnit] = ismember(unitArray{kDataIndex}, SessionData.spikeUnitArray);
+            kUnit = unitArray{kDataIndex};
         case 'lfp'
             [a, kUnit] = ismember(unitArray{kDataIndex}, SessionData.lfpChannel);
         case 'erp'
@@ -224,7 +224,7 @@ for kDataIndex = 1 : nUnit
         switch dataType
             case 'neuron'
                 % Right Target trials
-                [alignedRasters, alignIndex] = spike_to_raster(trialData.spikeData(rightTargTrial, kUnit), alignListR);
+                [alignedRasters, alignIndex] = spike_to_raster(trialData.(kUnit)(rightTargTrial), alignListR);
                 % add NaN pad because often we want to display the sdf longer, and low-firing cells will otherwise get cut off
                 alignedRasters = [alignedRasters, nan(length(alignListR), 6000)];
                 Data(kDataIndex).rightTarg.(mEpochName).alignTime = alignIndex;
@@ -235,7 +235,7 @@ for kDataIndex = 1 : nUnit
                 Data(kDataIndex).rightTarg.(mEpochName).signalMean = nanmean(sdf, 1);
                 
                 % Left Target trials
-                [alignedRasters, alignIndex] = spike_to_raster(trialData.spikeData(leftTargTrial, kUnit), alignListL);
+                [alignedRasters, alignIndex] = spike_to_raster(trialData.(kUnit)(leftTargTrial), alignListL);
                 alignedRasters = [alignedRasters, nan(length(alignListL), 6000)];
                 Data(kDataIndex).leftTarg.(mEpochName).alignTime = alignIndex;
                 sdf = spike_density_function(alignedRasters, Kernel);
