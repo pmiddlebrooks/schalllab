@@ -90,11 +90,10 @@ if firstIndex < length(directory)
                end
             end
             
-            % Are we looking for eeg data?
+            % Are we looking for spike data?
             if sum(ismember('spike', dataIncludeArray)) || sum(ismember('spike', dataExcludeArray))
                % Check for eegData
-               [a, b] = ismember('spikeData', fieldnames(trialData));
-               if a
+               if sum(strncmp(fieldnames(trialData), 'spikeUnit', 9))
                   spikeFlag = 1;
                end
             end

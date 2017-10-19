@@ -43,7 +43,7 @@ epochDuration = 120;
 
 
 % Load the data
-[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, [ccm_min_vars, 'spikeData']);
+[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, [ccm_min_vars, unitArray], options.multiUnit);
 pSignalArray = ExtraVar.pSignalArray;
 ssdArray = ExtraVar.ssdArray;
 pSignalArray = pSignalArray(pSignalArray ~= .5);
@@ -54,8 +54,9 @@ if ~isfield(SessionData, 'spikeUnitArray') || isempty(SessionData.spikeUnitArray
     return
 end
 
-
-[a, spikeUnit] = ismember(unitArray, SessionData.spikeUnitArray);
+if strcmp(unitArray, 'spikeData')
+    unitArray = SessionData.spikeUnitArray;
+end
 
 
 
@@ -119,7 +120,7 @@ medianRightRT = nanmean(trialData.rt(easyRightTrial));
 
 
 
-for iUnit = 1 : length(spikeUnit)
+for iUnit = 1 : length(unitArray)
     
     
     fprintf('%s: %s\n',sessionID, (unitArray{iUnit}))
@@ -127,7 +128,7 @@ for iUnit = 1 : length(spikeUnit)
     
     % Go to Target trials
     alignmentTimeList = trialData.checkerOn;
-    [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(:, spikeUnit(iUnit)), alignmentTimeList);
+    [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(unitArray{iUnit}), alignmentTimeList);
     sdfLeft = nanmean(spike_density_function(alignedRasters(leftTrial,:), Kernel), 1);
     sdfRight = nanmean(spike_density_function(alignedRasters(rightTrial,:), Kernel), 1);
     alignedRasters = num2cell(alignedRasters, 2);
@@ -300,7 +301,7 @@ for iUnit = 1 : length(spikeUnit)
             signalTrial = leftTrial(leftTrialData.targ1CheckerProp == iProp);
             % Go to Target trials
             alignmentTimeList = trialData.checkerOn(signalTrial);
-            [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(signalTrial, spikeUnit(iUnit)), alignmentTimeList);
+            [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(unitArray{iUnit})(signalTrial), alignmentTimeList);
             sdfLeft = nanmean(spike_density_function(alignedRasters, Kernel), 1);
             
             plot(ax(axCohL), plotEpochRange, sdfLeft(alignmentIndex + plotEpochRange), 'color', inhColor, 'linewidth', lineW)
@@ -330,7 +331,7 @@ for iUnit = 1 : length(spikeUnit)
             % Go to Target trials
             alignmentTimeList = trialData.checkerOn(signalTrial);
             if ~isempty(alignmentTimeList)
-                [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(signalTrial, spikeUnit(iUnit)), alignmentTimeList);
+                [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(unitArray{iUnit})(signalTrial), alignmentTimeList);
                 sdfRight = nanmean(spike_density_function(alignedRasters, Kernel), 1);
                 
                 plot(ax(axCohR), plotEpochRange, sdfRight(alignmentIndex + plotEpochRange), 'color', inhColor, 'linewidth', lineW)
@@ -368,7 +369,7 @@ for iUnit = 1 : length(spikeUnit)
         else
             ddmStr = 'NO';
         end
-        titleString = sprintf('%s\t %s\t DDM-Like: %s', sessionID, SessionData.spikeUnitArray{spikeUnit(iUnit)}, ddmStr);
+        titleString = sprintf('%s\t %s\t DDM-Like: %s', sessionID, unitArray{iUnit}, ddmStr);
         text(0.5,1, titleString, 'HorizontalAlignment','Center', 'VerticalAlignment','Top')
         
         if options.printPlot
@@ -376,7 +377,7 @@ for iUnit = 1 : length(spikeUnit)
                 mkdir(fullfile(local_figure_path, subjectID, 'ddm'))
             end
             
-            print(options.figureHandle,fullfile(local_figure_path, subjectID, 'ddm', [sessionID, '_', SessionData.spikeUnitArray{spikeUnit(iUnit)}, '_ccm_ddm_like', '.pdf']),'-dpdf', '-r300')
+            print(options.figureHandle,fullfile(local_figure_path, subjectID, 'ddm', [sessionID, '_', unitArray{iUnit}, '_ccm_ddm_like', '.pdf']),'-dpdf', '-r300')
         end
     end % if options.plotFlag
 end % for iUnit = 1 : length(spikeUnit)

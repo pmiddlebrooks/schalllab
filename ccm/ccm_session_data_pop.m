@@ -81,7 +81,7 @@ nOutcome            = length(goOutcomeArray) + length(stopOutcomeArray);
 if isempty(Opt.trialData)
     % Load the data
     variables = [ccm_min_vars, 'spikeData'];
-[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, variables);
+[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, variables, Opt.multiUnit);
 else
     trialData = Opt.trialData;
     SessionData = Opt.SessionData;
@@ -227,7 +227,7 @@ end
 for kDataInd = 1 : nUnit
     switch dataType
         case 'neuron'
-            kUnit = kDataInd;
+            kUnit = Opt.unitArray{kDataInd};
         case 'lfp'
             [a, kUnit] = ismember(chNum(kDataInd), SessionData.lfpChannel);
         case 'erp'
@@ -360,7 +360,7 @@ for kDataInd = 1 : nUnit
                             
                             case 'neuron'
                                 % Go to TargetDistractor trials
-                                [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(iGoTrial, kUnit), alignListGo);
+                                [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(kUnit)(iGoTrial), alignListGo);
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(goOutcomeArray{g}).alignTime = -epochRange(1);
                                 sdf = spike_density_function(alignedRasters, Kernel);
                                 if ~isempty(sdf)
@@ -498,7 +498,7 @@ for kDataInd = 1 : nUnit
                                     
                                     if ~(strcmp(stopOutcomeArray{s}, 'stopStop') && strcmp(mEpochName, 'responseOnset'))  % No stop signals on go trials
                                         % Canceled Stop trials
-                                        [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(jStopTrial, kUnit), alignListStop);
+                                        [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(kUnit)(jStopTrial), alignListStop);
                                         Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(stopOutcomeArray{s}).ssd(jSSDIndex).alignTime = -epochRange(1);
                                         
                                         sdf = spike_density_function(alignedRasters, Kernel);
@@ -620,7 +620,7 @@ for kDataInd = 1 : nUnit
                         %                         switch dataType
                         %                             case 'neuron'
                         %                                 % Go Fast data
-                        %                                 [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(goFastTrial, kUnit), alignListGoFast);
+                        %                                 [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(kUnit)(goFastTrial), alignListGoFast);
                         %                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).goFast.ssd(jSSDIndex).alignTime = alignmentIndex;
                         %
                         %                                 sdf = spike_density_function(alignedRasters, Kernel);
@@ -631,7 +631,7 @@ for kDataInd = 1 : nUnit
                         %
                         %
                         %                                 % Go Slow data
-                        %                                 [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(goSlowTrial, kUnit), alignListGoSlow);
+                        %                                 [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(kUnit)(goSlowTrial), alignListGoSlow);
                         %                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).goSlow.ssd(jSSDIndex).alignTime = alignmentIndex;
                         %
                         %                                 sdf = spike_density_function(alignedRasters, Kernel);

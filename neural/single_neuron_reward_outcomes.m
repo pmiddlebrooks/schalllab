@@ -23,7 +23,7 @@ dataPath = ['data/', monkey, '_', brainArea, '_', sessionNumberString];
 load(dataPath)
 
 % Obtain the spike data from the relevant trials
-spikeUnitIndex = find(strcmp(spikeUnit, sessionData.collectedData.neurophysiology.singleUnit.names));
+spikeUnitIndex = strcmp(spikeUnit, sessionData.collectedData.neurophysiology.singleUnit.names);
 spikeData = trialData.singleUnit(:, spikeUnitIndex);
 
 

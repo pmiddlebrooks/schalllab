@@ -61,7 +61,7 @@ function Opt = ccm_options
 %           {'collapse','none' (for stopStop trials),'left','right','up','down','upLeft','upRight',downLeft','downRight'<list of possible angels, e.g. [45 -45]
 
 Opt.dataType            = 'neuron';
-Opt.multiUnit           = false;
+Opt.multiUnit           = true;
 Opt.trialData           = [];
 Opt.howProcess        = 'each';%'print';
 Opt.unitArray        = [];

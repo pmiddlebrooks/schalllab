@@ -196,25 +196,26 @@ alignListGo = trialData.(mEpochName)(iGoTrial);
 sdf = [];
 epochWindow = [-199:400];
 normWindow = [-299:0];
-for kUnit = unitIndex
+for k = unitIndex
+    kUnit = unitArrayNew{k}
     alignListTarg = trialData.targOn(iGoTrial);
-    [alignedRasters, ~] = spike_to_raster(trialData.spikeData(iGoTrial, kUnit), alignListTarg);
+    [alignedRasters, ~] = spike_to_raster(trialData.(kUnit)(iGoTrial), alignListTarg);
     iSdfTarg = nanmean(spike_density_function(alignedRasters, Kernel));
     iNormTarg = max(iSdfTarg);
     
     alignListSacc = trialData.responseOnset(iGoTrial);
-    [alignedRasters, ~] = spike_to_raster(trialData.spikeData(iGoTrial, kUnit), alignListSacc);
+    [alignedRasters, ~] = spike_to_raster(trialData.(kUnit)(iGoTrial), alignListSacc);
     iSdfSacc = nanmean(spike_density_function(alignedRasters, Kernel));
     iNormSacc = max(iSdfSacc);
     
     alignListChecker = trialData.targOn(iGoTrial);
-    [alignedRasters, ~] = spike_to_raster(trialData.spikeData(iGoTrial, kUnit), alignListChecker);
+    [alignedRasters, ~] = spike_to_raster(trialData.(kUnit)(iGoTrial), alignListChecker);
     iSdfChecker = nanmean(spike_density_function(alignedRasters, Kernel));
     iNormChecker = max(iSdfChecker);
     
     iNorm = max([iNormTarg, iNormSacc, iNormChecker]);
     
-    [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(iGoTrial, kUnit), alignListGo);
+    [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(kUnit)(iGoTrial), alignListGo);
     iSDF = nanmean(spike_density_function(alignedRasters, Kernel)) / iNorm;
     sdf = [sdf; iSDF(alignmentIndex + epochWindow)];
 end
@@ -281,30 +282,6 @@ writetable(b, fullfile(local_data_path, 'broca/bayes_ssrt.csv'))
 tebaDataPath = '/Volumes/SchallLab/data/';  % You may need to change this line
 load(fullfile(tebaDataPath,'joule/jp111n02.mat'));
 
-%% Use the data to create some variables for Jacob to do stuff with (include spike_to_raster function)
-% ============================================================
-
-% Gather some variables directly from trialData:
-rt              = trialData.rt;  % response times (a vector)
-colorCoherence  = trialData.targ1CheckerProp; % the proportion of right target color in the checkerboard stimulus (a vector)
-trialOutcome    = trialData.trialOutcome; % trial outcomes (a cell of strings)
-trialType       = trialData.trialType; % stop or go trial (a cell of strings)
-
-% Calculate spike rates for a given period of time durin the trial (epoch) aligned on some event (alignList)
-nUnit           = length(SessionData.spikeUnitArray);
-alignList       = trialData.responseOnset;
-epoch           = 101:300;
-
-% Initialize a matrix to be filled in with spike rates for each unit.
-spikeRate       = nan(size(trialData.trialOutcome, 1), nUnit);
-
-% Loop through each unit and get the spike rates
-for kUnit = 1 : nUnit
-    [alignedRasters, alignmentIndex]    = spike_to_raster(trialData.spikeData(:, kUnit), alignList);
-    epochRasters                        = alignedRasters(:, alignmentIndex + epoch);
-    kSpikeRate                          = sum(epochRasters,2) ./ (length(epoch) / 1000);  % in spikes per second (1000 = ms to sec conversion)
-    spikeRate(:, kUnit)                 = kSpikeRate;
-end
 
 
 %%
@@ -360,7 +337,6 @@ variables = {...
     'ssd',...
     'targAngle',...
     };
-% variables = [variables, {'spikeData'}];
 td = load('~/schalllab/scratch/jp113n02', variables{:});
 toc
 
@@ -754,8 +730,6 @@ sessionList = task_session_array(subject, 'ccm',sessionSet)
 data = ccm_inhibition_population(subject, sessionList)
 
 
-%%
-[td s] = load_data('joule', 'jp125n04', [ccm_min_vars,'spikeData']);
 
 %%              Memory-guided spiking data for Kaleb
 % =======================================================================
@@ -928,30 +902,6 @@ for i = 1 : length(lowRate)
 end
 
         
-  
-%%
-[alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(trial, spikeDataInd), trialData.responseOnset(trial));
-Kernel.method = 'postsynaptic potential';
-Kernel.growth = 1;
-Kernel.decay = 20;
-sdf = spike_density_function(alignedRasters, Kernel);
-sdf = sdf(:,alignmentIndex+(-200:0));
-
-spikeData = cellfun(@(in1,in2,in3) sort(in1(in1 > in2 & in1 < in3)), trialData.spikeData(trial,spikeDataInd), saccadeWinBegin, saccadeWinEnd, 'uni', false);
-
-%%
-clf
-
-for i = 1 : size(sdf, 1)
- figure(9)
-   plot(sdf(i,:))
-    Data.saccadeSpikeInterval{i}
- figure(10)
-   
-    plot(1:length(Data.saccadeSpikeInterval{i}), Data.saccadeSpikeInterval{i})
-    spikeData{i}
-    pause
-end
 
 %%
 opt = ccm_options;
@@ -973,7 +923,7 @@ alignList = trialData.(alignEvent)(trials);
  
     
 % Get the rasters (and what index they align to)
-[alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(trials, unitIndex), alignList);
+[alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeUnit01a(trials), alignList);
 
 
 %%
@@ -1008,5 +958,38 @@ opt.plotFlag     = true;
 data = ccm_neuron_stop_vs_go('broca', 'bp244n02', {'spikeUnit27'}, opt);
 % data = ccm_neuron_stop_vs_go('broca', 'bp247n02', {'spikeUnit12'}, opt);
   
+
+
+
+%% Establish options to send to ccm_session_data in the for loop below
+close all
+
+opt             = ccm_options;
+    opt.ms2Std = 75;
+opt.howProcess  = 'print';
+opt.plotFlag    = true;
+opt.printPlot    = true;
+opt.dataType    = 'neuron';
+opt.collapseTarg 	= true;
+opt.collapseSignal 	= true;
+opt.doStops 	= false;
+
+
+
+%     opt.unitArray = 'spikeData';
+    opt.unitArray = {'spikeUnit32a'};    
+    opt.multiUnit = false;
+    
+    opt.unitArray = {'spikeUnit32'};    
+    opt.multiUnit = true;
+
+    
+    subject = 'joule';
+    session = 'jp125n03';
+    
+%       iData = ccm_session_data(subject, session, opt);
+    opt.pairTriplet = 'pair';
+Data = ccm_rt_history_neural(subject, session, opt)
+
 
 

@@ -75,7 +75,7 @@ if firstIndex < length(directory)
             % Are we looking for spike data?
             if sum(ismember('spike', dataIncludeArray)) || sum(ismember('spike', dataExcludeArray))
                % Check for spikeData
-               [spikeFlag, b] = ismember('spikeData', fieldnames(trialData));
+               spikeFlag = sum(cell2mat(regexp(fieldnames(trialData), 'spike.*')));
                if spikeFlag
                   
                    

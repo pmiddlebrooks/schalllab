@@ -97,8 +97,11 @@ if ~isempty(Opt.trialData)
     ExtraVar = Opt.ExtraVar;
 else
     if strcmp(Opt.dataType, 'neuron')
-        variables = [ccm_min_vars, 'spikeData'];
+        variables = [ccm_min_vars, Opt.unitArray];
         [trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, variables, Opt.multiUnit);
+        if strcmp(Opt.unitArray, 'spikeData')
+            Opt.unitArray = SessionData.spikeUnitArray;
+        end
     else
         variables = [ccm_min_vars, 'lfpData'];
         [trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, variables);
@@ -134,61 +137,22 @@ baseWindow 	= -149 : 0;   % To baseline-shift the eeg signals, relative to event
 
 
 
-% Set defaults
-dataType = Opt.dataType;
-switch dataType
-    case 'neuron'
-        dataArray     = SessionData.spikeUnitArray;
-    case 'lfp'
-        chNum = SessionData.lfpChannel;
-        dataArray 	= num2cell(SessionData.lfpChannel);
-        dataArray   = cellfun(@(x) sprintf('lfp_%s', num2str(x, '%02d')), dataArray, 'uniformoutput', false);
-    case 'erp'
-        dataArray     = eeg_electrode_map(subjectID);
-end
-
-
-
-% If there was not a custom set of units or channels input to process, do
-% them all
-if isempty(Opt.unitArray)
-    if strcmp(Opt.howProcess, 'each') || strcmp(Opt.howProcess, 'step') || strcmp(Opt.howProcess, 'print') || strcmp(Opt.howProcess, 'pop')
-        Opt.unitArray     = dataArray;
-    end
-end
 
 
 % How many units were recorded?
 nUnit = length(Opt.unitArray);
-unitInd = find(ismember(dataArray, Opt.unitArray));
-
-%     switch dataType
-%         case 'neuron'
-%             for i = 1 : nUnit
-%                 load(fullfile(local_data_path, subjectID, [sessionID, '_', Opt.unitArray{i}]))
-%                 trialData.spikeData(:,i) = spikeData;
-%             end
-%         case 'lfp'
-%             error('need to code for lfps')
-%             % for i = 1 : nUnit
-%             %     load(fullfile(local_data_path, subjectID, [sessionID, '_', Opt.unitArray{i}]))
-%             %     trialData.spikeData(:,i) = spikeData;
-%             % end
-%         case 'erp'
-%             dataArray     = eeg_electrode_map(subjectID);
-%     end
 
 
 
 
 % Make sure user input a dataType that was recorded during the session
 dataTypePossible = {'neuron', 'lfp', 'erp'};
-if ~sum(strcmp(dataType, dataTypePossible))
-    fprintf('%s Is not a valid data type \n', dataType)
+if ~sum(strcmp(Opt.dataType, dataTypePossible))
+    fprintf('%s Is not a valid data type \n', Opt.dataType)
     return
 end
 if isempty(Opt.unitArray)
-    fprintf('Session %s apparently does not contain %s data \n', sessionID, dataType)
+    fprintf('Session %s apparently does not contain %s data \n', sessionID, Opt.dataType)
     return
 end
 
@@ -275,13 +239,12 @@ ssrt = dataInh.ssrtCollapseIntegrationWeighted;
 
 
 for kDataInd = 1 : nUnit
-    switch dataType
+    switch Opt.dataType
         case 'neuron'
-            kUnit = unitInd(kDataInd);
         case 'lfp'
-            %                 [a, kUnit] = ismember(chNum(kDataInd), SessionData.lfpChannel);
+                            [a, kUnit] = ismember(chNum(kDataInd), SessionData.lfpChannel);
         case 'erp'
-            %                 [a, kUnit] = ismember(Opt.unitArray{kDataInd}, eeg_electrode_map(subjectID));
+                            [a, kUnit] = ismember(Opt.unitArray{kDataInd}, eeg_electrode_map(subjectID));
     end
     
     
@@ -404,12 +367,12 @@ for kDataInd = 1 : nUnit
                         
                         
                         
-                        switch dataType
+                        switch Opt.dataType
                             
                             
                             case 'neuron'
                                 % Go to TargetDistractor trials
-                                [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(iGoTrial, kUnit), alignListGo);
+                                [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(Opt.unitArray{kDataInd})(iGoTrial), alignListGo);
                                 %                                     if kUnit > 21
                                 %                                         alignmentIndex = alignmentIndex - 98;
                                 %                                     end
@@ -474,7 +437,7 @@ for kDataInd = 1 : nUnit
                                 %                                 end
                                 %                             end
                                 %
-                        end % switch dataType
+                        end % switch Opt.dataType
                     end % ~strcmp(mEpochName, 'stopSignalOn')
                     
                     
@@ -544,13 +507,13 @@ for kDataInd = 1 : nUnit
                             
                             
                             
-                            switch dataType
+                            switch Opt.dataType
                                 case 'neuron'
                                     
                                     
                                     if ~(strcmp(stopOutcomeArray{s}, 'stopStop') && strcmp(mEpochName, 'responseOnset'))  % No stop signals on go trials
                                         %  Stop trials
-                                        [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(jStopTrial, kUnit), alignListStop);
+                                        [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(Opt.unitArray{kDataInd})(jStopTrial), alignListStop);
                                         Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(stopOutcomeArray{s}).ssd(jSSDIndex).alignTime = alignmentIndex;
                                         
                                         sdf = spike_density_function(alignedRasters, Kernel);
@@ -618,7 +581,7 @@ for kDataInd = 1 : nUnit
                                     %                                     end
                                     %                                 end
                                     
-                            end % switch dataType
+                            end % switch Opt.dataType
                             
                             
                             % Move stop rts here
@@ -649,7 +612,7 @@ for kDataInd = 1 : nUnit
                             % a "responseOnset" alignement for stopStop
                             % trials
                             alignListStop = stopStopCheckerOnList + round(nanmean(trialData.rt(goSlowTrial)));
-                            [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(stopStopCheckerTrial, kUnit), alignListStop);
+                            [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(Opt.unitArray{kDataInd})(stopStopCheckerTrial), alignListStop);
                             Data(kDataInd, jTarg).responseOnset.colorCoh(iColor).stopStop.ssd(jSSDIndex).alignTime = alignmentIndex;
                             
                             sdf = spike_density_function(alignedRasters, Kernel);
@@ -665,10 +628,10 @@ for kDataInd = 1 : nUnit
                         alignListGoSlow = trialData.(mEpochName)(goSlowTrial);
                         Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).goSlow.ssd(jSSDIndex).alignTimeList = alignListGoSlow;   % Keep track of trial-by-trial alignemnt
                         
-                        switch dataType
+                        switch Opt.dataType
                             case 'neuron'
                                 % Go Fast data
-                                [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(goFastTrial, kUnit), alignListGoFast);
+                                [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(Opt.unitArray{kDataInd})(goFastTrial), alignListGoFast);
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).goFast.ssd(jSSDIndex).alignTime = alignmentIndex;
                                 
                                 sdf = spike_density_function(alignedRasters, Kernel);
@@ -680,7 +643,7 @@ for kDataInd = 1 : nUnit
                                 
                                 
                                 % Go Slow data
-                                [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(goSlowTrial, kUnit), alignListGoSlow);
+                                [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(Opt.unitArray{kDataInd})(goSlowTrial), alignListGoSlow);
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).goSlow.ssd(jSSDIndex).alignTime = alignmentIndex;
                                 
                                 sdf = spike_density_function(alignedRasters, Kernel);
@@ -814,7 +777,7 @@ end % kDataInd
 %                 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                 if ~strcmp(mEpochName, 'stopSignalOn')  % No stop signals on go trials
 %
-%                     switch dataType
+%                     switch Opt.dataType
 %                         case 'neuron'
 %                             % Go to Target trials
 %                             Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(goOutcomeArray{g}).sdf = ...
@@ -838,7 +801,7 @@ end % kDataInd
 %                             Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(goOutcomeArray{g}).lfpMean = ...
 %                                 nanmean(Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(goOutcomeArray{g}).eeg, 1);
 %
-%                     end % switch dataType
+%                     end % switch Opt.dataType
 %                 end % ~strcmp(mEpochName, 'stopSignalOn')
 %
 %
@@ -851,7 +814,7 @@ end % kDataInd
 %                 if Opt.doStops
 %                     for jSSDIndex = 1 : nSSD
 %
-%                         switch dataType
+%                         switch Opt.dataType
 %                             case 'neuron'
 %                                 if ~strcmp(mEpochName, 'responseOnset')  % No stop signals on go trials
 %
@@ -887,13 +850,13 @@ end % kDataInd
 %
 %                                 end % ~strcmp(mEpochName, 'responseOnset')
 %
-%                         end % switch dataType
+%                         end % switch Opt.dataType
 %                     end % jSSD
 %                 end % if Opt.doStops
 %             end % mEpoch
 %         end % for mEpoch = 1 : length(epochArray)
 %         Data(kDataInd, jTarg).yMax = 1.1;
-%         switch dataType
+%         switch Opt.dataType
 %             case 'neuron'
 %                 Data(kDataInd, jTarg).yMin = 0;
 %             case {'lfp', 'erp'}
@@ -917,7 +880,6 @@ end % kDataInd
 
 Data(1).unitArray       = Opt.unitArray;
 Data(1).howProcess       = Opt.howProcess;
-Data(1).dataArray       = dataArray;
 Data(1).pSignalArray    = pSignalArray;
 Data(1).targAngleArray  = targAngleArray;
 Data(1).ssdArray        = ssdArray;

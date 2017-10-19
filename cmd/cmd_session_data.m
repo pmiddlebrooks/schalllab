@@ -84,7 +84,7 @@ switch options.dataType
 end
 variables = [ccm_min_vars, addVar, 'trialDuration'];
 
-[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, variables);
+[trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, variables, options.multiUnit);
 ssdArray        = ExtraVar.ssdArray;
 nSSD            = length(ssdArray);
 targAngleArray	= ExtraVar.targAngleArray;
@@ -122,12 +122,8 @@ dataType = options.dataType;
 switch dataType
    case 'neuron'
       if ~isfield(SessionData, 'spikeUnitArray')
-         spikeUnitArray = {};
-         for i = 1 : size(trialData.trialOutcome.spikeData, 2)
-            spikeUnitArray = [spikeUnitArray, num2str(i)];
-            %    SessionData.spikeUnitArray = num2str([1:size(trialData.trialOutcome.spikeData,2)]);
-         end
-         SessionData.spikeUnitArray = spikeUnitArray;
+          tdFields = fieldnames(trialData);
+          SessionData.spikeUnitArray = tdField(strncmp(tdFields, 'spikeUnit', 9));
       end
       dataArray     = SessionData.spikeUnitArray;
    case 'lfp'
@@ -189,7 +185,7 @@ end
 for kDataIndex = 1 : nUnit
    switch dataType
       case 'neuron'
-         [a, kUnit] = ismember(dataArray{kDataIndex}, SessionData.spikeUnitArray);
+         kUnit = SessionData.spikeUnitArray{kDataIndex};
       case 'lfp'
          [a, kUnit] = ismember(dataArray{kDataIndex}, SessionData.lfpChannel);
       case 'erp'
@@ -211,7 +207,7 @@ for kDataIndex = 1 : nUnit
    % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % LOOP THROUGH ANGLES
    % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   for iTarg = 1 : nTarg;
+   for iTarg = 1 : nTarg
       
       
       if strcmp(options.targAngle, 'collapse')
@@ -247,7 +243,7 @@ for kDataIndex = 1 : nUnit
             switch dataType
                case 'neuron'
                   % Go to Target trials
-                  [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(iGoTargTrial, kUnit), alignListGoTarg);
+                  [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(kUnit)(iGoTargTrial), alignListGoTarg);
                   Data(kDataIndex).angle(iTarg).goTarg.(mEpochName).alignTime = alignmentIndex;
                   sdf = spike_density_function(alignedRasters, Kernel);
                   if ~isempty(sdf); yMax(mEpoch, iTarg, 1, 1) = nanmax(nanmean(sdf, 1)); end;
@@ -342,7 +338,7 @@ for kDataIndex = 1 : nUnit
             switch dataType
                case 'neuron'
                   % Stop to Target trials
-                  [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(jStopTargTrial, kUnit), alignListStopTarg);
+                  [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(kUnit)(jStopTargTrial), alignListStopTarg);
                   Data(kDataIndex).angle(iTarg).stopTarg.ssd(jSSDIndex).(mEpochName).alignTime = alignmentIndex;
                   
                   sdf = spike_density_function(alignedRasters, Kernel);
@@ -353,7 +349,7 @@ for kDataIndex = 1 : nUnit
                   
                   if ~strcmp(mEpochName, 'responseOnset')  % No stop signals on go trials
                      % Stop to Target trials
-                     [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(jStopCorrectTrial, kUnit), alignListStopCorrect);
+                     [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(kUnit)(jStopCorrectTrial), alignListStopCorrect);
                      Data(kDataIndex).angle(iTarg).stopStop.ssd(jSSDIndex).(mEpochName).alignTime = alignmentIndex;
                      
                      sdf = spike_density_function(alignedRasters, Kernel);
