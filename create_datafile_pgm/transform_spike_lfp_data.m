@@ -4,10 +4,11 @@ localDataPath = ['~/Dropbox/local_data/',lower(subject),'/'];
 
 d = dir(localDataPath);
 
-for i = 1 : size(d, 1)
+for i = 167 : size(d, 1)
 % for i = 1 : 1
     spikeFlag = 0;
     lfpFlag = 0;
+    i
     if regexp(d(i).name, '.*n0.*.mat')
         tic
         disp(d(i).name(1:end-4))
@@ -47,6 +48,8 @@ for i = 1 : size(d, 1)
             
             if spikeFlag || lfpFlag
                 save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
+tebaPath = '/Volumes/SchallLab/data/';
+                save(fullfile(tebaPath, subject, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
             end
             clear trialData
         end

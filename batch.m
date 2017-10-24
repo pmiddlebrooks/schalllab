@@ -1288,21 +1288,27 @@ subject = 'joule';
 % dataDir = '/Volumes/SchallLab/data/Joule';
 dataDir = ['/Volumes/SchallLab/data/', subject];
 d = dir(dataDir);
-for i = 1 : size(d, 1)
-    if regexp(d(i).name, 'jp.*mat')
+% for i = 1 : size(d, 1)
+for i = 12 : 13
+   if regexp(d(i).name, 'jp.*mat')
         tic
-        
-        disp(i)
+          disp(i)
         disp(d(i).name(1:end-4))
-        
-        load(fullfile(dataDir, d(i).name))
+       
+        clear trialOutcome
+
+        load(fullfile(local_data_path, subject ,d(i).name), 'trialOutcome');
+                if ~exist('trialOutcome')
+
+        load(fullfile(local_data_path, subject ,d(i).name));
+%         load(fullfile(dataDir, d(i).name))
         trialData = table2struct(trialData, 'ToScalar',true);
         trialData.SessionData = SessionData;
         
         save(fullfile(dataDir, d(i).name), '-struct', 'trialData','-v7.3')
         save(fullfile(local_data_path, subject, d(i).name), '-struct', 'trialData','-v7.3')
         clear trialData SessionData
-        
+                end
         disp(toc)
     end
 end
