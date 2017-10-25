@@ -103,7 +103,7 @@ d = dir(fullfile(local_data_path, subject));
 for i = 1 : size(d, 1)
 % for i = 12 : 30
 % for i = 209 : 209
-   if regexp(d(i).name, 'jp.*mat')
+   if regexp(d(i).name, 'bp.*mat')
         tic
           disp(i)
         disp(d(i).name(1:end-4))
@@ -134,7 +134,7 @@ d = dir(fullfile(local_data_path, subject));
 for i = 1 : size(d, 1)
 % for i = 12 : 30
 % for i = 209 : 209
-   if regexp(d(i).name, 'jp.*mat')
+   if regexp(d(i).name, 'xp.*mat')
         tic
           disp(i)
         disp(d(i).name(1:end-4))
