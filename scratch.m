@@ -1025,6 +1025,33 @@ end
 fprintf('\nlooped multi units: %.2f\n', toc)
 
 
+%%
+close all
+tic
 
+options = ccm_options;
 
+options.multiUnit = true;
+options.plotFlag = true;
+options.printPlot = true;
+opt.minTrialPerCond     = 10;
 
+options.unitArray = {'spikeUnit01'};
+options.doStops = false;
+
+options.ANALYZE_CANCELED = true;
+options.ANALYZE_NONCANCELED = true;
+options.ms2Std = 75;
+options.plotSigle = false;
+% Data = ccm_session_data('joule', 'jp054n02',  options);
+Data = ccm_neuron_stop_vs_go('joule', 'jp054n02',  options.unitArray, options);
+
+toc
+
+%%
+options = ccm_neuron_choice;
+options.unitArray = {'spikeUnit01'};
+options.multiUnit = true;
+
+% unitInfo = ccm_neuron_choice('joule', 'jp054n02', options.unitArray, options);
+unitInfo = ccm_ddm_like('joule', 'jp054n02', options.unitArray, options);

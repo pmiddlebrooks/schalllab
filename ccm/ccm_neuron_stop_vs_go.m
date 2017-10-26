@@ -60,6 +60,7 @@ if nargin < 4
     
     options.plotFlag            = true;
     options.printPlot           = true;
+    options.plotSingle          = false;
     
     % Return just the default options struct if no input
     if nargin == 0
@@ -672,7 +673,8 @@ for kUnitIndex = 1 : nUnit
                 
                 
                 % Plot the each single valid condition
-                if plotFlag
+                stopStopFigSingle = 2039;
+                if plotFlag && options.plotSingle
                     figure(stopStopFigSingle)
                     clf
                     

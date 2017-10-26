@@ -63,7 +63,7 @@ else
     % If user is not asking for spikeUnits/spikeData or lfp data, simply load whatever
     % variables requested. Otherwise some special processing may be
     % required depending on nature of spike data requested
-    if ~cell2mat(regexp(variables, 'spike.*'))
+    if isempty(cell2mat(regexp(variables, 'spike.*')))
         trialData = load(localDataFile, variables{:});
     else
         if cell2mat(regexp(variables, 'spike.*'))
