@@ -1,4 +1,4 @@
-function [tebDataFile, localDataPath, localDataFile] = data_file_path(subjectID, sessionID, monkeyOrHuman)
+function [tebaDataFile, localDataPath, localDataFile] = data_file_path(subjectID, sessionID, monkeyOrHuman)
 
 if nargin < 3
 if ismember(lower(subjectID), {'joule', 'broca', 'xena', 'chase', 'hoagie', 'norm', 'andy','shuffles','nebby'})
@@ -31,32 +31,32 @@ switch monkeyOrHuman
             switch lower(subjectID)
                case 'joule'
                   fileName = [sessionID, '.mat'];
-                  tebDataFile = [tebaDataPath, 'Joule/', fileName];
+                  tebaDataFile = [tebaDataPath, 'Joule/', fileName];
                case 'broca'
                   fileName = [sessionID, '.mat'];
-                  tebDataFile = [tebaDataPath, 'Broca/', fileName];
+                  tebaDataFile = [tebaDataPath, 'Broca/', fileName];
                case 'xena'
                   fileName = [sessionID, '.mat'];
-                  tebDataFile = [tebaDataPath, 'Xena/Plexon/', fileName];
+                  tebaDataFile = [tebaDataPath, 'Xena/Plexon/', fileName];
                case 'andy'
                   fileName = [sessionID, '.mat'];
-                  tebDataFile = [tebaDataPath, 'andy/andyfef/PDP', fileName];
+                  tebaDataFile = [tebaDataPath, 'andy/andyfef/PDP', fileName];
                case 'chase'
                   fileName = [sessionID, '.mat'];
-                  tebDataFile = [tebaDataPath, 'chase/chafef/pdp', fileName];
+                  tebaDataFile = [tebaDataPath, 'chase/chafef/pdp', fileName];
                case 'nebby'
                   fileName = [sessionID, '.mat'];
-                  tebDataFile = [];
+                  tebaDataFile = [];
                case 'shuffles'
                   fileName = [sessionID, '.mat'];
-                  tebDataFile = [];
+                  tebaDataFile = [];
                otherwise
                   fprintf('%s is not a valid subject ID, try again?/n', subjectID)
                   return
             end
             
          case 'home'
-            tebDataFile = [];
+            tebaDataFile = [];
             switch lower(subjectID)
                case 'joule'
                   fileName = [sessionID, '.mat'];
@@ -94,10 +94,10 @@ switch monkeyOrHuman
          case 'work'
             
             fileName = [sessionID, '.mat'];
-            tebDataFile = [humanDataPath, fileName];
+            tebaDataFile = [humanDataPath, fileName];
             
          case 'home'
-            tebDataFile = [];
+            tebaDataFile = [];
             fileName = [sessionID, '.mat'];
       end
       

@@ -126,7 +126,7 @@ if isempty(lastSpikeTime)
     if debugMode
     disp('In spike_to_raster.m, apparently there are no spikes in the spike train')
     end
-    alignedRasters = zeros(nTrial, 6000);
+    alignedRasters = int8(zeros(nTrial, 6000));
     alignmentIndex = 3000;
     return
 end
@@ -194,7 +194,7 @@ end
 % If user input a single raster trial or the rasters are already
 % aligned, we're done here. Else, we need to align stuff
 if isempty(alignmentTimeList) || length(alignmentTimeList) == 1
-    alignedRasters = [unAlignedRasters];
+    alignedRasters = unAlignedRasters;
 else
     % Make sure the trial number in the spikeTrainMatrix and the alignmentTime list match:
     if nTrial ~= length(alignmentTimeList)
@@ -255,4 +255,5 @@ if size(alignedRasters, 2) - alignmentIndex < catchLimit
     alignedRasters = [alignedRasters, nan(nTrial, addNaN)];
 end
 
+alignedRasters
 

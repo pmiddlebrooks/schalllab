@@ -1055,3 +1055,134 @@ options.multiUnit = true;
 
 % unitInfo = ccm_neuron_choice('joule', 'jp054n02', options.unitArray, options);
 unitInfo = ccm_ddm_like('joule', 'jp054n02', options.unitArray, options);
+
+
+%%
+td = trialData;
+var = fieldnames(trialData);
+for i = 1 : length(var)
+    if ~strncmp(var{i},'lfp', 3) &&...
+            ~strncmp(var{i},'eye', 3) &&...
+            ~strncmp(var{i},'targ1Check', 10) &&...
+            isa(trialData.(var{i}), 'double')
+        td.(var{i}) = int32(trialData.(var{i}));
+    end
+    if strncmp(var{i}, 'spike', 5)
+        td.(var{i}) = cellfun(@(x) int32(x), td.(var{i}), 'uni', false);
+    end
+end
+
+
+
+%%
+j = 1;
+subject = 'broca';
+d(j).name = 'bp247n02.mat';
+d(j).name = 'bp093n02.mat';
+
+% noChangeList = {'checkerAmp'...
+%     'checkerAngle'...
+%     'checkerSize'...
+%     'checkerWindow'...
+%     'distAmp'...
+%     'distAngle'...
+%     'distSize'...
+%     'distWindow'...
+%     'eegData'...
+%     'eyeX'...
+%     'eyeY'...
+%     'fixAmp'...
+%     'fixAngle'...
+%     'fixSize'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%     'xxxxxx'...
+%
+    
+localDataPath = ['~/Dropbox/local_data/',lower(subject),'/'];
+
+trialData = load(fullfile(localDataPath,d(j).name));
+var = fieldnames(trialData);
+
+for i = 1 : length(var)
+%     if ~strncmp(var{i},'lfp', 3) &&...
+%             ~strncmp(var{i},'eye', 3) &&...
+%             ~strncmp(var{i},'targ1Check', 10) &&...
+%             isa(trialData.(var{i}), 'double')
+%         td.(var{i}) = int32(trialData.(var{i}));
+%     end
+    if strncmp(var{i}, 'spike', 5)
+        var{i}
+        trialData.(var{i}) = cellfun(@(x) int32(x), trialData.(var{i}), 'uni', false);
+    end
+end
+
+% save(fullfile(local_data_path, subject, [d(i).name(1:end-4),'-new'), '-struct', 'trialData','-v7.3')
+
+%%
+tic
+[trialData, SessionData, ExtraVariable] = load_data('broca', 'bp093n02', [ccm_min_vars,'spikeData']);
+toc
+%%
+opt = ccm_options;
+        opt.multiUnit = true;
+        opt.unitArray = {'spikeUnit17'};
+        opt.printPlot = false;
+        opt.plotFlag = false;
+tic
+    data = ccm_session_data('broca', 'bp093n02', opt);
+    clear data
+toc
+tic
+    data = ccm_session_data('broca', 'bp093n02', opt);
+    clear data
+toc
+tic
+    data = ccm_session_data('broca', 'bp093n02', opt);
+    clear data
+toc
+tic
+    data = ccm_session_data('broca', 'bp093n02', opt);
+    clear data
+toc
+tic
+    data = ccm_session_data('broca', 'bp093n02', opt);
+    clear data
+toc
+
+fprintf('\n\n\n\n Now New File:\n\n\n')
+
+tic
+    data = ccm_session_data('broca', 'bp093n02-new', opt);
+    clear data
+toc
+tic
+    data = ccm_session_data('broca', 'bp093n02-new', opt);
+    clear data
+toc
+tic
+    data = ccm_session_data('broca', 'bp093n02-new', opt);
+    clear data
+toc
+tic
+    data = ccm_session_data('broca', 'bp093n02-new', opt);
+    clear data
+toc
+tic
+    data = ccm_session_data('broca', 'bp093n02-new', opt);
+    clear data
+toc
+
+
