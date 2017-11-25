@@ -3,84 +3,145 @@ function transform_spike_lfp_data(subject)
 localDataPath = ['~/Dropbox/local_data/',lower(subject),'/'];
 tebaDataPath = '/Volumes/SchallLab/data/';
 
-switch lower(subjectID)
+switch lower(subject)
     case 'joule'
-        fileName = [sessionID, '.mat'];
+        fileName = [subject, '.mat'];
         tebaDataPath = [tebaDataPath, 'Joule/'];
     case 'broca'
-        fileName = [sessionID, '.mat'];
+        fileName = [subject, '.mat'];
         tebaDataPath = [tebaDataPath, 'Broca/'];
     case 'xena'
-        fileName = [sessionID, '.mat'];
+        fileName = [subject, '.mat'];
         tebaDataPath = [tebaDataPath, 'Xena/Plexon/'];
     otherwise
-        fprintf('%s is not a valid subject ID, try again?/n', subjectID)
+        fprintf('%s is not a valid subject ID, try again?/n', subject)
         return
 end
 
-% d = dir(localDataPath);
-d = dir(tebaDataPath);
+d = dir(localDataPath);
+% d = dir(tebaDataPath);
 
-for i = 1 : size(d, 1)
-    spikeFlag = 0;
-    lfpFlag = 0;
+
+
+
+
+
+% % //////////////////////////////////////////////////////////////////////
+% %   Convert spikeData and lfpData into single variables for each spike and
+% %   lfp channels
+% % //////////////////////////////////////////////////////////////////////
+%
+% for i = 1 : size(d, 1)
+%     spikeFlag = 0;
+%     lfpFlag = 0;
+%     i
+%
+%     if regexp(d(i).name, '.*n0.*.mat')
+%         tic
+%
+%         % Check to see if the file has spike or lfp data in the old format. If it does, splay out
+%         % the data, naming each column by its ID
+%         v = who(matfile(fullfile(localDataPath,d(i).name)), 'spikeData', 'lfpData');
+%
+%         if ~isempty(v)
+%             disp(d(i).name(1:end-4))
+%
+%
+%             trialData = load(fullfile(localDataPath,d(i).name));
+%
+%             % Transform the spike data
+%             if isfield(trialData, 'spikeData')
+%
+%                 spikeFlag = 1;
+%                 for jUnit = 1 : length(trialData.SessionData.spikeUnitArray)
+%                     trialData.(trialData.SessionData.spikeUnitArray{jUnit}) = trialData.spikeData(:,jUnit);
+%                 end
+%                 trialData = rmfield(trialData, 'spikeData');
+%                 clear spikeData
+%             end
+%
+%
+%             % Transform the lfp data
+%             if isfield(trialData, 'lfpData')
+%
+%                 lfpFlag = 1;
+%
+%                 for jUnit = 1 : length(trialData.SessionData.lfpChannel)
+%                     unitName = sprintf('lfp%s', num2str(trialData.SessionData.lfpChannel(jUnit), '%02i')); %figure out the channel name
+%                     trialData.(unitName) = trialData.lfpData(:,jUnit);
+%                 end
+%                 trialData = rmfield(trialData, 'lfpData');
+%                 clear lfpData
+%             end
+%
+%             if spikeFlag || lfpFlag
+%                 %                 save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
+%                 % Save to teba also
+%                 save(fullfile(tebaDataPath, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
+%             end
+%             clear trialData
+%         end
+%
+%         toc
+%     end
+% end
+
+
+
+
+
+
+
+% //////////////////////////////////////////////////////////////////////
+%   Create separate files with the lfp data to save memory/load times in
+%   python for later when analyzing spiking data
+% //////////////////////////////////////////////////////////////////////
+
+for i = 89 : size(d, 1)
     i
     
     if regexp(d(i).name, '.*n0.*.mat')
         tic
         
-        % Check to see if the file has spike or lfp data in the old format. If it does, splay out
-        % the data, naming each column by its ID
-        v = who(matfile(fullfile(localDataPath,d(i).name)), 'spikeData', 'lfpData');
+        % Check to see if the file has lfp data. If it does, save an extra
+        % file with only the lfp data, and save the old file without the
+        % lfp data.
+        var = who(matfile(fullfile(localDataPath,d(i).name)));
+        lfpInd = strncmp(var, 'lfp', 3);
         
-        if ~isempty(v)
+        % if the file has lfp data
+        if sum(lfpInd)
             disp(d(i).name(1:end-4))
             
+            trialData = load(fullfile(local_data_path, subject ,d(i).name));
             
-            trialData = load(fullfile(localDataPath,d(i).name));
-            
-            % Transform the spike data
-            if isfield(trialData, 'spikeData')
-                
-                spikeFlag = 1;
-                for jUnit = 1 : length(trialData.SessionData.spikeUnitArray)
-                    trialData.(trialData.SessionData.spikeUnitArray{jUnit}) = trialData.spikeData(:,jUnit);
-                end
-                trialData = rmfield(trialData, 'spikeData');
-                clear spikeData
+            lfpData = struct();
+            for j = find(lfpInd)
+                lfpData.(var{lfpInd}) = trialData.(var{lfpInd});
+                trialData = rmfield(trialData, var{lfpInd});
             end
-            
-            
-            % Transform the lfp data
-            if isfield(trialData, 'lfpData')
-                
-                lfpFlag = 1;
-                
-                for jUnit = 1 : length(trialData.SessionData.lfpChannel)
-                    unitName = sprintf('lfp%s', num2str(trialData.SessionData.lfpChannel(jUnit), '%02i')); %figure out the channel name
-                    trialData.(unitName) = trialData.lfpData(:,jUnit);
-                end
-                trialData = rmfield(trialData, 'lfpData');
-                clear lfpData
-            end
-            
-            if spikeFlag || lfpFlag
-                %                 save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
-                % Save to teba also
-                save(fullfile(tebaDataPath, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
-            end
-            clear trialData
+        save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
+        save(fullfile(local_data_path, subject, [d(i).name(1:end-4),'_lfp']), '-struct', 'lfpData','-v7.3')
+        % Save to teba also
+        save(fullfile(tebaDataPath, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
+        save(fullfile(tebaDataPath, [d(i).name(1:end-4),'_lfp']), '-struct', 'lfpData','-v7.3')
+        clear trialData lfpData
         end
-        
+
         toc
+
     end
+    
+end
 end
 
 
 
 
+% //////////////////////////////////////////////////////////////////////
+%   Transform tables to variables in save files
+% //////////////////////////////////////////////////////////////////////
 
-% %%  Transform tables to variables in save files
 % subject = 'joule'
 % % dataDir = '/Volumes/SchallLab/data/Joule';
 % tebaDataDir = ['/Volumes/SchallLab/data/', subject];

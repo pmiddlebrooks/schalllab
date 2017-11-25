@@ -57,8 +57,8 @@ nError = 0;
 switch Opt.whichData
     case {'all','lfp','eeg','spike'}
         if isempty(Opt.hemisphere)
-        prompt = 'Which hemisphere was recorded (right, left, both, none)? ';
-        hemisphere = input(prompt, 's');
+            prompt = 'Which hemisphere was recorded (right, left, both, none)? ';
+            hemisphere = input(prompt, 's');
         end
         if strcmp(hemisphere, 'none')
             LFP_CHANNELS = [];
@@ -110,6 +110,8 @@ tebaDataPath = ['/Volumes/SchallLab/data/',monkeyDataPath];
 
 % Create a dataset for trial informatio
 trialData       = struct();
+lfpData         = struct();
+eegData         = struct();
 
 % Create a struct for session information
 SessionData     = struct();
@@ -128,6 +130,11 @@ plx             = readPLXFileC(tebaFile, 'all');
 
 
 
+
+
+
+
+
 %__________________________________________________________________________
 %                     CREATE SESSION DATA STRUCT
 %__________________________________________________________________________
@@ -136,6 +143,12 @@ plx             = readPLXFileC(tebaFile, 'all');
 SessionData.comment  	= plx.Comment;
 SessionData.date        = datestr(plx.Date);
 SessionData.duration  	= duration / 1000;
+
+
+
+
+
+
 
 
 %__________________________________________________________________________
@@ -347,6 +360,8 @@ infos_zero		= 3000;
 
 
 
+
+
 %--------------------------------------------------------------------------
 % get all of the raw values out of the .plx file
 % -----------------------------------------------------------------
@@ -358,9 +373,6 @@ timeStamps  = double(plx.EventChannels(STROBE_CHANNEL_INDEX).Timestamps) ./ (plx
 
 allStarts   = find(eventCodes == eTrialstart);
 allEnds     = find(eventCodes == eTrialEnd);
-
-
-
 
 
 
@@ -401,8 +413,11 @@ SessionData.taskID      = taskID;
 
 
 
+
+
 %--------------------------------------------------------------------------
 % get the time stamped events
+%--------------------------------------------------------------------------
 fprintf('Sorting time stamps...\n')
 trialStart      = round(timeStamps(eventCodes == eTrialstart));
 firstTrialStart = trialStart(1);
@@ -495,7 +510,7 @@ fprintf('...done in %.1f!\n\n', toc)
 
 
 %--------------------------------------------------------------------------
-% get mouth events
+% get mouth events  (archived from david godlove's licking catcher)
 % this has to be done seperately b/c there can be any number of mouth
 % movement events per trial
 
@@ -787,7 +802,7 @@ timeStamps = round(double(plx.EventChannels(2).Timestamps) ./ (plx.ADFrequency /
 photodiode = zeros(nTrial, N_PHOTODIODE_POSSIBLE);
 % photodiode(1:nTrial,1 : N_PHOTODIODE_POSSIBLE) = 0; %can have up to 6 pd events per trial
 
-for iTrial = 1:nTrial;
+for iTrial = 1:nTrial
     
     iStart = trialStart(iTrial);
     iEnd   = iStart + trialEnd(iTrial);
@@ -1210,8 +1225,18 @@ taskID = SessionData.taskID;
 
 
 
+
+
+
 switch Opt.whichData
     case {'all','spike'}
+        
+        
+        
+        
+        
+        
+        
         
         %__________________________________________________________________________
         %                   GET SPIKE TIME DATA.
@@ -1370,16 +1395,23 @@ for iChannel = 1:nADChannel
         iEEG = iEEG + 1;
     elseif ismember(iChannel, LFP_CHANNELS)
         unitName = sprintf('lfp%s', num2str(iChannel, '%02i')); %figure out the channel name
-        trialData.(unitName) = iData;
+        lfpData.(unitName) = iData;
         SessionData.lfpChannel = [SessionData.lfpChannel; iChannel];
         iLFP = iLFP + 1;
     end
 end
 clear adValues iData %conserve memory
 
+%__________________________________________________________________________
+%                   SAVE SEPARATE LFP DATA
+%__________________________________________________________________________
 
+saveFileName = [tebaDataPath, sessionID,'_lfp'];
+save(saveFileName, '-struct', 'lfpData','-v7.3')
+%
+save(fullfile(local_data_path, monkey, [sessionID,'_lfp']), '-struct', 'lfpData','-v7.3')
 
-
+clear lfpData
 
 
 
@@ -1410,7 +1442,7 @@ end
 %__________________________________________________________________________
 if strncmp(sessionID, 'jp125', 5)
     for i = 22 : 89
-                unitName = sprintf('spikeUnit%s%s', num2str(iChannel, '%02i'), i); %figure out the channel name
+        unitName = sprintf('spikeUnit%s%s', num2str(iChannel, '%02i'), i); %figure out the channel name
         
         iShifted = cellfun(@(x) x + 85, trialData.(unitName), 'uni', false);
         trialData.(unitName) = iShifted;
@@ -1423,10 +1455,10 @@ end
 %__________________________________________________________________________
 trialData.SessionData = SessionData;
 
-    saveFileName = [tebaDataPath, sessionID];
-    save(saveFileName, '-struct', 'trialData','-v7.3')
-% 
-            save(fullfile(local_data_path, monkey, sessionID), '-struct', 'trialData','-v7.3')
+saveFileName = [tebaDataPath, sessionID];
+save(saveFileName, '-struct', 'trialData','-v7.3')
+%
+save(fullfile(local_data_path, monkey, sessionID), '-struct', 'trialData','-v7.3')
 
 toc
 

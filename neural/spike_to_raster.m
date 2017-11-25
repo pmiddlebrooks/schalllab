@@ -255,5 +255,4 @@ if size(alignedRasters, 2) - alignmentIndex < catchLimit
     alignedRasters = [alignedRasters, nan(nTrial, addNaN)];
 end
 
-alignedRasters
 
