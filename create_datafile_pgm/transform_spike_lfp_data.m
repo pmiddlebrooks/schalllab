@@ -18,8 +18,8 @@ switch lower(subject)
         return
 end
 
-d = dir(localDataPath);
-% d = dir(tebaDataPath);
+% d = dir(localDataPath);
+d = dir(tebaDataPath);
 
 
 
@@ -41,13 +41,13 @@ d = dir(localDataPath);
 %
 %         % Check to see if the file has spike or lfp data in the old format. If it does, splay out
 %         % the data, naming each column by its ID
-%         v = who(matfile(fullfile(localDataPath,d(i).name)), 'spikeData', 'lfpData');
+%         v = who(matfile(fullfile(tebaDataPath,d(i).name)), 'spikeData', 'lfpData');
 %
 %         if ~isempty(v)
 %             disp(d(i).name(1:end-4))
 %
 %
-%             trialData = load(fullfile(localDataPath,d(i).name));
+%             trialData = load(fullfile(tebaDataPath,d(i).name));
 %
 %             % Transform the spike data
 %             if isfield(trialData, 'spikeData')
@@ -96,43 +96,48 @@ d = dir(localDataPath);
 %   Create separate files with the lfp data to save memory/load times in
 %   python for later when analyzing spiking data
 % //////////////////////////////////////////////////////////////////////
-
-for i = 89 : size(d, 1)
+for i = 1 : size(d, 1)
     i
     
-    if regexp(d(i).name, '.*n0.*.mat')
+    if ~isempty(regexp(d(i).name, '.*n0.*.mat')) && isempty(regexp(d(i).name, '.*lfp.*.mat')) && isempty(regexp(d(i).name, '.*legacy.*.mat')) && ~strncmp(d(i).name, '._', 2)
         tic
         
         % Check to see if the file has lfp data. If it does, save an extra
         % file with only the lfp data, and save the old file without the
         % lfp data.
-        var = who(matfile(fullfile(localDataPath,d(i).name)));
-        lfpInd = strncmp(var, 'lfp', 3);
+        %         var = who(matfile(fullfile(localDataPath,d(i).name)));
+        var = who(matfile(fullfile(tebaDataPath,d(i).name)));
+        lfpInd = find(strncmp(var, 'lfp', 3));
         
         % if the file has lfp data
-        if sum(lfpInd)
+        if ~isempty(lfpInd)
             disp(d(i).name(1:end-4))
             
-            trialData = load(fullfile(local_data_path, subject ,d(i).name));
+            %             trialData = load(fullfile(local_data_path, subject ,d(i).name));
+            trialData = load(fullfile(tebaDataPath ,d(i).name));
             
             lfpData = struct();
-            for j = find(lfpInd)
-                lfpData.(var{lfpInd}) = trialData.(var{lfpInd});
-                trialData = rmfield(trialData, var{lfpInd});
+            for j = 1: length(lfpInd)
+                jInd = lfpInd(j);
+                lfpData.(var{jInd}) = trialData.(var{jInd});
+                trialData = rmfield(trialData, var{jInd});
             end
-        save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
-        save(fullfile(local_data_path, subject, [d(i).name(1:end-4),'_lfp']), '-struct', 'lfpData','-v7.3')
-        % Save to teba also
-        save(fullfile(tebaDataPath, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
-        save(fullfile(tebaDataPath, [d(i).name(1:end-4),'_lfp']), '-struct', 'lfpData','-v7.3')
-        clear trialData lfpData
+            %         save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
+            %         save(fullfile(local_data_path, subject, [d(i).name(1:end-4),'_lfp']), '-struct', 'lfpData','-v7.3')
+            save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData')
+            save(fullfile(local_data_path, subject, [d(i).name(1:end-4),'_lfp']), '-struct', 'lfpData')
+            % Save to teba also
+            %         save(fullfile(tebaDataPath, d(i).name(1:end-4)), '-struct', 'trialData','-v7.3')
+            %         save(fullfile(tebaDataPath, [d(i).name(1:end-4),'_lfp']), '-struct', 'lfpData','-v7.3')
+            save(fullfile(tebaDataPath, d(i).name(1:end-4)), '-struct', 'trialData')
+            save(fullfile(tebaDataPath, [d(i).name(1:end-4),'_lfp']), '-struct', 'lfpData')
+            clear trialData lfpData
         end
-
+        
         toc
-
+        
     end
     
-end
 end
 
 

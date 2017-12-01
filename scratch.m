@@ -1185,4 +1185,54 @@ tic
     clear data
 toc
 
+%%
+subject = 'joule';
+tebaDataPath = '/Volumes/SchallLab/data/';
+
+            trialData = load(fullfile(tebaDataPath,subject,'jp083n02'));
+
+[trialData, SessionData, ExtraVariable] = load_data('broca', 'bp093n02', [ccm_min_vars,'spikeData']);
+
+%%
+subject = 'xena'
+localDataPath = ['~/Dropbox/local_data/',lower(subject),'/'];
+tebaDataPath = '/Volumes/SchallLab/data/';
+
+switch lower(subject)
+    case 'joule'
+        fileName = [subject, '.mat'];
+        tebaDataPath = [tebaDataPath, 'Joule/'];
+    case 'broca'
+        fileName = [subject, '.mat'];
+        tebaDataPath = [tebaDataPath, 'Broca/'];
+    case 'xena'
+        fileName = [subject, '.mat'];
+        tebaDataPath = [tebaDataPath, 'Xena/Plexon/'];
+    otherwise
+        fprintf('%s is not a valid subject ID, try again?/n', subject)
+        return
+end
+
+% d = dir(localDataPath);
+d = dir(tebaDataPath);
+
+
+for i = 1 : size(d, 1)
+    i
+    
+    if ~isempty(regexp(d(i).name, '.*n0.*.mat')) && ~strncmp(d(i).name, '._', 2) && isempty(regexp(d(i).name, '.*legacy.*.mat'))
+        tic
+        disp(d(i).name)
+            trialData = load(fullfile(tebaDataPath ,d(i).name));
+            
+            save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData')
+            % Save to teba also
+            save(fullfile(tebaDataPath, d(i).name(1:end-4)), '-struct', 'trialData')
+            clear trialData
+        
+        toc
+        
+    end
+    
+end
 
