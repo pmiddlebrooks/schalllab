@@ -539,11 +539,19 @@ if options.plotFlag
     end
 end
 
+% Print out plotted values
+ssrtPrint = [ssrtPlotAvg; ssrtPlotStd; ssrtPlotSem];
+
 
 data.ssrtIntWeight = ssrtIntWeight;
 data.ssrtGrandIntWeight = ssrtGrandIntWeight;
 data.rtGo = rtGo;
 data.nStopMean = nStopMean;
+
+
+
+% Print out plotted values
+% fprintf('\nSSRT:   Targ: %.0f (%.0f) (%.0f)', goRightProbMean, goRightProbStd, goRightProbSem);
 
 
 

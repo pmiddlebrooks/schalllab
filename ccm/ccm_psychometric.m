@@ -79,6 +79,7 @@ figureHandle    = options.figureHandle;
 %%
 % Load the data
 [trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, ccm_min_vars);
+% [trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID);
 ssdArray = ExtraVar.ssdArray;
 pSignalArray = unique(trialData.targ1CheckerProp);
 if options.USE_TWO_COLORS
@@ -187,7 +188,7 @@ for kTarg = 1 : nTargPair
     % Get default trial selection options
     optSelect       = ccm_trial_selection;
     
-    for iPropIndex = 1 : nSignal;
+    for iPropIndex = 1 : nSignal
         iPct = pSignalArray(iPropIndex) * 100;
         optSelect.rightCheckerPct = iPct;
         
@@ -220,7 +221,7 @@ for kTarg = 1 : nTargPair
         % Get correct go probabilities rightward
         optSelect.ssd       = 'none';
         
-        % All go Correct trials
+        % All completed go trials
         optSelect.targDir     = [kTargAngle, kDistAngle];
         optSelect.responseDir  = 'collapse';
         optSelect.outcome     = {'goCorrectTarget', 'targetHoldAbort'};
@@ -231,7 +232,7 @@ for kTarg = 1 : nTargPair
         goRightLogical(goTrial) = 0;
         nGo(iPropIndex)       = length(goTrial);
         
-        % Rightward go correct trials
+        % Rightward go trials
         optSelect.responseDir  = 'right';
         optSelect.outcome     = {'goCorrectTarget', 'targetHoldAbort'};
         goRightTarget         = ccm_trial_selection(trialData, optSelect);

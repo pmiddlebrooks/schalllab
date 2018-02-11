@@ -195,41 +195,52 @@ goLeftTargStd = nanstd(goLeftToTarg, 1);
 goLeftTargSem = nanstd(goLeftToTarg, 1)/sqrt(size(goLeftToTarg, 1));
 goRightDistMean = nanmean(goRightToDist, 1);
 goRightDistStd = nanstd(goRightToDist, 1);
+goRightDistSem = nanstd(goRightToDist, 1)/sqrt(size(goRightToDist, 1));
 
 goRightTargMean = nanmean(goRightToTarg, 1);
 goRightTargStd = nanstd(goRightToTarg, 1);
 goRightTargSem = nanstd(goRightToTarg, 1)/sqrt(size(goRightToTarg, 1));
 goLeftDistMean = nanmean(goLeftToDist, 1);
 goLeftDistStd = nanstd(goLeftToDist, 1);
+goLeftDistSem = nanstd(goLeftToDist, 1)/sqrt(size(goLeftToDist, 1));
 
 stopLeftTargMean = nanmean(stopLeftToTarg, 1);
 stopLeftTargStd = nanstd(stopLeftToTarg, 1);
 stopLeftTargSem = nanstd(stopLeftToTarg, 1)/sqrt(size(stopLeftToTarg, 1));
 stopRightDistMean = nanmean(stopRightToDist, 1);
 stopRightDistStd = nanstd(stopRightToDist, 1);
+stopRightDistSem = nanstd(stopRightToDist, 1)/sqrt(size(stopRightToDist, 1));
 
 stopRightTargMean = nanmean(stopRightToTarg, 1);
 stopRightTargStd = nanstd(stopRightToTarg, 1);
 stopRightTargSem = nanstd(stopRightToTarg, 1)/sqrt(size(stopRightToTarg, 1));
 stopLeftDistMean = nanmean(stopLeftToDist, 1);
 stopLeftDistStd = nanstd(stopLeftToDist, 1);
-
-
-
-goTargMean = nanmean([goLeftToTarg(:); goRightToTarg(:)]);
-goDistMean = nanmean([goLeftToDist(:); goRightToDist(:)]);
-stopTargMean = nanmean([stopLeftToTarg(:); stopRightToTarg(:)]);
-stopDistMean = nanmean([stopLeftToDist(:); stopRightToDist(:)]);
-goTargSD = nanstd([goLeftToTarg(:); goRightToTarg(:)]);
-goDistSD = nanstd([goLeftToDist(:); goRightToDist(:)]);
-stopTargSD = nanstd([stopLeftToTarg(:); stopRightToTarg(:)]);
-stopDistSD = nanstd([stopLeftToDist(:); stopRightToDist(:)]);
-fprintf('\nGo:   Targ: %.0f (%.0f) \tDist: %.0f (%.0f)', goTargMean, goTargSD, goDistMean, goDistSD);
-fprintf('\nStop: Targ: %.0f (%.0f) \tDist: %.0f (%.0f)', stopTargMean, stopTargSD, stopDistMean, stopDistSD);
+stopLeftDistSem = nanstd(stopLeftToDist, 1)/sqrt(size(stopLeftToDist, 1));
 
 
 
 
+
+goTargMean = [goLeftTargMean, goRightTargMean];
+goTargStd = [goLeftTargStd, goRightTargStd];
+goTargSem = [goLeftTargSem, goRightTargSem];
+goTargPrint = [goTargMean; goTargStd; goTargSem];
+
+goDistMean = [goRightDistMean, goLeftDistMean];
+goDistStd = [goRightDistStd, goLeftDistStd];
+goDistSem = [goRightDistSem, goLeftDistSem];
+goDistPrint = [goDistMean; goDistStd; goDistSem];
+
+stopTargMean = [stopLeftTargMean, stopRightTargMean];
+stopTargStd = [stopLeftTargStd, stopRightTargStd];
+stopTargSem = [stopLeftTargSem, stopRightTargSem];
+stopTargPrint = [stopTargMean; stopTargStd; stopTargSem];
+
+stopDistMean = [stopRightDistMean, stopLeftDistMean];
+stopDistStd = [stopRightDistStd, stopLeftDistStd];
+stopDistSem = [stopRightDistSem, stopLeftDistSem];
+stopDistPrint = [stopDistMean; stopDistStd; stopDistSem];
 
 
 
@@ -474,4 +485,10 @@ datas = [rtData, groupInh, groupTarg, groupSig, sessionNumber];
 if options.printPlot
     print(figureHandle,fullfile(local_figure_path, subjectID,['ccm_population_chronometric_',options.saveName]),'-dpdf', '-r300')
 end
+
+
+
+
+% fprintf('\nGo:   Targ: %.0f (%.0f) (%.0f) \tDist: %.0f (%.0f) (%.0f)', goTargMean, goTargSD, goTargSEM, goDistMean, goDistSD, goDistSEM);
+% fprintf('\nStop: Targ: %.0f (%.0f) (%.0f) \tDist: %.0f (%.0f) (%.0f)', stopTargMean, stopTargSD, stopTargSEM, stopDistMean, stopDistSD, stopDistSEM);
 

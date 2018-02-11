@@ -1473,32 +1473,32 @@ end
 
 %% Population behavioral measures Xena behavior modeled sessions
 opt = ccm_options;
-opt.plotFlag = false;
+opt.plotFlag = true;
 opt.printPlot = false;
 opt.saveName = 'behavior1';
 subject = 'xena';
 
 sessionSet = 'behavior1';
 % ccm_chronometric_population(subject, sessionSet, opt);
-ccm_psychometric_population(subject, sessionSet, opt);
+% ccm_psychometric_population(subject, sessionSet, opt);
 % ccm_rt_distribution_population(subject, sessionSet, opt);
-% data = ccm_inhibition_population(subject, sessionSet, opt);
+data = ccm_inhibition_population(subject, sessionSet, opt);
 
 %% Population behavioral measures: Broca behavior modeled sessions
 opt = ccm_options;
-opt.plotFlag = false;
+opt.plotFlag = true;
 opt.printPlot = false;
 subject = 'broca';
 
 sessionSet = 'behavior2';
+% ccm_psychometric_population(subject, sessionSet, opt);
 % ccm_chronometric_population(subject, sessionSet, opt);
-ccm_psychometric_population(subject, sessionSet, opt);
 % ccm_rt_distribution_population(subject, sessionSet, opt);
-% data = ccm_inhibition_population(subject, sessionSet, opt);
+data = ccm_inhibition_population(subject, sessionSet, opt);
 
 %% Population behavioral measures:  Broca neural modeled sessions
 opt = ccm_options;
-opt.plotFlag = false;
+opt.plotFlag = true;
 opt.printPlot = false;
 opt.saveName = 'neural_model';
 subject = 'broca';
@@ -1508,15 +1508,15 @@ sessionSet = {...
     'bp245n02';...
     'bp246n02';...
     'bp247n02'};
-% ccm_chronometric_population(subject, sessionSet, opt);
 ccm_psychometric_population(subject, sessionSet, opt);
+ccm_chronometric_population(subject, sessionSet, opt);
 % ccm_rt_distribution_population(subject, sessionSet, opt);
-% data = ccm_inhibition_population(subject, sessionSet, opt);
+data = ccm_inhibition_population(subject, sessionSet, opt);
 
 
 %% Population behavioral measures: Joule neural modeled sessions
 opt = ccm_options;
-opt.plotFlag = false;
+opt.plotFlag = true;
 opt.printPlot = false;
 opt.saveName = 'neural_model';
 subject = 'joule';
@@ -1527,10 +1527,10 @@ sessionSet = {...
     'jp121n02';...
     'jp124n04';...
     'jp125n04'};
-% ccm_chronometric_population(subject, sessionSet, opt);
 ccm_psychometric_population(subject, sessionSet, opt);
+ccm_chronometric_population(subject, sessionSet, opt);
 % ccm_rt_distribution_population(subject, sessionSet, opt);
-% data = ccm_inhibition_population(subject, sessionSet, opt);
+data = ccm_inhibition_population(subject, sessionSet, opt);
 
 
 %% Population behavioral measures: Broca all neural sessions
@@ -1615,3 +1615,6 @@ sessionSet = unique(neuronTypes.sessionID);
 % ccm_rt_distribution_population(subject, sessionSet, opt);
 % data = ccm_inhibition_population(subject, sessionSet, opt);
 
+%%
+
+[sessionArray, subjectIDArray] = task_session_array(subjectID, task, sessionSet)
