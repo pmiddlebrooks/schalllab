@@ -203,6 +203,7 @@ goRightProbStd = std(goRightProb, 1);
 goRightProbSem = std(goRightProb, 1)/sqrt(size(goRightProb, 1));
 
 [fitParameters, lowestSSE] = psychometric_weibull_fit(pSignalArrayFit(:), goRightProb(:));
+[fitParametersW, lowestSSEW] = Weibull(pSignalArrayFit(:), goRightProb(:));
 % [fitParameters, lowestSSE] = Weibull(pSignalArray*100, goRightProbMean);
 propPoints = pSignalArray(1) : .001 : pSignalArray(end);
 goPsychometricFn = weibull_curve(fitParameters, propPoints);

@@ -59,7 +59,7 @@ MIN_TO_0_FLAG = 0;
 % beta  = 1;   %beta : slope
 alpha = .5; %alpha: time at which inhition function reaches 67% probability
 beta  = 6;   %beta : slope
-gamma = 1;   %maximum probability value
+gamma = .9;   %maximum probability value
 delta = 0.2;   %minimum probability value
 
 param=[alpha beta gamma delta]; %must be in this format for ge.m

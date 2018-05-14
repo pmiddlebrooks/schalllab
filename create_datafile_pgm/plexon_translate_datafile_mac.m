@@ -1455,8 +1455,8 @@ end
 %__________________________________________________________________________
 trialData.SessionData = SessionData;
 
-saveFileName = [tebaDataPath, sessionID];
-save(saveFileName, '-struct', 'trialData','-v7.3')
+% saveFileName = [tebaDataPath, sessionID];
+% save(saveFileName, '-struct', 'trialData','-v7.3')
 %
 save(fullfile(local_data_path, monkey, sessionID), '-struct', 'trialData','-v7.3')
 

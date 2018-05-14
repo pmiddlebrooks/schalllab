@@ -29,6 +29,7 @@ optInh.include50    = 0;
 optInh.collapseTarg    = true;
 optInh.USE_TWO_COLORS = false;
 
+BIN_SSD = true;
 
 
 figureHandle = 4900;
@@ -38,19 +39,22 @@ switch lower(subjectID)
     case 'joule'
         [td, S, E] =load_data(subjectID, sessionArray{1},ccm_min_vars);
         pSignalArray = E.pSignalArray;
+        nSsdBin = 6;
     case 'human'
         pSignalArray = [.35 .42 .46 .5 .54 .58 .65];
     case 'broca'
         if iscell(sessionSet)
         [td, S, E] =load_data(subjectID, sessionArray{1}, ccm_min_vars);
         pSignalArray = E.pSignalArray;
+        nSsdBin = 6;  % This assumes the sessionArray is the neural data modeled (need to change otherwise)
         else
               switch sessionSet
                  case 'behavior'
                     pSignalArray = [.41 .45 .48 .5 .52 .55 .59];
                  case 'behavior2'
                     pSignalArray = [.43 .45 .47 .53 .55 .57];
-                 case 'neural1'
+         nSsdBin = 5;
+                case 'neural1'
                     pSignalArray = [.41 .44 .47 .53 .56 .59];
                  case 'neural2'
                     pSignalArray = [.42 .44 .46 .54 .56 .58];
@@ -64,6 +68,7 @@ switch lower(subjectID)
         end
     case 'xena'
         pSignalArray = [.35 .42 .47 .5 .53 .58 .65];
+        nSsdBin = 8;
 end
 
 if optInh.USE_TWO_COLORS
@@ -159,7 +164,8 @@ dataStopRespondRT = [];
 dataStopRespondRTPredict = [];
 
 % Mean number of canceled stop trials in each session
-nStopMean = nan(nSession, 1);
+nStopMean = nan(nSession, 1); % Mean number of trials for conditions with over 10
+nStopMeanAll = nan(nSession, 1); % Mean number of trials across all conditions
 for iSession = 1 : nSession
     
     disp(sessionArray{iSession})
@@ -169,6 +175,7 @@ for iSession = 1 : nSession
     % Mean number of stop trials in each session for the case when canceled stop trials number at least 10
     iOver10Trial = iData.nStopStop >= 10;
     nStopMean(iSession) = mean(iData.nStop(iOver10Trial));
+    nStopMeanAll(iSession) = mean(iData.nStop(:));
     
     
     % GRAND INHIBITION FN ***********************
@@ -213,6 +220,7 @@ for iSession = 1 : nSession
     clear iData
     
 end
+
 % Need to do a little SSD value adjusting, due to ms difference and 1-frame
 % differences in SSD values
 ssdArray = unique(dataSSD(~isnan(dataSSD)));
@@ -234,6 +242,16 @@ inhPop = weibull_curve(fitParameters, timePoints);
 
 
 
+% PROCESS SSD VALUES TO CREATE PRETTY GRAND INHIBITION PLOT
+if BIN_SSD
+    [N,edges,bin] = histcounts(ssdArrayGrand, nSsdBin);
+    ssdArrayGrandMean = nan(length(N), 1);
+    stopRespondGrandMean = nan(length(N), 1);
+    for jBin = 1 : length(N)
+        ssdArrayGrandMean(jBin) = mean(ssdArrayGrand(bin == jBin));
+        stopRespondGrandMean(jBin) = nanmean(stopRespondGrand(bin == jBin));
+    end
+end
 
 
 % SIGNAL STRENGTH INHIBITION FNS  ********************************
@@ -266,13 +284,13 @@ ssrtSEM = std(ssrtIntWeight, 1) / sqrt(nSession);
 ssrtMeanAvg = mean(ssrtMean, 1);
 ssrtIntegrationAvg = mean(ssrtInt, 1);
 ssrtIntegrationStd = std(ssrtInt, 1);
-ssrtIntegrationSem = ssrtIntegrationStd ./ nSession;
+ssrtIntegrationSem = ssrtIntegrationStd ./ sqrt(nSession);
 
 % ssrtPlot = ssrtIntWeight;
 ssrtPlot = ssrtIntWeight;
 ssrtPlotAvg = mean(ssrtPlot, 1);
 ssrtPlotStd = std(ssrtPlot, 1);
-ssrtPlotSem = ssrtPlotStd ./ nSession;
+ssrtPlotSem = ssrtPlotStd ./ sqrt(nSession);
 
 
 % OBSERVED VS. PREDICTED NON-CANCELED RTS  ********************************
@@ -388,10 +406,15 @@ if options.plotFlag
     
     
     % GRAND INHIBITION FN ***********************
+if BIN_SSD
+    plot(ax(axInh), ssdArrayGrandMean, stopRespondGrandMean, 'ok', 'markeredgecolor', 'k', 'markerfacecolor', 'k', 'markersize', 6)
+    errorbar(ax(axInh), ssdArrayGrandMean ,stopRespondGrandMean, std(stopRespondGrandMean)./sqrt(N), '.' , 'linestyle' , 'none', 'color', 'k', 'linewidth' , 3)
+else
     plot(ax(axInh), ssdArrayGrand, stopRespondGrand, 'ok', 'markeredgecolor', 'k', 'markerfacecolor', 'k', 'markersize', 6)
+end
     % plot(ax(inhAx), inhGrandMean, 'k', 'linewidth', 2)
     plot(ax(axInh), timePoints, inhPop, 'k', 'linewidth', 2)
-    ylim([0 1])
+            set(ax(axInh), 'Ylim', [0 1])
     switch subjectID
         case 'Human'
             set(ax(axInh), 'Xlim', [0 max(ssdArrayGrand)])
@@ -407,9 +430,9 @@ if options.plotFlag
     
     % SSRT  ********************************
     %    plot(ax(axSSRT), pSignalArray, mean(ssrtInt, 1), '-ok', 'markeredgecolor', 'k', 'markerfacecolor', 'k', 'markersize', 10)
-    errorbar(ax(axSSRT), pSignalArray ,ssrtPlotAvg, ssrtPlotStd, '.' , 'linestyle' , 'none', 'color', 'k', 'linewidth' , 3)
+%     errorbar(ax(axSSRT), pSignalArray ,ssrtPlotAvg, ssrtPlotStd, '.' , 'linestyle' , 'none', 'color', 'k', 'linewidth' , 3)
     plot(ax(axSSRT), pSignalArray, mean(ssrtPlot, 1), 'ok', 'markeredgecolor', 'k', 'markerfacecolor', 'k', 'markersize', 10)
-    errorbar(ax(axSSRT), pSignalArray ,ssrtPlotAvg, ssrtPlotSem, '.' , 'linestyle' , 'none', 'color', 'g', 'linewidth' , 2)
+    errorbar(ax(axSSRT), pSignalArray ,ssrtPlotAvg, ssrtPlotSem, '.' , 'linestyle' , 'none', 'color', 'k', 'linewidth' , 3)
     %    plot(ax(axSSRT), pSignalArray, mean(ssrtMean, 1), '-og', 'markeredgecolor', 'g', 'markerfacecolor', 'g', 'markersize', 10)
 %      plot(ax(axSSRT), pSignalArray, mean(ssrtInt, 1), '-ob', 'markeredgecolor', 'r', 'markerfacecolor', 'r', 'markersize', 10)
    
@@ -544,11 +567,15 @@ ssrtPrint = [ssrtPlotAvg; ssrtPlotStd; ssrtPlotSem];
 
 
 data.ssrtIntWeight = ssrtIntWeight;
+data.ssrtInt = ssrtInt;
+data.ssrtIntSimple = ssrtIntSimple;
+data.ssrtMean = ssrtMean;
 data.ssrtGrandIntWeight = ssrtGrandIntWeight;
 data.rtGo = rtGo;
+data.nStopMeanAll = nStopMeanAll;
 data.nStopMean = nStopMean;
-
-
+data.pSignalArray = pSignalArray;
+    
 
 % Print out plotted values
 % fprintf('\nSSRT:   Targ: %.0f (%.0f) (%.0f)', goRightProbMean, goRightProbStd, goRightProbSem);

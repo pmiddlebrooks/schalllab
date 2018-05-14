@@ -1474,32 +1474,39 @@ end
 %% Population behavioral measures Xena behavior modeled sessions
 opt = ccm_options;
 opt.plotFlag = true;
-opt.printPlot = false;
+opt.printPlot = true;
 opt.saveName = 'behavior1';
 subject = 'xena';
 
 sessionSet = 'behavior1';
+
+ccm_psychometric_population(subject, sessionSet, opt);
 % ccm_chronometric_population(subject, sessionSet, opt);
-% ccm_psychometric_population(subject, sessionSet, opt);
 % ccm_rt_distribution_population(subject, sessionSet, opt);
-data = ccm_inhibition_population(subject, sessionSet, opt);
+
+% data = ccm_inhibition_population(subject, sessionSet, opt);
+% csvwrite(fullfile(local_data_path, subject, [subject,'_behavior1_SSRT_sessionXcoherence.csv']), data.ssrtIntWeight)
 
 %% Population behavioral measures: Broca behavior modeled sessions
 opt = ccm_options;
 opt.plotFlag = true;
-opt.printPlot = false;
+opt.printPlot = true;
+opt.saveName = 'behavior2';
 subject = 'broca';
 
 sessionSet = 'behavior2';
-% ccm_psychometric_population(subject, sessionSet, opt);
+
+ccm_psychometric_population(subject, sessionSet, opt);
 % ccm_chronometric_population(subject, sessionSet, opt);
 % ccm_rt_distribution_population(subject, sessionSet, opt);
-data = ccm_inhibition_population(subject, sessionSet, opt);
+
+% data = ccm_inhibition_population(subject, sessionSet, opt);
+% csvwrite(fullfile(local_data_path, subject, [subject,'_behavior2_SSRT_sessionXcoherence.csv']), data.ssrtIntWeight)
 
 %% Population behavioral measures:  Broca neural modeled sessions
 opt = ccm_options;
 opt.plotFlag = true;
-opt.printPlot = false;
+opt.printPlot = true;
 opt.saveName = 'neural_model';
 subject = 'broca';
 sessionSet = {...
@@ -1508,16 +1515,18 @@ sessionSet = {...
     'bp245n02';...
     'bp246n02';...
     'bp247n02'};
-ccm_psychometric_population(subject, sessionSet, opt);
-ccm_chronometric_population(subject, sessionSet, opt);
-% ccm_rt_distribution_population(subject, sessionSet, opt);
-data = ccm_inhibition_population(subject, sessionSet, opt);
 
+ccm_psychometric_population(subject, sessionSet, opt);
+% ccm_chronometric_population(subject, sessionSet, opt);
+% ccm_rt_distribution_population(subject, sessionSet, opt);
+
+% data = ccm_inhibition_population(subject, sessionSet, opt);
+% csvwrite(fullfile(local_data_path, subject, [subject,'_neurophys_SSRT_sessionXcoherence.csv']), data.ssrtIntWeight)
 
 %% Population behavioral measures: Joule neural modeled sessions
 opt = ccm_options;
 opt.plotFlag = true;
-opt.printPlot = false;
+opt.printPlot = true;
 opt.saveName = 'neural_model';
 subject = 'joule';
 
@@ -1527,11 +1536,13 @@ sessionSet = {...
     'jp121n02';...
     'jp124n04';...
     'jp125n04'};
-ccm_psychometric_population(subject, sessionSet, opt);
-ccm_chronometric_population(subject, sessionSet, opt);
-% ccm_rt_distribution_population(subject, sessionSet, opt);
-data = ccm_inhibition_population(subject, sessionSet, opt);
 
+ccm_psychometric_population(subject, sessionSet, opt);
+% ccm_chronometric_population(subject, sessionSet, opt);
+% ccm_rt_distribution_population(subject, sessionSet, opt);
+
+% data = ccm_inhibition_population(subject, sessionSet, opt);
+% csvwrite(fullfile(local_data_path, subject, [subject,'_neurophys_SSRT_sessionXcoherence.csv']), data.ssrtIntWeight)
 
 %% Population behavioral measures: Broca all neural sessions
 subject = 'broca';
@@ -1618,3 +1629,13 @@ sessionSet = unique(neuronTypes.sessionID);
 %%
 
 [sessionArray, subjectIDArray] = task_session_array(subjectID, task, sessionSet)
+
+
+%%
+Opt = plexon_translate_datafile_mac;
+Opt.hemisphere = 'left';
+    Opt.whichData   = 'all';
+    Opt.saveFile    = true;
+    Opt.LFP_CHANNELS = 17;
+    Opt.EEG_CHANNELS = [1:5];
+plexon_translate_datafile_mac('broca','bp095n04', Opt)
