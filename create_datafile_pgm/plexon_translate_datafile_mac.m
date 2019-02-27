@@ -39,6 +39,15 @@ PD_CHANNEL          = 2;
 STROBE_CHANNEL      = 257;
 STROBE_CHANNEL_INDEX = 17;
 
+
+% hemisphere = 'none';
+% Opt.hemisphere = 'none';
+% EEG_CHANNELS        = 1:5;  % Default assumption not recording EEG
+% LFP_CHANNELS        = [];  % Default assumption recording LFP on channels listed
+
+EEG_CHANNELS        = Opt.EEG_CHANNELS;  % Default assumption not recording EEG
+LFP_CHANNELS        = Opt.LFP_CHANNELS;  % Default assumption recording LFP on channels listed
+
 % For some reason voltage from AD lines in MexPlex (PC translation)
 % 2.4414 times larger than in ReadPLXC (mac translation)
 % Multiply voltage values by this number to obtain real voltage values
@@ -62,7 +71,6 @@ switch Opt.whichData
         end
         if strcmp(hemisphere, 'none')
             LFP_CHANNELS = [];
-            EEG_CHANNELS = [];
         else
             if isempty(Opt.LFP_CHANNELS)
                 prompt = 'Are these LFP and EEG channels correct (y or n)? ';

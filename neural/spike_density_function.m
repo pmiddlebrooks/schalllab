@@ -94,6 +94,11 @@ end
 % pause
 %         size(kernel)
 for iTrial = 1 : nTrial
+    
+    if isa(alignedRasters, 'int8')
+        alignedRasters = double(alignedRasters);
+    end
+    
     convolvedSDF = conv(alignedRasters(iTrial, :), kernelShape);
     
     center = ceil(length(convolvedSDF) / 2 );

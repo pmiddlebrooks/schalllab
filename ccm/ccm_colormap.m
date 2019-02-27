@@ -1,9 +1,12 @@
-function cMap = ccm_colormap(signalArray)
+function cMap = ccm_colormap(signalArray, grayscale)
 
 % If percentages were input instead of proportions, change it to
 % proportions
 if sum(signalArray < 1) == 0
     signalArray = signalArray .* 100;
+end
+if nargin == 1
+    grayscale = false;
 end
 nSignalLevel = length(signalArray);
 
@@ -15,9 +18,14 @@ pureMagenta = [1 0 1];
 cyanMax = 0.85;
 magMax = 1;
 minAll = .1;
+lightestGray = 1;
 switch nSignalLevel
     case 2
-        cMap = [0 .67 .67; .67 0 .67];
+        if grayscale
+            cMap = [0 0 0; .5 .5 .5];
+        else
+            cMap = [0 .67 .67; .67 0 .67];
+        end
     otherwise
         fiftyP = ismember(signalArray, .5);
         nFifty = sum(fiftyP);
@@ -25,13 +33,22 @@ switch nSignalLevel
         leftArray = signalArray(signalArray < .5);
         rightArray = signalArray(signalArray > .5);
         
-        leftGrad = linspace(cyanMax, minAll, length(leftArray)+1)';
-        leftNoGun = zeros(length(leftArray)+1, 1);
-        rightGrad = linspace(minAll, magMax, length(rightArray)+1)';
-        rightNoGun = zeros(length(rightArray)+1, 1);
+        if grayscale
+            leftGrad = linspace(0, lightestGray, length(leftArray)+1)';
+            rightGrad = linspace(lightestGray, 0, length(rightArray)+1)';
+            
+            % Createa color map that assumes two .5 signal levels:
+            cMap = [leftGrad leftGrad leftGrad; rightGrad rightGrad rightGrad];
+        else
+            leftGrad = linspace(cyanMax, minAll, length(leftArray)+1)';
+            leftNoGun = zeros(length(leftArray)+1, 1);
+            rightGrad = linspace(minAll, magMax, length(rightArray)+1)';
+            rightNoGun = zeros(length(rightArray)+1, 1);
+            
+            % Createa color map that assumes two .5 signal levels:
+            cMap = [leftNoGun leftGrad leftGrad; rightGrad rightNoGun rightGrad];
+        end
         
-        % Createa color map that assumes two .5 signal levels:
-        cMap = [leftNoGun leftGrad leftGrad; rightGrad rightNoGun rightGrad];
         
         % take out members of the color map w.r.t. how many .5 levels the
         % signal array actually has

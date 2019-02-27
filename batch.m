@@ -1615,3 +1615,16 @@ sessionSet = unique(neuronTypes.sessionID);
 % ccm_rt_distribution_population(subject, sessionSet, opt);
 % data = ccm_inhibition_population(subject, sessionSet, opt);
 
+%%
+subjectID = 'xena';
+sessionSet = 'behavior1';
+task = 'ccm';
+[sessionArray, subjectIDArray] = task_session_array(subjectID, task, sessionSet);
+Opt = plexon_translate_datafile_mac;
+Opt.LFP_CHANNELS = [];
+Opt.EEG_CHANNELS = 1:5;
+Opt.hemisphere = 'none';
+
+for i = 2 : length(sessionArray)
+    plexon_translate_datafile_mac(subjectID, sessionArray{i})
+end

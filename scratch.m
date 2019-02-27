@@ -15,18 +15,19 @@ scatter(trialData.rt(goTrial{d, i}), cellfun(@max, goVel{d, i}))
 
 
 %% Add hemisphere to translated data file
-subject = 'joule';
-session = {'jp061n02'};
-tebaPath = '/Volumes/SchallLab/data/';
+subject = 'broca';
+session = {'bp095n04'};
+% tebaPath = '/Volumes/SchallLab/data/';
 
+hemisphere = 'right';
 
 for i = 1 : length(session)
     [~, SessionData] = load_data(subject, session{i});
     
-    SessionData.hemisphere = 'left';
+    SessionData.hemisphere = hemisphere;
     
     save(fullfile(local_data_path, subject, [session{i}, '.mat']), 'SessionData', '-append')
-    save(fullfile(tebaPath, subject, [session{i}, '.mat']), 'SessionData', '-append')
+%     save(fullfile(tebaPath, subject, [session{i}, '.mat']), 'SessionData', '-append')
     
     
 end
@@ -794,9 +795,9 @@ for i = 1 : 32
     
     iUnitName = sprintf('spikeUnit%.2d', i);
     iUnit = {session, iUnitName};
-        iData = mem_session_data(subject, iUnit, opt);
+    iData = mem_session_data(subject, iUnit, opt);
 end
- 
+
 %%
 iUnit = {'jp110n01', 'spikeUnit01'};
 iData = mem_session_data(subject, iUnit, opt)
@@ -886,22 +887,22 @@ pSignRank = nan(length(lowRate), length(highRate), length(nTrial));
 pTTest = nan(length(lowRate), length(highRate), length(nTrial));
 for i = 1 : length(lowRate)
     iHighRateInd = highRate >= lowRate(i);
-%     iHighRate = highRate(highRate >= lowRate(i));
+    %     iHighRate = highRate(highRate >= lowRate(i));
     for j = find(iHighRateInd) : length(highRate)
         for k = 1 : length(nTrial);
-        jLowRand = poissrnd(lowRate(i), nTrial(k), 1);
-        jHighRand = poissrnd(highRate(j), nTrial(k), 1);
-        
-        [p,h,stats]   = signrank(jLowRand, jHighRand);
-        pSignRank(i,j,k) = p;
-
-        [h,p,ci,stats] = ttest(jLowRand, jHighRand);
-        pTTest(i,j,k) = p; 
+            jLowRand = poissrnd(lowRate(i), nTrial(k), 1);
+            jHighRand = poissrnd(highRate(j), nTrial(k), 1);
+            
+            [p,h,stats]   = signrank(jLowRand, jHighRand);
+            pSignRank(i,j,k) = p;
+            
+            [h,p,ci,stats] = ttest(jLowRand, jHighRand);
+            pTTest(i,j,k) = p;
         end
     end
 end
 
-        
+
 
 %%
 opt = ccm_options;
@@ -920,8 +921,8 @@ trials = mem_trial_selection(trialData, outcome, side);
 unitIndex = 1;
 alignEvent = 'responseOnset';
 alignList = trialData.(alignEvent)(trials);
- 
-    
+
+
 % Get the rasters (and what index they align to)
 [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeUnit01a(trials), alignList);
 
@@ -929,24 +930,24 @@ alignList = trialData.(alignEvent)(trials);
 %%
 
 for i = 1 : size(classicDdmCancel, 1)
-options = ccm_options;
-
-options.multiUnit = true;
-options.plotFlag = true;
-options.printPlot = true;
-options.ms2Std = 75;
-
-
-
-Data = ccm_neuron_stop_vs_go('joule', classicDdmCancel.sessionID{i},  classicDdmCancel.unit(i), options);
-
-options.unitArray = classicDdmCancel.unit(i);
-options.doStops = false;
-
-Data = ccm_session_data('joule', classicDdmCancel.sessionID{i},  options);
+    options = ccm_options;
+    
+    options.multiUnit = true;
+    options.plotFlag = true;
+    options.printPlot = true;
+    options.ms2Std = 75;
+    
+    
+    
+    Data = ccm_neuron_stop_vs_go('joule', classicDdmCancel.sessionID{i},  classicDdmCancel.unit(i), options);
+    
+    options.unitArray = classicDdmCancel.unit(i);
+    options.doStops = false;
+    
+    Data = ccm_session_data('joule', classicDdmCancel.sessionID{i},  options);
     
 end
-    
+
 %%
 opt = ccm_neuron_stop_vs_go;
 opt.multiUnit = true;
@@ -957,7 +958,7 @@ opt.plotFlag     = true;
 % data = ccm_neuron_stop_vs_go('joule', 'jp125n04', {'spikeUnit32'}, opt);
 data = ccm_neuron_stop_vs_go('broca', 'bp244n02', {'spikeUnit27'}, opt);
 % data = ccm_neuron_stop_vs_go('broca', 'bp247n02', {'spikeUnit12'}, opt);
-  
+
 
 
 
@@ -965,7 +966,7 @@ data = ccm_neuron_stop_vs_go('broca', 'bp244n02', {'spikeUnit27'}, opt);
 close all
 
 opt             = ccm_options;
-    opt.ms2Std = 75;
+opt.ms2Std = 75;
 opt.howProcess  = 'print';
 opt.plotFlag    = true;
 opt.printPlot    = true;
@@ -977,18 +978,18 @@ opt.doStops 	= false;
 
 
 %     opt.unitArray = 'spikeData';
-    opt.unitArray = {'spikeUnit32a'};    
-    opt.multiUnit = false;
-    
-    opt.unitArray = {'spikeUnit32'};    
-    opt.multiUnit = true;
+opt.unitArray = {'spikeUnit32a'};
+opt.multiUnit = false;
 
-    
-    subject = 'joule';
-    session = 'jp125n03';
-    
+opt.unitArray = {'spikeUnit32'};
+opt.multiUnit = true;
+
+
+subject = 'joule';
+session = 'jp125n03';
+
 %       iData = ccm_session_data(subject, session, opt);
-    opt.pairTriplet = 'pair';
+opt.pairTriplet = 'pair';
 Data = ccm_rt_history_neural(subject, session, opt)
 
 
@@ -1003,8 +1004,8 @@ tic
 trialData = load_data('joule','jp125n03',[ccm_min_vars]);
 unitArray = {'spikeUnit01a','spikeUnit01b','spikeUnit02a','spikeUnit02b','spikeUnit02c','spikeUnit03a','spikeUnit03b','spikeUnit04a','spikeUnit04b'};
 for i = 1 : length(unitArray)
-t = load_data('joule','jp125n03',[ccm_min_vars,unitArray(i)]);
-trialData.(unitArray{i}) = t.(unitArray{i});
+    t = load_data('joule','jp125n03',[ccm_min_vars,unitArray(i)]);
+    trialData.(unitArray{i}) = t.(unitArray{i});
 end
 fprintf('\nlooped single units: %.2f\n', toc)
 
@@ -1019,8 +1020,8 @@ tic
 trialData = load_data('joule','jp125n03',[ccm_min_vars]);
 unitArray = {'spikeUnit01','spikeUnit02','spikeUnit03','spikeUnit04'};
 for i = 1 : length(unitArray)
-t = load(fullfile(localDataPath, 'jp125n03'),unitArray{i}, 1);
-trialData.(unitArray{i}) = t.(unitArray{i});
+    t = load(fullfile(localDataPath, 'jp125n03'),unitArray{i}, 1);
+    trialData.(unitArray{i}) = t.(unitArray{i});
 end
 fprintf('\nlooped multi units: %.2f\n', toc)
 
@@ -1110,19 +1111,19 @@ d(j).name = 'bp093n02.mat';
 %     'xxxxxx'...
 %     'xxxxxx'...
 %
-    
+
 localDataPath = ['~/Dropbox/local_data/',lower(subject),'/'];
 
 trialData = load(fullfile(localDataPath,d(j).name));
 var = fieldnames(trialData);
 
 for i = 1 : length(var)
-%     if ~strncmp(var{i},'lfp', 3) &&...
-%             ~strncmp(var{i},'eye', 3) &&...
-%             ~strncmp(var{i},'targ1Check', 10) &&...
-%             isa(trialData.(var{i}), 'double')
-%         td.(var{i}) = int32(trialData.(var{i}));
-%     end
+    %     if ~strncmp(var{i},'lfp', 3) &&...
+    %             ~strncmp(var{i},'eye', 3) &&...
+    %             ~strncmp(var{i},'targ1Check', 10) &&...
+    %             isa(trialData.(var{i}), 'double')
+    %         td.(var{i}) = int32(trialData.(var{i}));
+    %     end
     if strncmp(var{i}, 'spike', 5)
         var{i}
         trialData.(var{i}) = cellfun(@(x) int32(x), trialData.(var{i}), 'uni', false);
@@ -1137,59 +1138,59 @@ tic
 toc
 %%
 opt = ccm_options;
-        opt.multiUnit = true;
-        opt.unitArray = {'spikeUnit17'};
-        opt.printPlot = false;
-        opt.plotFlag = false;
+opt.multiUnit = true;
+opt.unitArray = {'spikeUnit17'};
+opt.printPlot = false;
+opt.plotFlag = false;
 tic
-    data = ccm_session_data('broca', 'bp093n02', opt);
-    clear data
+data = ccm_session_data('broca', 'bp093n02', opt);
+clear data
 toc
 tic
-    data = ccm_session_data('broca', 'bp093n02', opt);
-    clear data
+data = ccm_session_data('broca', 'bp093n02', opt);
+clear data
 toc
 tic
-    data = ccm_session_data('broca', 'bp093n02', opt);
-    clear data
+data = ccm_session_data('broca', 'bp093n02', opt);
+clear data
 toc
 tic
-    data = ccm_session_data('broca', 'bp093n02', opt);
-    clear data
+data = ccm_session_data('broca', 'bp093n02', opt);
+clear data
 toc
 tic
-    data = ccm_session_data('broca', 'bp093n02', opt);
-    clear data
+data = ccm_session_data('broca', 'bp093n02', opt);
+clear data
 toc
 
 fprintf('\n\n\n\n Now New File:\n\n\n')
 
 tic
-    data = ccm_session_data('broca', 'bp093n02-new', opt);
-    clear data
+data = ccm_session_data('broca', 'bp093n02-new', opt);
+clear data
 toc
 tic
-    data = ccm_session_data('broca', 'bp093n02-new', opt);
-    clear data
+data = ccm_session_data('broca', 'bp093n02-new', opt);
+clear data
 toc
 tic
-    data = ccm_session_data('broca', 'bp093n02-new', opt);
-    clear data
+data = ccm_session_data('broca', 'bp093n02-new', opt);
+clear data
 toc
 tic
-    data = ccm_session_data('broca', 'bp093n02-new', opt);
-    clear data
+data = ccm_session_data('broca', 'bp093n02-new', opt);
+clear data
 toc
 tic
-    data = ccm_session_data('broca', 'bp093n02-new', opt);
-    clear data
+data = ccm_session_data('broca', 'bp093n02-new', opt);
+clear data
 toc
 
 %%
 subject = 'joule';
 tebaDataPath = '/Volumes/SchallLab/data/';
 
-            trialData = load(fullfile(tebaDataPath,subject,'jp083n02'));
+trialData = load(fullfile(tebaDataPath,subject,'jp083n02'));
 
 [trialData, SessionData, ExtraVariable] = load_data('broca', 'bp093n02', [ccm_min_vars,'spikeData']);
 
@@ -1223,12 +1224,12 @@ for i = 1 : size(d, 1)
     if ~isempty(regexp(d(i).name, '.*n0.*.mat')) && ~strncmp(d(i).name, '._', 2) && isempty(regexp(d(i).name, '.*legacy.*.mat'))
         tic
         disp(d(i).name)
-            trialData = load(fullfile(tebaDataPath ,d(i).name));
-            
-            save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData')
-            % Save to teba also
-            save(fullfile(tebaDataPath, d(i).name(1:end-4)), '-struct', 'trialData')
-            clear trialData
+        trialData = load(fullfile(tebaDataPath ,d(i).name));
+        
+        save(fullfile(local_data_path, subject, d(i).name(1:end-4)), '-struct', 'trialData')
+        % Save to teba also
+        save(fullfile(tebaDataPath, d(i).name(1:end-4)), '-struct', 'trialData')
+        clear trialData
         
         toc
         
@@ -1236,3 +1237,149 @@ for i = 1 : size(d, 1)
     
 end
 
+
+
+%%    SET VARIABLES FOR RUNNING ANALYSES ON A SET OF UNITS UNDER SOME CATEGORY (SUCH AS PRESACC DDM-MODULATED CANCELING UNITS)
+
+subject = 'broca';
+
+multiUnit = true;
+ssrtUse = 'intWeightPerSession';
+
+% Which ddm criteria do we want to use?
+ddmType = 'ddmRankMean';  % ddm coherence determined by comparing means of easy vs hard spike rates into RF (and out)
+% ddmType = 'ddm';  % ddm coherence determined by ranksum test and slopes of means easy vs hard rates into RF (and out)
+
+% Which cancel time criterium do we want to use?
+cancelType = 'meanDifference';
+cancelType = 'trialByTrial';
+cancelType = 'meanSdf';
+
+saccadeBaseRatio = 2;
+saccadeBaseRatio = [];
+
+deleteUnmodulated = true;
+deleteSessions = true;
+
+if multiUnit
+    addMulti = '_multiUnit';
+else
+    addMulti = [];
+end
+
+
+%% SET PATHS
+
+projectDate = '2017-01-11';
+accreRoot = '/gpfs22';
+accreHome = '/home/middlepg';
+accreScratch = '/scratch/middlepg';
+if isdir(fullfile(accreScratch))
+    matRoot = fullfile(accreRoot,accreHome,'m-files'); % Edit this if running on Accre
+    projectRoot = fullfile(accreScratch,'perceptualchoice_stop_model');
+    environ = 'accre';
+else
+    matRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/schalllab';
+    projectRoot = '/Volumes/HD-1/Users/paulmiddlebrooks/perceptualchoice_stop_spikes_population';
+    matRoot = '~/schalllab';
+    projectRoot = '~/perceptualchoice_stop_spikes_population';
+    environ = 'local';
+end
+
+addpath(genpath(fullfile(matRoot,'ccm')));
+addpath(genpath(fullfile(projectRoot,'src/code',projectDate)));
+
+cd(matRoot)
+
+
+projectRoot = '~/perceptualchoice_stop_spikes_population';
+
+addpath(genpath(fullfile(projectRoot,'src/code',projectDate)));
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+
+
+%%     OPEN THE RELEVANT CATEGORY
+
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+
+
+% Possible categories:
+% ddm cancel
+category = 'ccm_presacc_ddmRankMeanStim_cancel_neurons_multiUnit';
+
+% ddm no-cancel
+category = 'ccm_presacc_ddmRankMeanStim_noCancel_neurons_multiUnit';
+
+% no-ddm cancel
+% category = 'ccm_presacc_cancel_noddmRankMeanStim_neurons_multiUnit';
+
+% no-ddm no-cancel
+category = 'ccm_presacc_noddmRankMeanStim_noCancel_neurons_multiUnit';
+
+% visual-only neurons
+category = 'ccm_visNoPresacc_neurons_multiUnit';
+
+load(fullfile(dataPath, category))
+if strcmp(category, 'ccm_visNoPresacc_neurons_multiUnit')
+    neurons = neurons(strcmp(neurons.rf, 'none'),:)
+end
+neurons
+
+%%
+options = ccm_neuron_stop_vs_go;
+% options = ccm_options;
+
+options.multiUnit = true;
+options.plotFlag = true;
+options.printPlot = true;
+
+switch category
+    case 'ccm_presacc_ddmRankMeanStim_cancel_neurons_multiUnit'
+        options.ANALYZE_CANCELED = true;
+        options.ANALYZE_NONCANCELED = true;
+    case 'ccm_presacc_ddmRankMeanStim_noCancel_neurons_multiUnit'
+        options.ANALYZE_CANCELED = true;
+        options.ANALYZE_NONCANCELED = true;
+    case 'ccm_presacc_cancel_noddmRankMeanStim_neurons_multiUnit'
+        options.ANALYZE_CANCELED = true;
+        options.ANALYZE_NONCANCELED = true;
+    case 'ccm_presacc_noddmRankMeanStim_noCancel_neurons_multiUnit'
+        options.ANALYZE_CANCELED = true;
+        options.ANALYZE_NONCANCELED = true;
+    case 'ccm_visNoPresacc_neurons_multiUnit'
+        options.ANALYZE_CANCELED = true;
+        options.ANALYZE_NONCANCELED = false;
+       
+end
+for i = 1 : size(neurons, 1)
+    fprintf('\n%d of %d \n', i, size(neurons, 1))
+%     [~, SessionData] = load_data(subject, neurons.sessionID{i});
+%     SessionData.hemisphere = neurons.hemisphere{i};    
+%     save(fullfile(local_data_path, subject, [neurons.sessionID{i}, '.mat']), 'SessionData', '-append')
+
+    Data = ccm_neuron_stop_vs_go(subject, neurons.sessionID{i},  neurons.unit(i), options);
+    
+%     options.unitArray = neurons.unit(i);
+%         Data = ccm_session_data(subject, neurons.sessionID{i},  options);
+
+end
+disp('done')
+%% Add hemisphere to translated data file
+session = {'bp234n02'};
+% tebaPath = '/Volumes/SchallLab/data/';
+
+hemisphere = 'left';
+
+for i = 1 : length(session)
+    [~, SessionData] = load_data(subject, session{i});
+    
+    SessionData.hemisphere = hemisphere;
+    
+    save(fullfile(local_data_path, subject, [sessionID, '.mat']), 'SessionData', '-append')
+%     save(fullfile(tebaPath, subject, [session{i}, '.mat']), 'SessionData', '-append')
+    
+    
+end
+
+
+%% Print population average SDFs for each category

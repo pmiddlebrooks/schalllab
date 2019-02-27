@@ -10,6 +10,7 @@ end
 
 
 homeDataPath = '/Users/paulmiddlebrooks/schalllab/local_data/';
+homeDataPath = '/Users/paulmiddlebrooks/Dropbox/local_data/';
 tebaDataPath = '/Volumes/SchallLab/data/';
 if isdir(tebaDataPath)
    location = 'work';

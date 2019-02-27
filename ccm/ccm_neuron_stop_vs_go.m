@@ -59,6 +59,7 @@ if nargin < 4
     options.ms2Std = 75;  % How many consecutive ms should neural signals be separated to "cancel"?
     
     options.plotFlag            = true;
+    options.plotSem            = true;
     options.printPlot           = true;
     options.plotSingle          = false;
     
@@ -89,7 +90,8 @@ plotFlag            = options.plotFlag;
 printPlot           = options.printPlot;
 stopStopFig        = 100;
 stopTargFig        = 150;
-nPlot               = 4; % plot only 3 conditions- those with highest number of stop trials
+nPlot               = 6; % plot only 3 conditions- those with highest number of stop trials
+faceAlpha           = .5; % how opaque to make the error ribbons.
 
 % latencyMatchMethod = 'match';
 % latencyMatchMethod = 'rt';
@@ -266,51 +268,66 @@ for kUnitIndex = 1 : nUnit
     
     pValue40msStopTarg = nan(length(stopTargCoh), 1);  % The index in the sdf after checker onset at wich the differential sdf passes the 50ms test
     
-    % Nonanceled Stop and Fast Go
-    stopTargCheckerData          = cell(length(stopTargCoh), 1);
-    stopTargCheckerFn          = cell(length(stopTargCoh), 1);
-    stopTargCheckerEventLat  	= cell(length(stopTargCoh), 1);
-    stopTargCheckerAlign      	= nan(length(stopTargCoh), 1);
-    
-    stopTargSaccData             = cell(length(stopTargCoh), 1);
-    stopTargSaccFn             = cell(length(stopTargCoh), 1);
-    stopTargSaccEventLat        = cell(length(stopTargCoh), 1);
-    stopTargSaccAlign           = nan(length(stopTargCoh), 1);
-    
-    goTargFastCheckerData        = cell(length(stopTargCoh), 1);
-    goTargFastCheckerFn        = cell(length(stopTargCoh), 1);
-    goTargFastCheckerEventLat  	= cell(length(stopTargCoh), 1);
-    goTargFastCheckerAlign    	= nan(length(stopTargCoh), 1);
-    
-    goTargFastSaccData        	= cell(length(stopTargCoh), 1);
-    goTargFastSaccFn           = cell(length(stopTargCoh), 1);
-    goTargFastSaccEventLat      = cell(length(stopTargCoh), 1);
-    goTargFastSaccAlign         = nan(length(stopTargCoh), 1);
-    
-    stopTargSpike               = cell(length(stopTargCoh), 1);
-    goTargFastSpike               = cell(length(stopTargCoh), 1);
     
     
     % Canceled Stop and Slow Go
     stopStopCheckerData          = cell(length(stopStopCoh), 1);
     stopStopCheckerFn          = cell(length(stopStopCoh), 1);
+    stopStopCheckerFnSem          = cell(length(stopStopCoh), 1);
     stopStopCheckerEventLat  	= cell(length(stopStopCoh), 1);
     stopStopCheckerAlign      	= nan(length(stopStopCoh), 1);
     stopStopCheckerSdf      	= cell(length(stopStopCoh), 1);
     
     goTargSlowCheckerData        = cell(length(stopStopCoh), 1);
     goTargSlowCheckerFn        = cell(length(stopStopCoh), 1);
+    goTargSlowCheckerFnSem        = cell(length(stopStopCoh), 1);
     goTargSlowCheckerEventLat  	= cell(length(stopStopCoh), 1);
     goTargSlowCheckerAlign    	= nan(length(stopStopCoh), 1);
+    goTargSlowCheckerSdf        = cell(length(stopStopCoh), 1);
     
     goTargSlowSaccData        	= cell(length(stopStopCoh), 1);
     goTargSlowSaccFn           = cell(length(stopStopCoh), 1);
+    goTargSlowSaccFnSem           = cell(length(stopStopCoh), 1);
     goTargSlowSaccEventLat      = cell(length(stopStopCoh), 1);
     goTargSlowSaccAlign         = nan(length(stopStopCoh), 1);
+    goTargSlowSaccSdf           = cell(length(stopStopCoh), 1);
     
     
     stopStopSpike               = cell(length(stopStopCoh), 1);
     goTargSlowSpike               = cell(length(stopStopCoh), 1);
+    
+    
+    % Nonanceled Stop and Fast Go
+    stopTargCheckerData          = cell(length(stopTargCoh), 1);
+    stopTargCheckerFn          = cell(length(stopTargCoh), 1);
+    stopTargCheckerFnSem          = cell(length(stopTargCoh), 1);
+    stopTargCheckerEventLat  	= cell(length(stopTargCoh), 1);
+    stopTargCheckerAlign      	= nan(length(stopTargCoh), 1);
+    stopTargCheckerSdf          = cell(length(stopTargCoh), 1);
+    
+    stopTargSaccData             = cell(length(stopTargCoh), 1);
+    stopTargSaccFn             = cell(length(stopTargCoh), 1);
+    stopTargSaccFnSem             = cell(length(stopTargCoh), 1);
+    stopTargSaccEventLat        = cell(length(stopTargCoh), 1);
+    stopTargSaccAlign           = nan(length(stopTargCoh), 1);
+    stopTargSaccSdf             = cell(length(stopTargCoh), 1);
+    
+    goTargFastCheckerData        = cell(length(stopTargCoh), 1);
+    goTargFastCheckerFn        = cell(length(stopTargCoh), 1);
+    goTargFastCheckerFnSem        = cell(length(stopTargCoh), 1);
+    goTargFastCheckerEventLat  	= cell(length(stopTargCoh), 1);
+    goTargFastCheckerAlign    	= nan(length(stopTargCoh), 1);
+    goTargFastCheckerSdf        = cell(length(stopTargCoh), 1);
+    
+    goTargFastSaccData        	= cell(length(stopTargCoh), 1);
+    goTargFastSaccFn           = cell(length(stopTargCoh), 1);
+    goTargFastSaccFnSem           = cell(length(stopTargCoh), 1);
+    goTargFastSaccEventLat      = cell(length(stopTargCoh), 1);
+    goTargFastSaccAlign         = nan(length(stopTargCoh), 1);
+    goTargFastSaccSdf           = cell(length(stopTargCoh), 1);
+    
+    stopTargSpike               = cell(length(stopTargCoh), 1);
+    goTargFastSpike               = cell(length(stopTargCoh), 1);
     
     
     
@@ -327,12 +344,12 @@ for kUnitIndex = 1 : nUnit
     % Creat a new figure if needed (for a new pair of targets and/or
     % left/right checker signal
     if plotFlag
-        
-        cMap = ccm_colormap(pSignalArray);
+        grayScale = 1;
+        cMap = ccm_colormap(pSignalArray, grayScale);
         if length(pSignalArray) > 4
-        stopColorMap = [1 0 0; .7 0 0; .4 0 0; .4 0 0; .7 0 0; 1 0 0];
+            stopColorMap = [1 0 0; .7 0 0; .4 0 0; .4 0 0; .7 0 0; 1 0 0];
         elseif length(pSignalArray) == 4
-        stopColorMap = [1 0 0; .7 0 0; .7 0 0; 1 0 0];
+            stopColorMap = [1 0 0; .7 0 0; .7 0 0; 1 0 0];
         end
         
         opt = ccm_concat_neural_conditions; % Get default options structure
@@ -485,17 +502,23 @@ for kUnitIndex = 1 : nUnit
                 goTargSlowCheckerData{i}      = iGoTargChecker.signal(iGoSlowTrial,:);
                 goTargSlowCheckerAlign(i) 	= iGoTargChecker.align;
                 goTargSlowCheckerEventLat{i}	= iGoTargChecker.eventLatency(iGoSlowTrial,:);
+                goTargSlowCheckerSdf{i} = spike_density_function(goTargSlowCheckerData{i}, Kernel);
                 
                 goTargSlowSaccData{i}         = iGoTargSacc.signal(iGoSlowTrial,:);
                 goTargSlowSaccAlign(i)       = iGoTargSacc.align;
                 goTargSlowSaccEventLat{i}    = iGoTargSacc.eventLatency(iGoSlowTrial,:);
+                goTargSlowSaccSdf{i} = spike_density_function(goTargSlowSaccData{i}, Kernel);
                 
                 
                 
                 
                 stopStopCheckerFn{i} 	= iStopStopChecker.signalFn;
-                goTargSlowCheckerFn{i}      = nanmean(spike_density_function(goTargSlowCheckerData{i}, Kernel), 1);
-                goTargSlowSaccFn{i}         = nanmean(spike_density_function(goTargSlowSaccData{i}, Kernel), 1);
+                goTargSlowCheckerFn{i}      = nanmean(goTargSlowCheckerSdf{i});
+                goTargSlowSaccFn{i}         = nanmean(goTargSlowSaccSdf{i});
+                
+                stopStopCheckerFnSem{i} 	= std(stopStopCheckerSdf{i}) / sqrt(size(stopStopCheckerSdf{i}, 1));
+                goTargSlowCheckerFnSem{i}      = std(goTargSlowCheckerSdf{i}) / sqrt(size(goTargSlowCheckerSdf{i}, 1));
+                goTargSlowSaccFnSem{i}         = std(goTargSlowSaccSdf{i}) / sqrt(size(goTargSlowSaccSdf{i}, 1));
                 
                 
                 
@@ -653,7 +676,7 @@ for kUnitIndex = 1 : nUnit
                     end
                     
                     iStopStopCheckerFn = stopStopCheckerFn{i}(stopStopCheckerAlign(i) + epochRangeChecker);
-                    plot(ax(i, colChkr), epochRangeChecker, iStopStopCheckerFn, '--', 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
+                    plot(ax(i, colChkr), epochRangeChecker, iStopStopCheckerFn, '-', 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
                     %                 plot(ax(i, colChkr), epochRangeChecker, sdfDiff(sdfDiffCheckerOn-1:end), 'color', 'g', 'linewidth', stopLineW)
                     
                     % Cancel time
@@ -667,7 +690,25 @@ for kUnitIndex = 1 : nUnit
                     
                     %                 iStopStopSaccFn = stopStopCheckerFn{i}(stopStopCheckerAlign(i) + iGoTargRTMean + epochRangeSacc);
                     %                 plot(ax(i, colSacc), epochRangeSacc, iStopStopSaccFn, 'color', stopColor, 'linewidth', stopLineW)
-                    
+                    if options.plotSem
+                        % GO Checker aligned
+                        iGoTargSlowCheckerFnSem = goTargSlowCheckerFnSem{i}(goTargSlowCheckerAlign(i) + epochRangeChecker);
+                        fillX = [epochRangeChecker(1) : epochRangeChecker(end) epochRangeChecker(end) : -1 : epochRangeChecker(1)];
+                        fillY = [iGoTargSlowCheckerFn+iGoTargSlowCheckerFnSem fliplr(iGoTargSlowCheckerFn-iGoTargSlowCheckerFnSem)];
+                        fill(ax(i, colChkr), fillX, fillY, cMap(pSignalArray == stopStopCoh(i),:), 'facealpha', faceAlpha, 'linestyle' , 'none')
+                        
+                        % STOP STOP Checker aligned
+                        iStopStopCheckerFnSem = stopStopCheckerFnSem{i}(stopStopCheckerAlign(i) + epochRangeChecker);
+                        fillX = [epochRangeChecker(1) : epochRangeChecker(end) epochRangeChecker(end) : -1 : epochRangeChecker(1)];
+                        fillY = [iStopStopCheckerFn+iStopStopCheckerFnSem fliplr(iStopStopCheckerFn-iStopStopCheckerFnSem)];
+                        fill(ax(i, colChkr), fillX, fillY, stopColorMap(pSignalArray == stopStopCoh(i),:), 'facealpha', faceAlpha, 'linestyle' , 'none')
+                        
+                        % GO Sacc aligned
+                        iGoTargSlowSaccFnSem = goTargSlowSaccFnSem{i}(goTargSlowSaccAlign(i) + epochRangeSacc);
+                        fillX = [epochRangeSacc(1) : epochRangeSacc(end) epochRangeSacc(end) : -1 : epochRangeSacc(1)];
+                        fillY = [iGoTargSlowSaccFn+iGoTargSlowSaccFnSem fliplr(iGoTargSlowSaccFn-iGoTargSlowSaccFnSem)];
+                        fill(ax(i, colSacc), fillX, fillY, cMap(pSignalArray == stopStopCoh(i),:), 'facealpha', faceAlpha, 'linestyle' , 'none')
+                    end
                 end
                 
                 
@@ -764,8 +805,8 @@ for kUnitIndex = 1 : nUnit
                 %                 maxFnInd(maxFnInd >= meanRtInd) = nan;
                 
                 % Cancel time only gets calculated if max SDF occurs before mean Go slow Rts
-                     iCancelTimeSdf = nan;
-               if maxFnInd < meanRtInd
+                iCancelTimeSdf = nan;
+                if maxFnInd < meanRtInd
                     
                     % Find the minimum after the maximum, to
                     % determine relative half-max index
@@ -781,21 +822,21 @@ for kUnitIndex = 1 : nUnit
                     
                     if ~isempty(halfMaxFnInd)
                         iCancelTimeSdf = maxFnInd + halfMaxFnInd/2 - iSsrt;
-%                                                     % optional- plot individual trials for
-%                                                     % troubleshooting
-%                                                     figure(27)
-%                                                     clf
-%                                                     hold 'all'
-%                                                     % Canceled GO goTargSlowCheckerFn
-%                                                     plot(goTargSlowCheckerFn{i}(goTargSlowCheckerAlign(i):goTargSlowCheckerAlign(i)+700), 'g')
-%                                                     plot(stopStopCheckerFn{i}(iStopStopChecker.align:iStopStopChecker.align+700), 'k')
-%                                                     plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopFn*.8], '-r', 'linewidth', 3)
-%                                                     plot([stopStopSsd(i)+iSsrt stopStopSsd(i)+iSsrt], [0 maxStopStopFn*.8], '--r', 'linewidth', 3)
-%                                                     plot([stopStopSsd(i) + maxFnInd, stopStopSsd(i) + maxFnInd], [0 maxStopStopFn], '-k', 'linewidth', 3)
-%                                                     plot([stopStopSsd(i) + maxFnInd + halfMaxFnInd, stopStopSsd(i) + maxFnInd + halfMaxFnInd], [0 halfMaxStopStopFn], '-k', 'linewidth', 3)
-%                                                     plot([stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2), stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2)], [0 maxStopStopFn*.8], '--k', 'linewidth', 3)
-%                         printName = sprintf('%s_canceled_Coh%s_Ssd%d_nTrial%d.pdf',Unit(kUnitIndex).name, num2str(stopStopCoh(i)*100), stopStopSsd(i), size(stopStopCheckerSdf{i}, 1));
-%                                     print(gcf,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID,  printName),'-dpdf', '-r300')
+                        %                                                     % optional- plot individual trials for
+                        %                                                     % troubleshooting
+                        %                                                     figure(27)
+                        %                                                     clf
+                        %                                                     hold 'all'
+                        %                                                     % Canceled GO goTargSlowCheckerFn
+                        %                                                     plot(goTargSlowCheckerFn{i}(goTargSlowCheckerAlign(i):goTargSlowCheckerAlign(i)+700), 'g')
+                        %                                                     plot(stopStopCheckerFn{i}(iStopStopChecker.align:iStopStopChecker.align+700), 'k')
+                        %                                                     plot([stopStopSsd(i) stopStopSsd(i)], [0 maxStopStopFn*.8], '-r', 'linewidth', 3)
+                        %                                                     plot([stopStopSsd(i)+iSsrt stopStopSsd(i)+iSsrt], [0 maxStopStopFn*.8], '--r', 'linewidth', 3)
+                        %                                                     plot([stopStopSsd(i) + maxFnInd, stopStopSsd(i) + maxFnInd], [0 maxStopStopFn], '-k', 'linewidth', 3)
+                        %                                                     plot([stopStopSsd(i) + maxFnInd + halfMaxFnInd, stopStopSsd(i) + maxFnInd + halfMaxFnInd], [0 halfMaxStopStopFn], '-k', 'linewidth', 3)
+                        %                                                     plot([stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2), stopStopSsd(i)+(maxFnInd + halfMaxFnInd/2)], [0 maxStopStopFn*.8], '--k', 'linewidth', 3)
+                        %                         printName = sprintf('%s_canceled_Coh%s_Ssd%d_nTrial%d.pdf',Unit(kUnitIndex).name, num2str(stopStopCoh(i)*100), stopStopSsd(i), size(stopStopCheckerSdf{i}, 1));
+                        %                                     print(gcf,fullfile(local_figure_path, subjectID, 'go_vs_canceled', options.ssrt, sessionID,  printName),'-dpdf', '-r300')
                     end
                 end
                 
@@ -974,25 +1015,35 @@ for kUnitIndex = 1 : nUnit
                 stopTargCheckerData{i}        = iStopTargChecker.signal(iStopTargTrial,:);
                 stopTargCheckerAlign(i)     	= iStopTargChecker.align;
                 stopTargCheckerEventLat{i}	= iStopTargChecker.eventLatency(iStopTargTrial,:);
+                stopTargCheckerSdf{i}        = spike_density_function(stopTargCheckerData{i}, Kernel);
                 
                 stopTargSaccData{i}           = iStopTargSacc.signal(iStopTargTrial,:);
                 stopTargSaccAlign(i)         = iStopTargSacc.align;
                 stopTargSaccEventLat{i}      = iStopTargSacc.eventLatency(iStopTargTrial,:);
+                stopTargSaccSdf{i}        = spike_density_function(stopTargSaccData{i}, Kernel);
                 
                 goTargFastCheckerData{i}      = iGoTargChecker.signal(iGoFastTrial,:);
                 goTargFastCheckerAlign(i) 	= iGoTargChecker.align;
                 goTargFastCheckerEventLat{i}	= iGoTargChecker.eventLatency(iGoFastTrial,:);
+                goTargFastCheckerSdf{i}        = spike_density_function(goTargFastCheckerData{i}, Kernel);
                 
                 goTargFastSaccData{i}         = iGoTargSacc.signal(iGoFastTrial,:);
                 goTargFastSaccAlign(i)       = iGoTargSacc.align;
                 goTargFastSaccEventLat{i}    = iGoTargSacc.eventLatency(iGoFastTrial,:);
+                goTargFastSaccSdf{i}        = spike_density_function(goTargFastSaccData{i}, Kernel);
                 
                 
                 
-                stopTargCheckerFn{i}      = nanmean(spike_density_function(stopTargCheckerData{i}, Kernel), 1);
-                stopTargSaccFn{i}      = nanmean(spike_density_function(stopTargSaccData{i}, Kernel), 1);
-                goTargFastCheckerFn{i}      = nanmean(spike_density_function(goTargFastCheckerData{i}, Kernel), 1);
-                goTargFastSaccFn{i}         = nanmean(spike_density_function(goTargFastSaccData{i}, Kernel), 1);
+                stopTargCheckerFn{i}      = nanmean(stopTargCheckerSdf{i}, 1);
+                stopTargSaccFn{i}      = nanmean(stopTargSaccSdf{i}, 1);
+                goTargFastCheckerFn{i}      = nanmean(goTargFastCheckerSdf{i}, 1);
+                goTargFastSaccFn{i}         = nanmean(goTargFastSaccSdf{i}, 1);
+                
+                stopTargCheckerFnSem{i}      = std(stopTargCheckerSdf{i}) / sqrt(size(stopTargCheckerSdf{i}, 1));
+                stopTargSaccFnSem{i}      = std(stopTargSaccSdf{i}) / sqrt(size(stopTargSaccSdf{i}, 1));
+                goTargFastCheckerFnSem{i}      = std(goTargFastCheckerSdf{i}) / sqrt(size(goTargFastCheckerSdf{i}, 1));
+                goTargFastSaccFnSem{i}         = std(goTargFastSaccSdf{i}) / sqrt(size(goTargFastSaccSdf{i}, 1));
+                
                 
                 
                 % Hanes et al 1998 t-test of spike rates 40 ms surrounding estimated ssrt
@@ -1045,7 +1096,8 @@ for kUnitIndex = 1 : nUnit
                     end
                     
                     iStopTargCheckerFn = stopTargCheckerFn{i}(stopTargCheckerAlign(i) + epochRangeChecker);
-                    plot(ax(i, colChkr), epochRangeChecker, iStopTargCheckerFn, '--', 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
+ 
+                    plot(ax(i, colChkr), epochRangeChecker, iStopTargCheckerFn, '-', 'color', stopColorMap(pSignalArray == stopTargCoh(i),:), 'linewidth', stopLineW)
                     iStopTargRTMean = round(nanmean(stopTargCheckerEventLat{i}));
                     if iStopTargRTMean <= length(iStopTargCheckerFn)
                         plot(ax(i, colChkr), iStopTargRTMean, 0, '.k','markersize', markSize)
@@ -1055,9 +1107,35 @@ for kUnitIndex = 1 : nUnit
                     plot(ax(i, colSacc), epochRangeSacc, iGoTargFastSaccFn, 'color', cMap(pSignalArray == stopTargCoh(i),:), 'linewidth', goLineW)
                     
                     iStopTargSaccFn = stopTargSaccFn{i}(stopTargSaccAlign(i) + epochRangeSacc);
-                    plot(ax(i, colSacc), epochRangeSacc, iStopTargSaccFn, 'color', stopColorMap(pSignalArray == stopStopCoh(i),:), 'linewidth', stopLineW)
+                    plot(ax(i, colSacc), epochRangeSacc, iStopTargSaccFn, 'color', stopColorMap(pSignalArray == stopTargCoh(i),:), 'linewidth', stopLineW)
                     
-                    
+                    if options.plotSem
+                        % GO Checker aligned
+                        iGoTargFastCheckerFnSem = goTargFastCheckerFnSem{i}(goTargFastCheckerAlign(i) + epochRangeChecker);
+                        fillX = [epochRangeChecker(1) : epochRangeChecker(end) epochRangeChecker(end) : -1 : epochRangeChecker(1)];
+                        fillY = [iGoTargFastCheckerFn+iGoTargFastCheckerFnSem fliplr(iGoTargFastCheckerFn-iGoTargFastCheckerFnSem)];
+                        fill(ax(i, colChkr), fillX, fillY, cMap(pSignalArray == stopTargCoh(i),:), 'facealpha', faceAlpha, 'linestyle' , 'none')
+                        
+                        % STOP TARG Checker aligned
+                        iStopTargCheckerFnSem = stopTargCheckerFnSem{i}(stopTargCheckerAlign(i) + epochRangeChecker);
+                        fillX = [epochRangeChecker(1) : epochRangeChecker(end) epochRangeChecker(end) : -1 : epochRangeChecker(1)];
+                        fillY = [iStopTargCheckerFn+iStopTargCheckerFnSem fliplr(iStopTargCheckerFn-iStopTargCheckerFnSem)];
+                        fill(ax(i, colChkr), fillX, fillY, stopColorMap(pSignalArray == stopTargCoh(i),:), 'facealpha', faceAlpha, 'linestyle' , 'none')
+                        
+                        % GO Sacc aligned
+                        iGoTargFastSaccFnSem = goTargFastSaccFnSem{i}(goTargFastSaccAlign(i) + epochRangeSacc);
+                        fillX = [epochRangeSacc(1) : epochRangeSacc(end) epochRangeSacc(end) : -1 : epochRangeSacc(1)];
+                        fillY = [iGoTargFastSaccFn+iGoTargFastSaccFnSem fliplr(iGoTargFastSaccFn-iGoTargFastSaccFnSem)];
+                        fill(ax(i, colSacc), fillX, fillY, cMap(pSignalArray == stopTargCoh(i),:), 'facealpha', faceAlpha, 'linestyle' , 'none')
+
+                        % STOP TARG Sacc aligned
+                        iStopTargSaccFnSem = stopTargSaccFnSem{i}(stopTargSaccAlign(i) + epochRangeSacc);
+                        fillX = [epochRangeSacc(1) : epochRangeSacc(end) epochRangeSacc(end) : -1 : epochRangeSacc(1)];
+                        fillY = [iStopTargSaccFn+iStopTargSaccFnSem fliplr(iStopTargSaccFn-iStopTargSaccFnSem)];
+                        fill(ax(i, colSacc), fillX, fillY, stopColorMap(pSignalArray == stopTargCoh(i),:), 'facealpha', faceAlpha, 'linestyle' , 'none')
+                        
+                   end
+                     
                 end
             end
             
