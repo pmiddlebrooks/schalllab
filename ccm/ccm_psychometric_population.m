@@ -203,6 +203,7 @@ goRightProbStd = std(goRightProb, 1);
 goRightProbSem = std(goRightProb, 1)/sqrt(size(goRightProb, 1));
 
 [fitParameters, lowestSSE] = psychometric_weibull_fit(pSignalArrayFit(:), goRightProb(:));
+[fitParametersW, lowestSSEW] = Weibull(pSignalArrayFit(:), goRightProb(:));
 % [fitParameters, lowestSSE] = Weibull(pSignalArray*100, goRightProbMean);
 propPoints = pSignalArray(1) : .001 : pSignalArray(end);
 goPsychometricFn = weibull_curve(fitParameters, propPoints);
@@ -309,4 +310,24 @@ end
 if options.printPlot
             print(figureHandle,fullfile(local_figure_path, subjectID,['ccm_population_psychometric_',options.saveName]),'-dpdf', '-r300')
 end
+
+
+
+% Print out values
+goPrint = [goRightProbMean; goRightProbStd; goRightProbSem];
+fprintf('\nGO:\n')
+fprintf('Mean SD SEM\n')
+fprintf('%.2f %.3f %.3f\n', goPrint)
+
+goMatchPrint = [goMatchRightProbMean; goMatchRightProbStd; goMatchRightProbSem];
+fprintf('\nGO-Match:\n')
+fprintf('Mean SD SEM\n')
+fprintf('%.2f %.3f %.3f\n', goMatchPrint)
+
+stopPrint = [stopRightProbMean; stopRightProbStd; stopRightProbSem];
+fprintf('\nSTOP:\n')
+fprintf('Mean SD SEM\n')
+fprintf('%.2f %.3f %.3f\n', stopPrint)
+
+
 

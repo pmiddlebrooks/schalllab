@@ -489,7 +489,7 @@ for iTrial = 1 : nTrial
     iNCode                  = length(eventCodes(iStart : iEnd));
     iStrobes(1 : iNCode)    = eventCodes(iStart : iEnd);
     iTimeStamps(1 : iNCode) = timeStamps(iStart : iEnd);
-    for j = 1 : length(eventArray);
+    for j = 1 : length(eventArray)
         jEvent = char(eventArray(j));
         jCode = char(eventNumArray(j));
         eval(sprintf('codeNumber = %s;',jCode));
@@ -1463,8 +1463,8 @@ end
 %__________________________________________________________________________
 trialData.SessionData = SessionData;
 
-saveFileName = [tebaDataPath, sessionID];
-save(saveFileName, '-struct', 'trialData','-v7.3')
+% saveFileName = [tebaDataPath, sessionID];
+% save(saveFileName, '-struct', 'trialData','-v7.3')
 %
 save(fullfile(local_data_path, monkey, sessionID), '-struct', 'trialData','-v7.3')
 

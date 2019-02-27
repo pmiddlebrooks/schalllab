@@ -132,6 +132,10 @@ trialLogical = trialLogical & outcomeLogical;
 
 
 
+
+
+
+
 % Trials w.r.t. the checkerboard proportion of target1
 % checkers
 if strcmp(selectOpt.rightCheckerPct, 'collapse')

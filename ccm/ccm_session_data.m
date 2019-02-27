@@ -1,6 +1,6 @@
 function Data = ccm_session_data(subjectID, sessionID, Opt)
 %
-% function Data = ccm_session_data(subjectID, sessionID, plotFlag, Opt.unitArray)
+% function Data = ccm_session_data(subjectID, sessionID, Opt)
 %
 % Creates a processed data struct for other functions to use, and
 % optionally plots session neurophysiology data
@@ -885,7 +885,7 @@ Data(1).targAngleArray  = targAngleArray;
 Data(1).ssdArray        = ssdArray;
 Data(1).sessionID       = sessionID;
 Data(1).subjectID       = subjectID;
-Data(1).hemisphere       = SessionData.hemisphere;
+% Data(1).hemisphere       = SessionData.hemisphere;
 Data(1).spikeUnitArray       = SessionData.spikeUnitArray;
 Data(1).Opt             = Opt;
 

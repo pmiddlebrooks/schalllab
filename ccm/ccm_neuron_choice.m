@@ -65,8 +65,8 @@ alphaCoherence  = .05;   % alpha criteria for coherence dependence
 % Load the data
 
 
-    
-    
+
+
 [trialData, SessionData, ExtraVar] = load_data(subjectID, sessionID, [ccm_min_vars, unitArray], options.multiUnit);
 pSignalArray = ExtraVar.pSignalArray;
 pSignalArray = pSignalArray(pSignalArray ~= .5);
@@ -117,7 +117,7 @@ for iUnit = 1 : length(unitArray)
     optCollapse.multiUnit   = options.multiUnit;
     UnitCollapse                = ccm_session_data(subjectID, sessionID, optCollapse);
     rf = ccm_find_saccade_rf(UnitCollapse);
-
+    
     
     
     % Go to Target trials
@@ -222,21 +222,21 @@ for iUnit = 1 : length(unitArray)
         if iEpochEnd(1) > length(alignedRasters{1})
             break
         end
-%         switch dataType
-%             case 'spikes'
-                nSpike = cellfun(@(x,y,z) sum(x(y:z)), alignedRasters, num2cell(iEpochBegin), num2cell(iEpochEnd), 'uniformoutput', false);
-                iSpikeRate = cell2mat(nSpike) .* 1000 ./ epochDuration;
-                % Choice dependence
-                leftMetric = iSpikeRate(leftTrial);
-                rightMetric = iSpikeRate(rightTrial);
-%             case 'eeg'
-%                 eegMeanEpoch = cellfun(@(x,y,z) nanmean(x(y:z)), num2cell(alignedSignal,2), num2cell(iEpochBegin), num2cell(iEpochEnd), 'uniformoutput', false);
-%                 eegMeanEpoch = cell2mat(eegMeanEpoch);
-%                 % Choice dependence
-%                 leftMetric = eegMeanEpoch(leftTrial);
-%                 rightMetric = eegMeanEpoch(rightTrial);
-%             otherwise
-%         end
+        %         switch dataType
+        %             case 'spikes'
+        nSpike = cellfun(@(x,y,z) sum(x(y:z)), alignedRasters, num2cell(iEpochBegin), num2cell(iEpochEnd), 'uniformoutput', false);
+        iSpikeRate = cell2mat(nSpike) .* 1000 ./ epochDuration;
+        % Choice dependence
+        leftMetric = iSpikeRate(leftTrial);
+        rightMetric = iSpikeRate(rightTrial);
+        %             case 'eeg'
+        %                 eegMeanEpoch = cellfun(@(x,y,z) nanmean(x(y:z)), num2cell(alignedSignal,2), num2cell(iEpochBegin), num2cell(iEpochEnd), 'uniformoutput', false);
+        %                 eegMeanEpoch = cell2mat(eegMeanEpoch);
+        %                 % Choice dependence
+        %                 leftMetric = eegMeanEpoch(leftTrial);
+        %                 rightMetric = eegMeanEpoch(rightTrial);
+        %             otherwise
+        %         end
         
         % Break out of the loop if we're so far out that tChoice is
         % meaningless
@@ -363,21 +363,21 @@ for iUnit = 1 : length(unitArray)
     pValOut     = statsOut.fstat.pval;
     
     
-% Decision tree to determine whether the neuron/signal was "coherence dependent"
-if pValIn < alphaCoherence && pValOut > alphaCoherence
-    coherenceDependent = true;
-elseif pValIn > alphaCoherence && pValOut < alphaCoherence
-    coherenceDependent = true;
-elseif pValIn < alphaCoherence && pValOut < alphaCoherence
-    % slopeOut must have opposite sign than slopeIn
-    if signSlopeIn ~= signSlopeOut
+    % Decision tree to determine whether the neuron/signal was "coherence dependent"
+    if pValIn < alphaCoherence && pValOut > alphaCoherence
         coherenceDependent = true;
+    elseif pValIn > alphaCoherence && pValOut < alphaCoherence
+        coherenceDependent = true;
+    elseif pValIn < alphaCoherence && pValOut < alphaCoherence
+        % slopeOut must have opposite sign than slopeIn
+        if signSlopeIn ~= signSlopeOut
+            coherenceDependent = true;
+        end
     end
-end
-
-if choiceDependent && coherenceDependent
-    ddmLike = true;
-end
+    
+    if choiceDependent && coherenceDependent
+        ddmLike = true;
+    end
     
     if choiceDependent && coherenceDependent
         ddmLike = true;
@@ -385,7 +385,7 @@ end
     
     
     
-  % Alternate Coherence Dependence test- Rank sum, like choice dependence
+    % Alternate Coherence Dependence test- Rank sum, like choice dependence
     [pIn, h, stats]   = ranksum(spikeRate(easyInTrial), spikeRate(hardInTrial));
     [pOut, h, stats]   = ranksum(spikeRate(easyOutTrial), spikeRate(hardOutTrial));
     
@@ -393,7 +393,7 @@ end
     if pIn <= alphaCoherence
         if pOut > alphaCoherence
             coherenceDependentRank = true;
-        else 
+        else
             % slopeOut must have opposite sign than slopeIn
             if signSlopeIn ~= signSlopeOut
                 coherenceDependentRank = true;
@@ -413,11 +413,11 @@ end
     if choiceDependent && coherenceDependentRank
         ddmLikeRank = true;
     end
-   
     
     
     
-  % Alternate Coherence Dependence test- Ranking spike rate means
+    
+    % Alternate Coherence Dependence test- Ranking spike rate means
     inMeanDiff   = nanmean(spikeRate(easyInTrial)) - nanmean(spikeRate(hardInTrial));
     outMeanDiff   = nanmean(spikeRate(easyOutTrial)) - nanmean(spikeRate(hardOutTrial));
     
@@ -425,7 +425,7 @@ end
     if inMeanDiff > 0
         if outMeanDiff <= 0
             coherenceDependentMean = true;
-        end 
+        end
     end
     
     if choiceDependent && coherenceDependentMean
@@ -436,7 +436,7 @@ end
     
     
     
-        %%
+    %%
     
     % ________________________________________________________________
     % PLOT THE DATA
@@ -545,16 +545,16 @@ end
         h = fill(fillXLeft, fillY, fillColor);
         set(h, 'edgecolor', 'none');
         
-%         % Rightward trials
-
-plot(ax(axCohR), [0 0], [0 yMax], '-k', 'linewidth', 2);
+        %         % Rightward trials
+        
+        plot(ax(axCohR), [0 0], [0 yMax], '-k', 'linewidth', 2);
         axes(ax(axCohR))
         h = fill(fillXRight, fillY, fillColor);
         set(h, 'edgecolor', 'none');
-
         
-         for i = 1 : length(pSignalArray)
-             iProp = pSignalArray(i);
+        
+        for i = 1 : length(pSignalArray)
+            iProp = pSignalArray(i);
             
             % Determine color to use for plot based on which checkerboard color
             % proportion being used. Normalize the available color spectrum to do
@@ -564,16 +564,16 @@ plot(ax(axCohR), [0 0], [0 yMax], '-k', 'linewidth', 2);
             iTrial = trialData.targ1CheckerProp == iProp;
             iSdf = nanmean(sdf(iTrial,:), 1);
             if iProp < .5
-            plot(ax(axCohL), plotEpochRange, iSdf(alignmentIndex + plotEpochRange), 'color', inhColor, 'linewidth', lineW)
-            set(ax(axCohL), 'xlim', [plotEpochRange(1) plotEpochRange(end)], 'ylim', [0 yMax])
+                plot(ax(axCohL), plotEpochRange, iSdf(alignmentIndex + plotEpochRange), 'color', inhColor, 'linewidth', lineW)
+                set(ax(axCohL), 'xlim', [plotEpochRange(1) plotEpochRange(end)], 'ylim', [0 yMax])
             elseif iProp > .5
-             plot(ax(axCohR), plotEpochRange, iSdf(alignmentIndex + plotEpochRange), 'color', inhColor, 'linewidth', lineW)
-            set(ax(axCohR), 'xlim', [plotEpochRange(1) plotEpochRange(end)], 'ylim', [0 yMax])
+                plot(ax(axCohR), plotEpochRange, iSdf(alignmentIndex + plotEpochRange), 'color', inhColor, 'linewidth', lineW)
+                set(ax(axCohR), 'xlim', [plotEpochRange(1) plotEpochRange(end)], 'ylim', [0 yMax])
             end
-         end
-             
-             
-       
+        end
+        
+        
+        
         boxplot(ax(axCoh), spikeRate, trialData.targ1CheckerProp, 'position', pSignalArray, 'colors', cMap, 'plotstyle', 'compact')
         
         % regressions on trial-by-trial spike rates in the epoch
@@ -595,11 +595,11 @@ plot(ax(axCohR), [0 0], [0 yMax], '-k', 'linewidth', 2);
         
         
         h=axes('Position', [0 0 1 1], 'Visible', 'Off');
-            ddmStr = 'NO';
+        ddmStr = 'NO';
         if choiceDependent(iUnit) && coherenceDependent(iUnit)
             ddmStr = 'YES';
         end
-            ddmRankStr = 'NO';
+        ddmRankStr = 'NO';
         if choiceDependent(iUnit) && coherenceDependentRank(iUnit)
             ddmRankStr = 'YES';
         end
@@ -614,7 +614,7 @@ plot(ax(axCohR), [0 0], [0 yMax], '-k', 'linewidth', 2);
             print(options.figureHandle,fullfile(local_figure_path, subjectID, 'choice', [sessionID, '_', unitArray{iUnit}, '_ccm_ddm_like', '.pdf']),'-dpdf', '-r300')
         end
     end % if options.plotFlag
-
+    
     
     
     
@@ -632,6 +632,10 @@ unitInfo.choiceSelectionTime    = choiceSelectionTime;
 unitInfo.leftIsIn               = leftIsIn;
 unitInfo.coeffIn                = coeffIn;
 unitInfo.coeffOut               = coeffOut;
+
+unitInfo.easyInTrial               = easyInTrial;
+unitInfo.hardInTrial               = hardInTrial;
+unitInfo.spikeRate               = spikeRate;
 
 
 
