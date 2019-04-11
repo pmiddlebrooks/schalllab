@@ -267,7 +267,13 @@ for kUnitIndex = 1 : nUnit
     pValue40msStopStop = nan(length(stopStopCoh), 1);  % The index in the sdf after checker onset at wich the differential sdf passes the 50ms test
     
     pValue40msStopTarg = nan(length(stopTargCoh), 1);  % The index in the sdf after checker onset at wich the differential sdf passes the 50ms test
+
     
+    pValuePostSsrtRt = nan(length(stopStopCoh), 1);  % for jeff's new proposed analysis
+    pValuePostSsrt100 = nan(length(stopStopCoh), 1);  % for jeff's new proposed analysis
+    targToStopDiffSD = nan(length(stopStopCoh), 1);  % for jeff's new proposed analysis
+    preSaccDiffSD = nan(length(stopStopCoh), 1);  % for jeff's new proposed analysis
+
     
     
     % Canceled Stop and Slow Go
@@ -295,6 +301,10 @@ for kUnitIndex = 1 : nUnit
     
     stopStopSpike               = cell(length(stopStopCoh), 1);
     goTargSlowSpike               = cell(length(stopStopCoh), 1);
+    stopStopSpikePostSsrtRt               = cell(length(stopStopCoh), 1);
+    goTargSlowSpikePostSsrtRt               = cell(length(stopStopCoh), 1);
+    stopStopSpikePostSsrt100               = cell(length(stopStopCoh), 1);
+    goTargSlowSpikePostSsrt100               = cell(length(stopStopCoh), 1);
     
     
     % Nonanceled Stop and Fast Go
@@ -383,6 +393,10 @@ for kUnitIndex = 1 : nUnit
         titleString = sprintf('%s \t %s', sessionID, Unit(kUnitIndex).name);
         text(0.5,1, titleString, 'HorizontalAlignment','Center', 'VerticalAlignment','Top')
         
+        if options.plotSingle
+            stopStopFigSingle = 2039;
+            [axisW, axisH, xAxesPos, yAxesPos] = standard_figure(1, 2, 'portrait', stopStopFigSingle);
+        end
         
         if ANALYZE_NONCANCELED
             [~, ~, ~, ~] = standard_figure(nRow, nColumn, 'portrait', stopTargFig);
@@ -461,8 +475,8 @@ for kUnitIndex = 1 : nUnit
                 % analyze:
                 checkerEpochEnd = min([epochRangeChecker(end), length(iStopStopChecker.signalFn) - iStopStopChecker.align - stopStopSsd(i)]);
                 
-                % Use a latency-matching method to get a (fast)
-                % subsample of go trials that match the noncanceled
+                % Use a latency-matching method to get a (slow)
+                % subsample of go trials that match the canceled
                 % stop trials
                 switch latencyMatchMethod
                     
@@ -485,7 +499,7 @@ for kUnitIndex = 1 : nUnit
                         iGoSlowTrial = data.goSlowTrial;
                 end
                 
-                
+                iGoSlowRt = iGoTargChecker.eventLatency(iGoSlowTrial);
                 
                 
                 
@@ -533,6 +547,21 @@ for kUnitIndex = 1 : nUnit
                 stats{i}     = sts;
                 
                 
+                % TEST #1 ALTERED BY J SCHALL
+                % t-test of spike rates from ssrt to median RT
+                stopStopSpikePostSsrtRt{i}     = sum(iStopStopChecker.signal(:, iStopStopChecker.align + stopStopSsd(i) + iSsrt : iStopStopChecker.align + nanmedian(iGoSlowRt)), 2) / (nanmedian(iGoSlowRt)-(iStopStopChecker.align + stopStopSsd(i) + iSsrt)) * 1000;
+                goTargSlowSpikePostSsrtRt{i}   = sum(iGoTargChecker.signal(iGoSlowTrial, iGoTargChecker.align + stopStopSsd(i) + iSsrt : iGoTargChecker.align + nanmedian(iGoSlowRt)), 2) / (nanmedian(iGoSlowRt)-(iStopStopChecker.align + stopStopSsd(i) + iSsrt)) * 1000;
+                [h,p,ci,~]       	= ttest2(stopStopSpikePostSsrtRt{i}, goTargSlowSpikePostSsrtRt{i});
+                
+                pValuePostSsrtRt(i)    = p;
+               
+                % t-test of spike rates from ssrt to ssrt + 100
+                stopStopSpikePostSsrt100{i}     = sum(iStopStopChecker.signal(:, iStopStopChecker.align + stopStopSsd(i) + iSsrt : iStopStopChecker.align + stopStopSsd(i) + iSsrt + 100), 2) / (nanmedian(iGoSlowRt)-(iStopStopChecker.align + stopStopSsd(i) + iSsrt)) * 1000;
+                goTargSlowSpikePostSsrt100{i}   = sum(iGoTargChecker.signal(iGoSlowTrial, iGoTargChecker.align + stopStopSsd(i) + iSsrt : iGoTargChecker.align + stopStopSsd(i) + iSsrt + 100), 2) / (nanmedian(iGoSlowRt)-(iStopStopChecker.align + stopStopSsd(i) + iSsrt)) * 1000;
+                [h,p,ci,~]       	= ttest2(stopStopSpikePostSsrt100{i}, goTargSlowSpikePostSsrt100{i});
+                
+                pValuePostSsrt100(i)    = p;
+               
                 
                 % TEST #2:
                 % Hanes et al 1998 (p.822) differential sdf test
@@ -640,6 +669,26 @@ for kUnitIndex = 1 : nUnit
                 fprintf('ssd: %d  \tcolor: %.2f  \tgo v. stop: %.1f  %.1f sp, p = %.2f\t canceltime = %d\n',...
                     stopStopSsd(i), stopStopCoh(i), mean(goTargSlowSpike{i}), mean(stopStopSpike{i}), p, cancelTime2Std(i) - iSsrt -  stopStopSsd(i));
                 
+
+                
+                
+                % TEST #2: ALTERED BY J SCHALL
+                % 1. Compare SDFs from checkerOn to stopSignalOn
+                % 2. Compare SDFs from SSRT to median goSlowRT (Canceled trials) - 20s pre-saccade (goSlowTrials)
+                % ------------------------------------------------------------------------
+                
+                % 1. 
+                targToStopGoSlowMean = mean(goTargSlowCheckerFn{i}(iGoTargChecker.align : iGoTargChecker.align + stopStopSsd(i)));
+                targToStopGoSlowStd = std(goTargSlowCheckerFn{i}(iGoTargChecker.align : iGoTargChecker.align + stopStopSsd(i)));
+                targToStopStopStopMean = mean(stopChecker.signalFn(stopChecker.align : stopChecker.align + stopStopSsd(i)));
+                targToStopDiffSD(i) = (targToStopStopStopMean - targToStopGoSlowMean) / targToStopGoSlowStd;
+                
+                % 2.
+                preSaccGoSlowMean = mean(goTargSlowSaccFn{i}(iGoTargSacc.align-20 : iGoTargSacc.align));
+                preSaccGoSlowStd = std(goTargSlowSaccFn{i}(iGoTargSacc.align-20 : iGoTargSacc.align));
+                ssrtToRtStopStopMean = mean(stopChecker.signalFn(iStopStopChecker.align + stopStopSsd(i) + iSsrt : iStopStopChecker.align + nanmedian(iGoSlowRt)));
+                preSaccDiffSD(i) = (ssrtToRtStopStopMean - preSaccGoSlowMean) / preSaccGoSlowStd;
+               
                 
                 if plotFlag && i <= nPlot
                     figure(stopStopFig)
@@ -714,9 +763,9 @@ for kUnitIndex = 1 : nUnit
                 
                 
                 % Plot the each single valid condition
-                stopStopFigSingle = 2039;
                 if plotFlag && options.plotSingle
                     figure(stopStopFigSingle)
+                    
                     clf
                     
                     % Data aligned on checkerboard onset
@@ -1096,7 +1145,7 @@ for kUnitIndex = 1 : nUnit
                     end
                     
                     iStopTargCheckerFn = stopTargCheckerFn{i}(stopTargCheckerAlign(i) + epochRangeChecker);
- 
+                    
                     plot(ax(i, colChkr), epochRangeChecker, iStopTargCheckerFn, '-', 'color', stopColorMap(pSignalArray == stopTargCoh(i),:), 'linewidth', stopLineW)
                     iStopTargRTMean = round(nanmean(stopTargCheckerEventLat{i}));
                     if iStopTargRTMean <= length(iStopTargCheckerFn)
@@ -1127,15 +1176,15 @@ for kUnitIndex = 1 : nUnit
                         fillX = [epochRangeSacc(1) : epochRangeSacc(end) epochRangeSacc(end) : -1 : epochRangeSacc(1)];
                         fillY = [iGoTargFastSaccFn+iGoTargFastSaccFnSem fliplr(iGoTargFastSaccFn-iGoTargFastSaccFnSem)];
                         fill(ax(i, colSacc), fillX, fillY, cMap(pSignalArray == stopTargCoh(i),:), 'facealpha', faceAlpha, 'linestyle' , 'none')
-
+                        
                         % STOP TARG Sacc aligned
                         iStopTargSaccFnSem = stopTargSaccFnSem{i}(stopTargSaccAlign(i) + epochRangeSacc);
                         fillX = [epochRangeSacc(1) : epochRangeSacc(end) epochRangeSacc(end) : -1 : epochRangeSacc(1)];
                         fillY = [iStopTargSaccFn+iStopTargSaccFnSem fliplr(iStopTargSaccFn-iStopTargSaccFnSem)];
                         fill(ax(i, colSacc), fillX, fillY, stopColorMap(pSignalArray == stopTargCoh(i),:), 'facealpha', faceAlpha, 'linestyle' , 'none')
                         
-                   end
-                     
+                    end
+                    
                 end
             end
             
@@ -1186,7 +1235,12 @@ for kUnitIndex = 1 : nUnit
     
     Data(kUnitIndex).pValue40msStopTarg     = pValue40msStopTarg;
     
-    
+    % Jeff's new analysis
+    Data(kUnitIndex).pValuePostSsrtRt     = pValuePostSsrtRt;
+    Data(kUnitIndex).pValuePostSsrt100     = pValuePostSsrt100;
+    Data(kUnitIndex).targToStopDiffSD     = targToStopDiffSD;
+    Data(kUnitIndex).preSaccDiffSD     = preSaccDiffSD;
+  
     
     %               Canceled Stop vs latency-matched (Slow) Go:
     Data(kUnitIndex).stopStopCheckerData        = stopStopCheckerData;

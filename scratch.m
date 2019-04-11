@@ -27,7 +27,7 @@ for i = 1 : length(session)
     SessionData.hemisphere = hemisphere;
     
     save(fullfile(local_data_path, subject, [session{i}, '.mat']), 'SessionData', '-append')
-%     save(fullfile(tebaPath, subject, [session{i}, '.mat']), 'SessionData', '-append')
+    %     save(fullfile(tebaPath, subject, [session{i}, '.mat']), 'SessionData', '-append')
     
     
 end
@@ -953,14 +953,22 @@ opt = ccm_neuron_stop_vs_go;
 opt.multiUnit = true;
 opt.minTrialPerCond     = 10;
 opt.plotFlag     = true;
+opt.printPlot     = false;
 
 % data = ccm_neuron_stop_vs_go('joule', 'jp125n04', {'spikeUnit26'}, opt);
-% data = ccm_neuron_stop_vs_go('joule', 'jp125n04', {'spikeUnit32'}, opt);
-data = ccm_neuron_stop_vs_go('broca', 'bp244n02', {'spikeUnit27'}, opt);
+% data = ccm_neuron_stop_vs_go('joule', 'jp106n02', {'spikeUnit18'}, opt);
+data = ccm_neuron_stop_vs_go('broca', 'bp092n02', {'spikeUnit17'}, opt);
 % data = ccm_neuron_stop_vs_go('broca', 'bp247n02', {'spikeUnit12'}, opt);
 
 
+%%
+%%
+options = ccm_neuron_choice;
+options.unitArray = {'spikeUnit03'};
+options.multiUnit = true;
 
+% unitInfo = ccm_neuron_choice('joule', 'jp054n02', options.unitArray, options);
+unitInfo = ccm_neuron_choice('broca', 'bp229n02-mm', options.unitArray, options)
 
 %% Establish options to send to ccm_session_data in the for loop below
 close all
@@ -1241,7 +1249,7 @@ end
 
 %%    SET VARIABLES FOR RUNNING ANALYSES ON A SET OF UNITS UNDER SOME CATEGORY (SUCH AS PRESACC DDM-MODULATED CANCELING UNITS)
 
-subject = 'broca';
+subject = 'joule';
 
 multiUnit = true;
 ssrtUse = 'intWeightPerSession';
@@ -1305,26 +1313,26 @@ dataPath = fullfile(projectRoot,'data',projectDate,subject);
 
 % Possible categories:
 % ddm cancel
-category = 'ccm_presacc_ddmRankMeanStim_cancel_neurons_multiUnit';
+category = 'ccm_presacc_ddmRankMeanStim_cancel_meanSdf_neurons_multiUnit';
 
 % ddm no-cancel
-category = 'ccm_presacc_ddmRankMeanStim_noCancel_neurons_multiUnit';
+category = 'ccm_presacc_ddmRankMeanStim_noCancel_meanSdf_neurons_multiUnit';
 
 % no-ddm cancel
-% category = 'ccm_presacc_cancel_noddmRankMeanStim_neurons_multiUnit';
+category = 'ccm_presacc_cancel_meanSdf_noddmRankMeanStim_neurons_multiUnit';
 
 % no-ddm no-cancel
-category = 'ccm_presacc_noddmRankMeanStim_noCancel_neurons_multiUnit';
+category = 'ccm_presacc_noddmRankMeanStim_noCancel_meanSdf_neurons_multiUnit';
 
 % visual-only neurons
-category = 'ccm_visNoPresacc_neurons_multiUnit';
+% category = 'ccm_visNoPresacc_neurons_multiUnit';
 
 load(fullfile(dataPath, category))
 if strcmp(category, 'ccm_visNoPresacc_neurons_multiUnit')
-    neurons = neurons(strcmp(neurons.rf, 'none'),:)
+    neurons = neurons(strcmp(neurons.rf, 'none'),:);
 end
 neurons
-
+size(neurons)
 %%
 options = ccm_neuron_stop_vs_go;
 % options = ccm_options;
@@ -1332,36 +1340,22 @@ options = ccm_neuron_stop_vs_go;
 options.multiUnit = true;
 options.plotFlag = true;
 options.printPlot = true;
+options.plotSingle = true;
+options.ANALYZE_CANCELED = true;
+options.ANALYZE_NONCANCELED = true;
 
-switch category
-    case 'ccm_presacc_ddmRankMeanStim_cancel_neurons_multiUnit'
-        options.ANALYZE_CANCELED = true;
-        options.ANALYZE_NONCANCELED = true;
-    case 'ccm_presacc_ddmRankMeanStim_noCancel_neurons_multiUnit'
-        options.ANALYZE_CANCELED = true;
-        options.ANALYZE_NONCANCELED = true;
-    case 'ccm_presacc_cancel_noddmRankMeanStim_neurons_multiUnit'
-        options.ANALYZE_CANCELED = true;
-        options.ANALYZE_NONCANCELED = true;
-    case 'ccm_presacc_noddmRankMeanStim_noCancel_neurons_multiUnit'
-        options.ANALYZE_CANCELED = true;
-        options.ANALYZE_NONCANCELED = true;
-    case 'ccm_visNoPresacc_neurons_multiUnit'
-        options.ANALYZE_CANCELED = true;
-        options.ANALYZE_NONCANCELED = false;
-       
-end
+
 for i = 1 : size(neurons, 1)
     fprintf('\n%d of %d \n', i, size(neurons, 1))
-%     [~, SessionData] = load_data(subject, neurons.sessionID{i});
-%     SessionData.hemisphere = neurons.hemisphere{i};    
-%     save(fullfile(local_data_path, subject, [neurons.sessionID{i}, '.mat']), 'SessionData', '-append')
-
+    %     [~, SessionData] = load_data(subject, neurons.sessionID{i});
+    %     SessionData.hemisphere = neurons.hemisphere{i};
+    %     save(fullfile(local_data_path, subject, [neurons.sessionID{i}, '.mat']), 'SessionData', '-append')
+    
     Data = ccm_neuron_stop_vs_go(subject, neurons.sessionID{i},  neurons.unit(i), options);
     
-%     options.unitArray = neurons.unit(i);
-%         Data = ccm_session_data(subject, neurons.sessionID{i},  options);
-
+    %     options.unitArray = neurons.unit(i);
+    %         Data = ccm_session_data(subject, neurons.sessionID{i},  options);
+    
 end
 disp('done')
 %% Add hemisphere to translated data file
@@ -1376,10 +1370,51 @@ for i = 1 : length(session)
     SessionData.hemisphere = hemisphere;
     
     save(fullfile(local_data_path, subject, [sessionID, '.mat']), 'SessionData', '-append')
-%     save(fullfile(tebaPath, subject, [session{i}, '.mat']), 'SessionData', '-append')
+    %     save(fullfile(tebaPath, subject, [session{i}, '.mat']), 'SessionData', '-append')
     
     
 end
 
 
-%% Print population average SDFs for each category
+%%
+plexon_translate_datafile_mac('broca','bp247n02');
+
+%%
+subject = 'joule';
+session = 'jp125n04';
+unitArray = {'spikeUnit03'};
+
+
+%%
+options = ccm_neuron_stop_vs_go;
+% options = ccm_options;
+
+options.multiUnit = true;
+options.plotFlag = true;        
+options.printPlot = false;
+options.ANALYZE_NONCANCELED = false;
+options.plotSingle          = false;
+
+Data = ccm_neuron_stop_vs_go(subject, session, unitArray, options);
+
+
+%%
+subject = 'joule';
+session = 'jp083n02';
+
+optInh              = ccm_options;
+optInh.plotFlag     = false;
+dataInh             = ccm_inhibition(subject, session, optInh);
+
+round(nanmean(dataInh.ssrtIntegrationWeighted))
+
+%%
+%% Inhibition and chronometric population plots
+subject = 'broca';
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+category = 'presacc';
+load(fullfile(dataPath, ['ccm_',category,'_neurons']))
+sessionSet = unique(neurons.sessionID);
+
+dataInh = ccm_inhibition_population(subject, sessionSet(1:2));
+

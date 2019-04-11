@@ -17,7 +17,8 @@ afterMaxRT = rt > maxRT;
 rtMean = nanmean(rt);
 rtStd = nanstd(rt);
 
-extraRangeRT = rt < (rtMean - nSTD*rtStd) | rt > (rtMean + nSTD*rtStd);
+% extraRangeRT = rt < (rtMean - nSTD*rtStd) | rt > (rtMean + nSTD*rtStd);
+extraRangeRT = zeros(length(rt), 1);
 
 % outlierTrial = find(beforeMinRT | afterMaxRT | extraRangeRT);
 outlierTrial = beforeMinRT | afterMaxRT | extraRangeRT;

@@ -96,11 +96,22 @@ nTrial = size(trialData.trialOutcome, 1);
 
 
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%              Constnats, Conditions setup
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+INCLUDE_GO_OMISSION = true;
+
 % Truncate RTs
 MIN_RT = 120;
 MAX_RT = 1200;
-nSTD   = 3;
-[allRT, outlierTrial]   = truncate_rt(trialData.rt, MIN_RT, MAX_RT, nSTD);
+nSTDTruncate   = 4;
+
+% To include Go Omissions for SSRT calculations, set all goIncorrect RTs to
+% lowest goIndorrect RT
+lowestGoIncRT = min(MAX_RT-1, nanmin(trialData.rt(strcmp(trialData.trialOutcome, 'goIncorrect'))));
+trialData.rt(strcmp(trialData.trialOutcome, 'goIncorrect')) = lowestGoIncRT;
+
+[allRT, outlierTrial]   = truncate_rt(trialData.rt, MIN_RT, MAX_RT, nSTDTruncate);
 trialData = structfun(@(x) x(~outlierTrial,:), trialData, 'uni', false);
 allRT(outlierTrial) = [];
 
@@ -134,10 +145,6 @@ if ~strcmp(SessionData.taskID, 'ccm')
     fprintf('Not a choice countermanding session, try again\n')
     return
 end
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%              Constnats, Conditions setup
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
@@ -399,6 +406,10 @@ for kTarg = 1 : nTargPair
             optSelect.outcome           = {'goCorrectDistractor', 'distractorHoldAbort'};
             jGoDistTrial                 = ccm_trial_selection(trialData, optSelect);
             
+            % Go omission trials
+            optSelect.outcome           = {'goIncorrect'};
+            jGoOmissionTrial                 = ccm_trial_selection(trialData, optSelect);
+            
             
             
             
@@ -434,6 +445,10 @@ for kTarg = 1 : nTargPair
             
             
             jGoTrial = sort([jGoDistTrial; jGoTargTrial]);
+            % Include Go Omissions (see consensus stop signal task paper)
+            if INCLUDE_GO_OMISSION
+            jGoTrial = sort([jGoTrial; jGoOmissionTrial]);
+            end
             
             jGoTrialRT = allRT(jGoTrial);
             goTotalRT{iPropInd, jSSDInd} = jGoTrialRT;
