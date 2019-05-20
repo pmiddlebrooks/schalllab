@@ -1043,17 +1043,19 @@ options = ccm_options;
 options.multiUnit = true;
 options.plotFlag = true;
 options.printPlot = true;
+options.normalize = true;
 opt.minTrialPerCond     = 10;
+options.doStops = true;
 
-options.unitArray = {'spikeUnit01'};
-options.doStops = false;
+options.unitArray = {'spikeUnit27'};
 
 options.ANALYZE_CANCELED = true;
 options.ANALYZE_NONCANCELED = true;
 options.ms2Std = 75;
 options.plotSigle = false;
-% Data = ccm_session_data('joule', 'jp054n02',  options);
-Data = ccm_neuron_stop_vs_go('joule', 'jp054n02',  options.unitArray, options);
+
+Data = ccm_session_data('joule', 'jp125n04',  options);
+% Data = ccm_neuron_stop_vs_go('joule', 'jp054n02',  options.unitArray, options);
 
 toc
 
@@ -1249,7 +1251,7 @@ end
 
 %%    SET VARIABLES FOR RUNNING ANALYSES ON A SET OF UNITS UNDER SOME CATEGORY (SUCH AS PRESACC DDM-MODULATED CANCELING UNITS)
 
-subject = 'joule';
+subject = 'broca';
 
 multiUnit = true;
 ssrtUse = 'intWeightPerSession';
@@ -1316,13 +1318,13 @@ dataPath = fullfile(projectRoot,'data',projectDate,subject);
 category = 'ccm_presacc_ddmRankMeanStim_cancel_meanSdf_neurons_multiUnit';
 
 % ddm no-cancel
-category = 'ccm_presacc_ddmRankMeanStim_noCancel_meanSdf_neurons_multiUnit';
+% category = 'ccm_presacc_ddmRankMeanStim_noCancel_meanSdf_neurons_multiUnit';
 
 % no-ddm cancel
-category = 'ccm_presacc_cancel_meanSdf_noddmRankMeanStim_neurons_multiUnit';
+% category = 'ccm_presacc_cancel_meanSdf_noddmRankMeanStim_neurons_multiUnit';
 
 % no-ddm no-cancel
-category = 'ccm_presacc_noddmRankMeanStim_noCancel_meanSdf_neurons_multiUnit';
+% category = 'ccm_presacc_noddmRankMeanStim_noCancel_meanSdf_neurons_multiUnit';
 
 % visual-only neurons
 % category = 'ccm_visNoPresacc_neurons_multiUnit';
@@ -1333,7 +1335,14 @@ if strcmp(category, 'ccm_visNoPresacc_neurons_multiUnit')
 end
 neurons
 size(neurons)
-%%
+%% Loop through categories and create ccm_neuron_stop_vs_go figures
+subject = 'broca';
+
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+categoryList = {'ccm_presacc_ddmRankMeanStim_cancel_meanSdf_neurons_multiUnit', ...
+    'ccm_presacc_ddmRankMeanStim_noCancel_meanSdf_neurons_multiUnit', ...
+    'ccm_presacc_cancel_meanSdf_noddmRankMeanStim_neurons_multiUnit', ...
+    'ccm_presacc_noddmRankMeanStim_noCancel_meanSdf_neurons_multiUnit'};
 options = ccm_neuron_stop_vs_go;
 % options = ccm_options;
 
@@ -1343,21 +1352,20 @@ options.printPlot = true;
 options.plotSingle = true;
 options.ANALYZE_CANCELED = true;
 options.ANALYZE_NONCANCELED = true;
+options.normalize = true;
 
-
-for i = 1 : size(neurons, 1)
-    fprintf('\n%d of %d \n', i, size(neurons, 1))
-    %     [~, SessionData] = load_data(subject, neurons.sessionID{i});
-    %     SessionData.hemisphere = neurons.hemisphere{i};
-    %     save(fullfile(local_data_path, subject, [neurons.sessionID{i}, '.mat']), 'SessionData', '-append')
+for c = 1 : length(categoryList)
+    options.category = categoryList{c};
+    load(fullfile(dataPath, categoryList{c}))
     
-    Data = ccm_neuron_stop_vs_go(subject, neurons.sessionID{i},  neurons.unit(i), options);
     
-    %     options.unitArray = neurons.unit(i);
-    %         Data = ccm_session_data(subject, neurons.sessionID{i},  options);
+    for i = 1 : size(neurons, 1)
+        %     for i = size(neurons, 1) : size(neurons, 1)
+        fprintf('\n%d of %d category: %s\n', i, size(neurons, 1), categoryList{c})
+        Data = ccm_neuron_stop_vs_go(subject, neurons.sessionID{i},  neurons.unit(i), options);
+    end
     
 end
-disp('done')
 %% Add hemisphere to translated data file
 session = {'bp234n02'};
 % tebaPath = '/Volumes/SchallLab/data/';
@@ -1380,34 +1388,65 @@ end
 plexon_translate_datafile_mac('broca','bp247n02');
 
 %%
-subject = 'joule';
-session = 'jp125n04';
-unitArray = {'spikeUnit03'};
+subject = 'broca';
+session = 'bp093n02';
+unitArray = {'spikeUnit17'};
+session = 'bp246n02';
+unitArray = {'spikeUnit30'};
 
 
 %%
 options = ccm_neuron_stop_vs_go;
 % options = ccm_options;
 
+options.normalize = true;
 options.multiUnit = true;
-options.plotFlag = true;        
+options.plotFlag = true;
 options.printPlot = false;
-options.ANALYZE_NONCANCELED = false;
-options.plotSingle          = false;
+options.ANALYZE_NONCANCELED = true;
+options.ANALYZE_CANCELED = true;
+options.plotSingle          = true;
 
 Data = ccm_neuron_stop_vs_go(subject, session, unitArray, options);
 
 
 %%
 subject = 'joule';
-session = 'jp083n02';
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+
+
+% Possible categories:
+% ddm cancel
+category = 'ccm_presacc_ddmRankMeanStim_cancel_meanSdf_neurons_multiUnit';
+
+% cancel no-ddm
+% category = 'ccm_presacc_cancel_meanSdf_noddmRankMeanStim_neurons_multiUnit';
+
+
+load(fullfile(dataPath, category))
 
 optInh              = ccm_options;
 optInh.plotFlag     = false;
-dataInh             = ccm_inhibition(subject, session, optInh);
+oldSSRT = nan(size(neurons, 1), 1);
+newSSRT = nan(size(neurons, 1), 1);
 
-round(nanmean(dataInh.ssrtIntegrationWeighted))
+optInh.INCLUDE_GO_OMISSION = false;
+for i = 1 : size(neurons, 1)
+    dataInh             = ccm_inhibition(subject, neurons.sessionID{i}, optInh);
+    oldSSRT(i) = round(nanmean(dataInh.ssrtIntegrationWeighted));
+end
 
+optInh.INCLUDE_GO_OMISSION = true;
+for i = 1 : size(neurons, 1)
+    dataInh             = ccm_inhibition(subject, neurons.sessionID{i}, optInh);
+    newSSRT(i) = round(nanmean(dataInh.ssrtIntegrationWeighted));
+end
+
+neurons.oldSSRT = oldSSRT;
+neurons.newSSRT = newSSRT;
+neurons.ssrtDiff = newSSRT - oldSSRT;
+
+neurons
 %%
 %% Inhibition and chronometric population plots
 subject = 'broca';
@@ -1417,4 +1456,64 @@ load(fullfile(dataPath, ['ccm_',category,'_neurons']))
 sessionSet = unique(neurons.sessionID);
 
 dataInh = ccm_inhibition_population(subject, sessionSet(1:2));
+
+%% Why are there so many that now don't count as cancel?
+options = ccm_neuron_stop_vs_go;
+% options = ccm_options;
+
+options.multiUnit = true;
+options.plotFlag = true;
+options.printPlot = true;
+options.plotSingle = true;
+options.ANALYZE_CANCELED = true;
+options.ANALYZE_NONCANCELED = false;
+
+
+for i = 1 : size(neuronsNotDC, 1)
+    fprintf('\n%d of %d \n', i, size(neuronsNotDC, 1))
+    Data = ccm_neuron_stop_vs_go(subject, neuronsNotDC.sessionID{i},  neuronsNotDC.unit(i), options);
+end
+disp('done')
+
+
+%% Test whether ccm_find_saccade_rf really needs collapss color coherence...
+
+category = 'ccm_presacc_neurons_multiUnit';
+subject = 'joule';
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+load(fullfile(dataPath, category))
+
+opt             = ccm_options;
+opt.multiUnit    = options.multiUnit;
+opt.plotFlag    = false;
+opt.printFlag    = false;
+opt.collapseTarg = true;
+opt.doStops   = false;
+
+rf = cell(size(neurons, 1), 1);
+rfCollapse = cell(size(neurons, 1), 1);
+
+for i = 1 : size(neurons, 1)
+    fprintf('\n%d of %d \n', i, size(neurons, 1))
+    
+    opt.unitArray   = neurons.unit(i);
+    
+    opt.collapseSignal = true;
+    UnitCollapse                = ccm_session_data(subject, neurons.sessionID{i}, opt);
+    rfCollapse{i} = ccm_find_saccade_rf(UnitCollapse);
+    
+    opt.collapseSignal = false;
+    UnitCollapse                = ccm_session_data(subject, neurons.sessionID{i}, opt);
+    rf{i} = ccm_find_saccade_rf(UnitCollapse);
+    
+end
+%%
+[rf, rfCollapse]
+sum(~strcmp(rf, rfCollapse))
+
+%%
+subject = 'broca';
+session = 'bp247n02';
+    [~, SessionData] = load_data(subject, session);
+
 

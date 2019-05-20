@@ -1290,25 +1290,25 @@ dataDir = ['/Volumes/SchallLab/data/', subject];
 d = dir(dataDir);
 % for i = 1 : size(d, 1)
 for i = 12 : 13
-   if regexp(d(i).name, 'jp.*mat')
+    if regexp(d(i).name, 'jp.*mat')
         tic
-          disp(i)
+        disp(i)
         disp(d(i).name(1:end-4))
-       
-        clear trialOutcome
-
-        load(fullfile(local_data_path, subject ,d(i).name), 'trialOutcome');
-                if ~exist('trialOutcome')
-
-        load(fullfile(local_data_path, subject ,d(i).name));
-%         load(fullfile(dataDir, d(i).name))
-        trialData = table2struct(trialData, 'ToScalar',true);
-        trialData.SessionData = SessionData;
         
-        save(fullfile(dataDir, d(i).name), '-struct', 'trialData','-v7.3')
-        save(fullfile(local_data_path, subject, d(i).name), '-struct', 'trialData','-v7.3')
-        clear trialData SessionData
-                end
+        clear trialOutcome
+        
+        load(fullfile(local_data_path, subject ,d(i).name), 'trialOutcome');
+        if ~exist('trialOutcome')
+            
+            load(fullfile(local_data_path, subject ,d(i).name));
+            %         load(fullfile(dataDir, d(i).name))
+            trialData = table2struct(trialData, 'ToScalar',true);
+            trialData.SessionData = SessionData;
+            
+            save(fullfile(dataDir, d(i).name), '-struct', 'trialData','-v7.3')
+            save(fullfile(local_data_path, subject, d(i).name), '-struct', 'trialData','-v7.3')
+            clear trialData SessionData
+        end
         disp(toc)
     end
 end
@@ -1409,7 +1409,7 @@ end
 opt = ccm_options;
 opt.collapseSignal = true;
 
-opt.unitArray = {'spikeUnit14a', 'spikeUnit14b'}; 
+opt.unitArray = {'spikeUnit14a', 'spikeUnit14b'};
 session =  'bp243n02';
 for i = 1 : length(sessionList)
     data = ccm_session_data('broca', session, opt);
@@ -1420,7 +1420,7 @@ end
 %%matlab
 
 categoryName = 'presacc';
-    load(fullfile(dataPath, ['ccm_',categoryName,'_neurons']))
+load(fullfile(dataPath, ['ccm_',categoryName,'_neurons']))
 
 
 % Establish options to send to ccm_session_data in the for loop below
@@ -1432,7 +1432,7 @@ opt.dataType    = 'neuron';
 opt.collapseTarg 	= true;
 opt.collapseSignal 	= true;
 opt.doStops 	= false;
-    opt.multiUnit = multiUnit;
+opt.multiUnit = multiUnit;
 
 
 
@@ -1443,7 +1443,7 @@ for i = 1 : size(neurons, 1)
     pdfName = [neurons.sessionID{i},'_ccm_',neurons.unit{i},'_neuron_collapse.pdf'];
     if exist(fullfile(local_figure_path,subject,'sessionCollapseChoice',pdfName))
     else
-      iData = ccm_session_data(subject, neuronTypes.sessionID{sessionInd(i)}, opt);
+        iData = ccm_session_data(subject, neuronTypes.sessionID{sessionInd(i)}, opt);
     end
     
     clear iData
@@ -1647,8 +1647,73 @@ end
 %%
 Opt = plexon_translate_datafile_mac;
 Opt.hemisphere = 'left';
-    Opt.whichData   = 'all';
-    Opt.saveFile    = true;
-    Opt.LFP_CHANNELS = 17;
-    Opt.EEG_CHANNELS = [1:5];
+Opt.whichData   = 'all';
+Opt.saveFile    = true;
+Opt.LFP_CHANNELS = 17;
+Opt.EEG_CHANNELS = [1:5];
 plexon_translate_datafile_mac('broca','bp095n04', Opt)
+
+%%
+subject = 'joule';
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+fileName = ['ccm_neuronTypes',addMulti];
+tebaPath = '/Volumes/SchallLab/data/';
+
+
+original = load(fullfile(dataPath, fileName));
+
+sessionID = unique(original.neuronTypes.sessionID);
+
+addHem = [];
+for i = 1 : length(sessionID)
+    [~, SessionData] = load_data(subject, sessionID{i}, ccm_min_vars);
+    if ~isfield(SessionData, 'hemisphere')
+        sessionInd = find(strcmp(original.neuronTypes.sessionID, sessionID{i}), 1);
+        SessionData.hemisphere = original.neuronTypes.hemisphere{sessionInd};
+        original.neuronTypes(sessionInd,:)
+        i
+        save(fullfile(local_data_path, subject, [sessionID{i}, '.mat']), 'SessionData', '-append')
+        save(fullfile(tebaPath, subject, [sessionID{i}, '.mat']), 'SessionData', '-append')
+    end
+end
+disp('done')
+
+
+%% Send specific files into local_data path on Dropbox to use on home computer (and conserve memory)
+
+
+subject = 'joule';
+dataPath = fullfile(projectRoot,'data',projectDate,subject);
+
+neuroDataPath = '/Users/paulmiddlebrooks/Dropbox/neuro_data/';
+homeDataPath = '/Users/paulmiddlebrooks/Dropbox/local_data/';
+
+if ~isdir(fullfile(homeDataPath, subject))
+    mkdir(fullfile(homeDataPath, subject))
+end
+
+% Load Classic neuron classifications
+cFileName = fullfile(dataPath, ['ccm_presacc_neurons', addMulti]);
+c = load(cFileName);
+classic = c.neurons;
+
+sessionList = unique(classic.sessionID);
+
+for i = 1 : length(sessionList)
+    fprintf('%d of %d\n', i, length(sessionList))
+    neuroFile = fullfile(neuroDataPath, subject, [sessionList{i},'.mat']);
+    localFolder = fullfile(homeDataPath, subject);
+    copyfile(neuroFile, localFolder)
+end
+
+
+
+
+
+
+
+
+
+
+
+

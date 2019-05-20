@@ -50,11 +50,11 @@ if nargin < 3
     options.include50           = false;
     options.USE_PRE_SSD         = true;
     options.USE_TWO_COLORS         = false;
+    options.INCLUDE_GO_OMISSION = true;
     
     options.plotFlag            = true;
     options.printPlot           = false;
     options.figureHandle      	= 403;
-    
     % Return just the default options struct if no input
     if nargin == 0
         Data           = options;
@@ -66,6 +66,7 @@ include50       = options.include50;
 plotFlag        = options.plotFlag;
 printPlot       = options.printPlot;
 figureHandle    = options.figureHandle;
+INCLUDE_GO_OMISSION = options.INCLUDE_GO_OMISSION;
 
 
 useCorrectOrAll = 'correct';
@@ -99,7 +100,6 @@ nTrial = size(trialData.trialOutcome, 1);
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %              Constnats, Conditions setup
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-INCLUDE_GO_OMISSION = true;
 
 % Truncate RTs
 MIN_RT = 120;
@@ -108,8 +108,8 @@ nSTDTruncate   = 4;
 
 % To include Go Omissions for SSRT calculations, set all goIncorrect RTs to
 % lowest goIndorrect RT
-lowestGoIncRT = min(MAX_RT-1, nanmin(trialData.rt(strcmp(trialData.trialOutcome, 'goIncorrect'))));
-trialData.rt(strcmp(trialData.trialOutcome, 'goIncorrect')) = lowestGoIncRT;
+goIncorrectRT = min(MAX_RT-1, nanmedian(trialData.rt(strcmp(trialData.trialOutcome, 'goIncorrect'))));
+trialData.rt(strcmp(trialData.trialOutcome, 'goIncorrect')) = goIncorrectRT;
 
 [allRT, outlierTrial]   = truncate_rt(trialData.rt, MIN_RT, MAX_RT, nSTDTruncate);
 trialData = structfun(@(x) x(~outlierTrial,:), trialData, 'uni', false);

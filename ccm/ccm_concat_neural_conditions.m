@@ -1,7 +1,6 @@
 function Data = ccm_concat_neural_conditions(Unit, Opt)
 
-if nargin < 2;
-    
+if nargin < 2;    
     Opt.dataType         = 'neuron';  % 'lfp' or 'erp'
     
     Opt.epochName       	= 'checkerOn';
@@ -13,9 +12,10 @@ if nargin < 2;
     if nargin == 0
         Data = Opt;
         return
-    end
-    
+    end    
 end
+
+
 dataType        = Opt.dataType;
 epochName       = Opt.epochName;
 ssdArray        = Opt.ssdArray;

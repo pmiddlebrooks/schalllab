@@ -14,46 +14,29 @@ function ssdList = ssd_session_adjust(ssdList)
 minTime = 17;
 
 ssdArray = unique(ssdList(~isnan(ssdList)));
+nSsd = arrayfun( @(x)(length(find(ssdList==x))), ssdArray);
 
+belowCriterion = (diff(ssdArray) <= minTime)'; % Indices below minTime
+firstIndexOfRun = find(diff([0,belowCriterion,0]) == 1); % First index of each run of consequtive SSDs below minTime
+lastIndexOfRun = find(diff([0,belowCriterion,0]) == -1); % First index of each run of consequtive SSDs below minTime
 
-
-% Iterate until a weighted sum of SSDs are produced. Require the time
-% between SSDs to be at least "minTime".
-criterionMet = false;
-
-belowCriterion = find(diff(ssdArray) <= minTime);
-if isempty(belowCriterion)
-    criterionMet = true;
+ssdWeighted = nan(length(firstIndexOfRun), 1);
+for iRun = 1 : length(firstIndexOfRun)
+    iSsd = ssdArray(firstIndexOfRun(iRun):lastIndexOfRun(iRun));  % Which run of SSDs is this?
+    iSsdN = nSsd(firstIndexOfRun(iRun):lastIndexOfRun(iRun));  % How many of each of the SSDs were there
+    ssdWeighted(iRun) = round(sum(iSsd .* iSsdN / sum(iSsdN))); % Weighted avg of the SSDs
+    ssdList(ismember(ssdList, iSsd)) = ssdWeighted(iRun);  % Replace old SSDs with new weighted avg SSDs
 end
 
-while ~criterionMet
-    
-    nSsd = arrayfun( @(x)(length(find(ssdList==x))), ssdArray);
-    
-    
-    % Are there any that have runs of more than 2 SSDs that are less than
-    % criteria? If so, we need to give up and keep one.
-    remove = 1+find(diff(belowCriterion) < 2);
-    belowCriterion(remove) = [];
-    
-    ssdIndAltered = [belowCriterion; belowCriterion+1];
-    ssdKeep = setxor(ssdIndAltered, 1:length(ssdArray));
-    
-    ssdWeighted = nan(length(belowCriterion), 1);
-    for i = 1 : length(belowCriterion)
-        
-        ssdInd = [belowCriterion(i) belowCriterion(i)+1];
-        ssdWeighted(i) = round(sum(ssdArray(ssdInd) .* nSsd(ssdInd) / sum(nSsd(ssdInd))));
-        ssdList(ssdList == ssdArray(ssdInd(1)) | ssdList == ssdArray(ssdInd(2))) = ssdWeighted(i);
-    end
-    
-    % The new ssdArray
-    ssdArray = sort([ssdArray(ssdKeep); ssdWeighted]);
-    
-    % Check to see if there are any SSDs between "minTime"
-    belowCriterion = find(diff(ssdArray) <= minTime);
-    if isempty(belowCriterion)
-        criterionMet = true;
-    end
-    
-end
+
+
+
+
+
+
+
+
+
+
+
+

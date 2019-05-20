@@ -142,9 +142,11 @@ if strcmp(selectOpt.rightCheckerPct, 'collapse')
     % do nothing
 else
     if strcmp(selectOpt.rightCheckerPct, 'right')
-        target1Proportion = selectOpt.rightCheckerPct/100 > 50;
+        pSginalArray = unique(trialData.targ1CheckerProp);
+        target1Proportion = pSginalArray(pSginalArray > .5);
     elseif strcmp(selectOpt.rightCheckerPct, 'left')
-        target1Proportion = selectOpt.rightCheckerPct/100 < 50;
+        pSginalArray = unique(trialData.targ1CheckerProp);
+        target1Proportion = pSginalArray(pSginalArray < .5);
     else
         target1Proportion = selectOpt.rightCheckerPct / 100;
     end

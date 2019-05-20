@@ -31,7 +31,7 @@ function Data = ccm_session_data(subjectID, sessionID, Opt)
 %    Opt.doStops        = true, false;
 %    Opt.filterData 	= false, true;
 %    Opt.stopHz         = 50, <any number, above which signal is filtered;
-%    Opt.normalize      = false, true;
+%    Opt.normalize      = [], z-score...
 %    Opt.howProcess      = how to step through the list of units
 %                                 'each' to plot all,
 %                                 'step' (default): step through to see one
@@ -76,6 +76,7 @@ if iscell(sessionID)
         Opt.doStops = 1;
         Opt.collapseSignal = 0;
         Opt.collapseTarg = 1;
+        Opt.normalize = false;
     end
     Opt.unitArray = sessionID(2);
     sessionID = sessionID{1};
@@ -134,7 +135,7 @@ Kernel.decay = 20;
 
 cropWindow  = -1000 : 2000;  % used to extract a semi-small portion of signal for each epoch/alignemnt
 baseWindow 	= -149 : 0;   % To baseline-shift the eeg signals, relative to event alignment index;
-
+normEpoch = -100 : -1;
 
 
 
@@ -219,6 +220,8 @@ optInh                  = ccm_options;
 optInh.collapseTarg     = true;
 optInh.printPlot        = false;
 optInh.plotFlag         = false;
+optInh.INCLUDE_GO_OMISSION         = true;
+
 dataInh                 = ccm_inhibition(subjectID, sessionID, optInh);
 % Which ssrt estimate should we use for latency matching? For now, use a
 % collapsed, across color coherence value. Later might want to use
@@ -242,14 +245,31 @@ for kDataInd = 1 : nUnit
     switch Opt.dataType
         case 'neuron'
         case 'lfp'
-                            [a, kUnit] = ismember(chNum(kDataInd), SessionData.lfpChannel);
+            [a, kUnit] = ismember(chNum(kDataInd), SessionData.lfpChannel);
         case 'erp'
-                            [a, kUnit] = ismember(Opt.unitArray{kDataInd}, eeg_electrode_map(subjectID));
+            [a, kUnit] = ismember(Opt.unitArray{kDataInd}, eeg_electrode_map(subjectID));
     end
+    
+    
     
     
     % Get default trial selection Opt
     selectOpt = ccm_options;
+    
+    
+    
+    % If we want normalized data, get the normalization factors here:
+    if Opt.normalize
+        selectOpt.ssd = 'none';
+        selectOpt.outcome     = {'goCorrectTarget', 'targetHoldAbort'};
+        selectOpt.rightCheckerPct = pSignalArray .* 100;
+        normTrial = ccm_trial_selection(trialData, selectOpt);
+        alignListGo = trialData.targOn(normTrial);
+        [alignedRasters, alignmentIndex] = spike_to_raster(trialData.(Opt.unitArray{kDataInd})(normTrial), alignListGo);
+        sdf = nanmean(spike_density_function(alignedRasters, Kernel), 1);
+        normMean = nanmean(sdf(alignmentIndex + normEpoch));
+        normSD = nanstd(sdf(alignmentIndex + normEpoch));
+    end
     
     % Loop through all right targets (or collapse them if desired) and
     % account for all target pairs if the session had more than one target
@@ -378,6 +398,9 @@ for kDataInd = 1 : nUnit
                                 %                                     end
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(goOutcomeArray{g}).alignTime = alignmentIndex;
                                 sdf = spike_density_function(alignedRasters, Kernel);
+                                if Opt.normalize
+                                    sdf = (sdf - normMean) / normSD;
+                                end
                                 if ~isempty(sdf); yMax(mEpoch, iColor, 1, 1) = nanmax(nanmean(sdf, 1)); end;
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(goOutcomeArray{g}).raster = alignedRasters;
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(goOutcomeArray{g}).sdf = sdf;
@@ -517,6 +540,9 @@ for kDataInd = 1 : nUnit
                                         Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(stopOutcomeArray{s}).ssd(jSSDIndex).alignTime = alignmentIndex;
                                         
                                         sdf = spike_density_function(alignedRasters, Kernel);
+                                if Opt.normalize
+                                    sdf = (sdf - normMean) / normSD;
+                                end
                                         if ~isempty(sdf); yMax(mEpoch, iColor, jSSDIndex+1, 5) = nanmax(nanmean(sdf, 1)); end;
                                         Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(stopOutcomeArray{s}).ssd(jSSDIndex).raster = alignedRasters;
                                         Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).(stopOutcomeArray{s}).ssd(jSSDIndex).sdf = sdf;
@@ -616,7 +642,10 @@ for kDataInd = 1 : nUnit
                             Data(kDataInd, jTarg).responseOnset.colorCoh(iColor).stopStop.ssd(jSSDIndex).alignTime = alignmentIndex;
                             
                             sdf = spike_density_function(alignedRasters, Kernel);
-                            Data(kDataInd, jTarg).responseOnset.colorCoh(iColor).stopStop.ssd(jSSDIndex).raster = alignedRasters;
+                                                   if Opt.normalize
+                                    sdf = (sdf - normMean) / normSD;
+                                end
+         Data(kDataInd, jTarg).responseOnset.colorCoh(iColor).stopStop.ssd(jSSDIndex).raster = alignedRasters;
                             Data(kDataInd, jTarg).responseOnset.colorCoh(iColor).stopStop.ssd(jSSDIndex).sdf = sdf;
                             Data(kDataInd, jTarg).responseOnset.colorCoh(iColor).stopStop.ssd(jSSDIndex).sdfMean = nanmean(sdf, 1);
                             clear sdf alignedRasters
@@ -635,6 +664,9 @@ for kDataInd = 1 : nUnit
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).goFast.ssd(jSSDIndex).alignTime = alignmentIndex;
                                 
                                 sdf = spike_density_function(alignedRasters, Kernel);
+                                if Opt.normalize
+                                    sdf = (sdf - normMean) / normSD;
+                                end
                                 if ~isempty(sdf); yMax(mEpoch, iColor, jSSDIndex+1, 3) = nanmax(nanmean(sdf, 1)); end;
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).goFast.ssd(jSSDIndex).raster = alignedRasters;
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).goFast.ssd(jSSDIndex).sdf = sdf;
@@ -647,6 +679,9 @@ for kDataInd = 1 : nUnit
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).goSlow.ssd(jSSDIndex).alignTime = alignmentIndex;
                                 
                                 sdf = spike_density_function(alignedRasters, Kernel);
+                                if Opt.normalize
+                                    sdf = (sdf - normMean) / normSD;
+                                end
                                 if ~isempty(sdf); yMax(mEpoch, iColor, jSSDIndex+1, 3) = nanmax(nanmean(sdf, 1)); end;
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).goSlow.ssd(jSSDIndex).raster = alignedRasters;
                                 Data(kDataInd, jTarg).(mEpochName).colorCoh(iColor).goSlow.ssd(jSSDIndex).sdf = sdf;
@@ -766,7 +801,7 @@ end % kDataInd
 % %
 % %  Haven't tested this in a while, probably needs work
 %
-% if Opt.normalize
+% if ~isempty(Opt.normalize)
 %     for kDataInd = 1 : nUnit
 %         for iColor = 1 : nSignal;
 %             for mEpoch = 1 : length(epochArray)
@@ -885,9 +920,10 @@ Data(1).targAngleArray  = targAngleArray;
 Data(1).ssdArray        = ssdArray;
 Data(1).sessionID       = sessionID;
 Data(1).subjectID       = subjectID;
-% Data(1).hemisphere       = SessionData.hemisphere;
+Data(1).hemisphere       = SessionData.hemisphere;
 Data(1).spikeUnitArray       = SessionData.spikeUnitArray;
 Data(1).Opt             = Opt;
+Data(1).dataInh        = dataInh;
 
 
 if Opt.plotFlag &&...
